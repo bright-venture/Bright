@@ -9,7 +9,7 @@ Ported from the Kimi prototype onto Supabase (Postgres, Auth, Storage), per the 
 ## Stack
 
 - **Frontend:** React 19, Vite, Tailwind, shadcn/ui, React Router, tRPC + React Query
-- **Backend:** Hono + tRPC on Node (`api/`), Drizzle ORM (`db/`)
+- **Backend:** Hono + tRPC on Node (`server/`), Drizzle ORM (`db/`)
 - **Supabase:** Postgres database, email sign-in (magic link / code, optional Google), private Storage bucket for media
 - Shared domain logic (service categories, question trees, urgency engine, strings) lives in `contracts/`
 
@@ -46,6 +46,25 @@ The storage bucket (`request-media`, private, 20 MB, images/videos only) is crea
 
 ## Deploy
 
+### Netlify
+
+`netlify.toml` builds the site (`npm run build:netlify`), publishes `dist/public`, and routes
+`/api/*` to a single function bundled from `server/netlify.ts`.
+
+1. In Netlify: **Add new site → Import an existing project** → pick the GitHub repo.
+   Build settings are read from `netlify.toml`; don't override them.
+2. Before the first deploy, add every variable from `.env.example` under
+   **Site configuration → Environment variables** (you can paste the whole `.env`).
+   `VITE_*` values are read at build time, so redeploy after changing them.
+3. In Supabase **Authentication → URL Configuration**, add the Netlify URL
+   (e.g. `https://be-right.netlify.app/**`) to Redirect URLs, and set it as Site URL for the live site.
+
+On Netlify's free plan functions run in US East (Ohio); the database is in Frankfurt, so each API
+call pays transatlantic latency. Netlify Pro can move functions to Frankfurt
+(**Cloud compute → Functions → Region → `fra`**) with no code change.
+
+### Node server / Docker
+
 Any Node 20+ host works. With Docker:
 
 ```bash
@@ -68,6 +87,7 @@ Runtime env needed on the server: `DATABASE_URL`, `SUPABASE_URL`, `SUPABASE_SERV
 | --- | --- |
 | `npm run dev` | Vite dev server with the API mounted at `/api` |
 | `npm run build` | Builds the SPA to `dist/public` and bundles the server to `dist/boot.js` |
+| `npm run build:netlify` | SPA build + bundles the API into `netlify/functions/api.mjs` |
 | `npm start` | Runs the built server (set `NODE_ENV=production`) |
 | `npm run check` | TypeScript type-check |
 | `npm test` | Unit tests (urgency engine) |

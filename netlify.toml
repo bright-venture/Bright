@@ -1,0 +1,23 @@
+[build]
+  command = "npm run build:netlify"
+  publish = "dist/public"
+
+[build.environment]
+  NODE_VERSION = "22"
+
+[functions]
+  directory = "netlify/functions"
+  node_bundler = "esbuild"
+
+# API → the single server function
+[[redirects]]
+  from = "/api/*"
+  to = "/.netlify/functions/api/:splat"
+  status = 200
+  force = true
+
+# Single-page app: any other path that isn't a real file serves index.html
+[[redirects]]
+  from = "/*"
+  to = "/index.html"
+  status = 200
