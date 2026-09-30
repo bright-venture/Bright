@@ -12,7 +12,7 @@ vi.mock("./lib/env", () => ({
     supabaseUrl: "",
     supabaseServiceRoleKey: "",
     storageBucket: "test",
-    adminEmails: ["specialist@example.com"],
+    specialistEmails: ["specialist@example.com"],
   },
 }));
 vi.mock("./lib/storage", () => ({
@@ -64,9 +64,9 @@ beforeAll(async () => {
 }, 60_000);
 
 describe("accounts", () => {
-  it("gives the admin role only to ADMIN_EMAILS", () => {
-    expect(admin.role).toBe("admin");
-    expect(alice.role).toBe("user");
+  it("gives the specialist role only to SPECIALIST_EMAILS", () => {
+    expect(admin.role).toBe("specialist");
+    expect(alice.role).toBe("customer");
   });
 
   it("returns the same user on repeat sign-in", async () => {
@@ -164,8 +164,8 @@ describe("full repair workflow", () => {
 
   it("keeps non-admins out of the specialist dashboard", async () => {
     const a = await callerFor(alice);
-    await expect(a.admin.queue()).rejects.toMatchObject({ code: "FORBIDDEN" });
-    await expect(a.admin.startReview({ id: requestId, urgency: "normal" })).rejects.toMatchObject({
+    await expect(a.specialist.queue()).rejects.toMatchObject({ code: "FORBIDDEN" });
+    await expect(a.specialist.startReview({ id: requestId, urgency: "normal" })).rejects.toMatchObject({
       code: "FORBIDDEN",
     });
     await expect(a.tech.myJobs()).rejects.toMatchObject({ code: "FORBIDDEN" });
@@ -173,13 +173,13 @@ describe("full repair workflow", () => {
 
   it("specialist reviews and quotes", async () => {
     const s = await callerFor(admin);
-    expect((await s.admin.queue()).map((r) => r.request.id)).toContain(requestId);
-    await s.admin.startReview({ id: requestId, urgency: "priority" });
-    await expect(s.admin.startReview({ id: requestId, urgency: "normal" })).rejects.toMatchObject({
+    expect((await s.specialist.queue()).map((r) => r.request.id)).toContain(requestId);
+    await s.specialist.startReview({ id: requestId, urgency: "priority" });
+    await expect(s.specialist.startReview({ id: requestId, urgency: "normal" })).rejects.toMatchObject({
       code: "BAD_REQUEST",
     });
-    await s.admin.sendQuote({ id: requestId, amount: "45", note: "Replace angle valve" });
-    const d = await s.admin.detail({ id: requestId });
+    await s.specialist.sendQuote({ id: requestId, amount: "45", note: "Replace angle valve" });
+    const d = await s.specialist.detail({ id: requestId });
     expect(d.request.status).toBe("quote_ready");
     expect(d.request.urgencyFinal).toBe("priority");
     expect(d.media).toHaveLength(1);
@@ -209,10 +209,10 @@ describe("full repair workflow", () => {
 
   it("enforces the status order", async () => {
     const s = await callerFor(admin);
-    await expect(s.admin.setStatus({ id: requestId, status: "completed" })).rejects.toMatchObject({
+    await expect(s.specialist.setStatus({ id: requestId, status: "completed" })).rejects.toMatchObject({
       code: "BAD_REQUEST",
     });
-    await s.admin.setStatus({ id: requestId, status: "scheduled" });
+    await s.specialist.setStatus({ id: requestId, status: "scheduled" });
   });
 
   it("technician works the job and shares location", async () => {

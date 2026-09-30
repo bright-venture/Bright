@@ -15,7 +15,7 @@ import {
 // Postgres directly (bypassing RLS), while Supabase's public REST API — reachable with
 // the browser's publishable key — gets no access to these tables at all.
 
-export const userRole = pgEnum("user_role", ["user", "admin", "technician"]);
+export const userRole = pgEnum("user_role", ["customer", "specialist", "technician"]);
 export const urgencyLevel = pgEnum("urgency_level", [
   "normal",
   "priority",
@@ -56,7 +56,7 @@ export const users = pgTable("users", {
   /** Given at sign-up; pre-fills bookings. */
   phone: varchar("phone", { length: 64 }),
   avatar: text("avatar"),
-  role: userRole("role").default("user").notNull(),
+  role: userRole("role").default("customer").notNull(),
   ...timestamps,
   lastSignInAt: timestamp("last_sign_in_at", { withTimezone: true })
     .defaultNow()

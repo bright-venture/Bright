@@ -2,6 +2,7 @@ import { ErrorMessages } from "@contracts/constants";
 import { initTRPC, TRPCError } from "@trpc/server";
 import superjson from "superjson";
 import type { TrpcContext } from "./context";
+import type { Role } from "@contracts/roles";
 
 const t = initTRPC.context<TrpcContext>().create({
   transformer: superjson,
@@ -23,7 +24,7 @@ const requireAuth = t.middleware(async (opts) => {
   return next({ ctx: { ...ctx, user: ctx.user } });
 });
 
-function requireRole(role: string) {
+function requireRole(role: Role) {
   return t.middleware(async (opts) => {
     const { ctx, next } = opts;
 
@@ -39,4 +40,9 @@ function requireRole(role: string) {
 }
 
 export const authedQuery = t.procedure.use(requireAuth);
-export const adminQuery = authedQuery.use(requireRole("admin"));
+/** Customers: book, follow and approve their own requests. */
+export const customerQuery = authedQuery.use(requireRole("customer"));
+/** Technicians: work the jobs assigned to them. */
+export const technicianQuery = authedQuery.use(requireRole("technician"));
+/** Specialists: office staff running the dashboard. */
+export const specialistQuery = authedQuery.use(requireRole("specialist"));

@@ -332,10 +332,6 @@ export const t = {
     title: { en: "Specialist dashboard", ar: "لوحة المختص" },
     queue: { en: "Queue", ar: "الطلبات" },
     empty: { en: "No requests in the queue.", ar: "ما في طلبات." },
-    notAdmin: {
-      en: "This area is for Be Right specialists. Ask an administrator to add your email to the specialist list.",
-      ar: "هالمنطقة لمختصين بي رايت. اطلب من المسؤول يضيف إيميلك على لائحة المختصين.",
-    },
     setUrgency: { en: "Confirmed urgency", ar: "الاستعجال المؤكد" },
     sendQuote: { en: "Send quote", ar: "أرسل العرض" },
     quoteAmount: { en: "Quote amount (USD)", ar: "قيمة العرض (دولار)" },
@@ -373,10 +369,7 @@ export const t = {
     photos: { en: "Customer photos", ar: "صور العميل" },
     urgency: { en: "Urgency", ar: "الاستعجال" },
     empty: { en: "No jobs assigned to you yet.", ar: "ما في مهام معيّنة إلك بعد." },
-    notTech: {
-      en: "This area is for Be Right technicians. A specialist can grant access from the dashboard.",
-      ar: "هالمنطقة لفنيين بي رايت. المختص بيعطي الصلاحية من لوحة التحكم.",
-    },
+
     customer: { en: "Customer", ar: "العميل" },
     appointment: { en: "Appointment", ar: "الموعد" },
     shareStart: { en: "Start live location", ar: "ابدأ مشاركة الموقع" },

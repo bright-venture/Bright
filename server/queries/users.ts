@@ -6,8 +6,8 @@ import { env } from "../lib/env";
 
 const SIGN_IN_TOUCH_MS = 60 * 60 * 1000;
 
-function isAdminEmail(email: string | null) {
-  return !!email && env.adminEmails.includes(email.toLowerCase());
+function isSpecialistEmail(email: string | null) {
+  return !!email && env.specialistEmails.includes(email.toLowerCase());
 }
 
 async function findByAuthId(authId: string) {
@@ -37,7 +37,7 @@ export async function findOrCreateUser(identity: {
         email: identity.email,
         name: identity.name,
         phone: identity.phone ?? null,
-        role: isAdminEmail(identity.email) ? "admin" : "user",
+        role: isSpecialistEmail(identity.email) ? "specialist" : "customer",
       })
       .onConflictDoNothing({ target: schema.users.authId });
     const created = await findByAuthId(identity.authId);
@@ -49,8 +49,8 @@ export async function findOrCreateUser(identity: {
   if (identity.email && identity.email !== existing.email) patch.email = identity.email;
   if (identity.name && !existing.name) patch.name = identity.name;
   if (identity.phone && !existing.phone) patch.phone = identity.phone;
-  if (existing.role !== "admin" && isAdminEmail(identity.email ?? existing.email)) {
-    patch.role = "admin";
+  if (existing.role !== "specialist" && isSpecialistEmail(identity.email ?? existing.email)) {
+    patch.role = "specialist";
   }
   if (Date.now() - existing.lastSignInAt.getTime() > SIGN_IN_TOUCH_MS) {
     patch.lastSignInAt = new Date();

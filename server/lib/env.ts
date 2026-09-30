@@ -14,8 +14,8 @@ export const env = {
   supabaseUrl: required("SUPABASE_URL"),
   supabaseServiceRoleKey: required("SUPABASE_SERVICE_ROLE_KEY"),
   storageBucket: process.env.SUPABASE_STORAGE_BUCKET || "request-media",
-  /** Comma-separated emails that are granted the specialist/admin role on sign-in. */
-  adminEmails: (process.env.ADMIN_EMAILS ?? "")
+  /** Comma-separated emails that get the specialist role on sign-in (ADMIN_EMAILS is the old name). */
+  specialistEmails: (process.env.SPECIALIST_EMAILS || process.env.ADMIN_EMAILS || "")
     .split(",")
     .map((e) => e.trim().toLowerCase())
     .filter(Boolean),

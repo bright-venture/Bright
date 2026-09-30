@@ -7,7 +7,7 @@ import { ServiceIcon } from "@/components/ServiceIcon";
 import { MediaGrid } from "@/components/MediaGrid";
 import { AnswerList } from "@/components/AnswerList";
 import { useI18n } from "@/i18n";
-import { useAuth } from "@/hooks/useAuth";
+import { useRoleGate } from "@/hooks/useRoleGate";
 import { trpc } from "@/providers/trpc";
 import {
   CATEGORY_MAP,
@@ -97,9 +97,8 @@ function TechnicianCard({
 
 export default function Requests() {
   const { t, p } = useI18n();
-  const { isAuthenticated, isLoading: authLoading } = useAuth({
-    redirectOnUnauthenticated: true,
-  });
+  const { role, isLoading: authLoading } = useRoleGate(["customer"], { requireSignIn: true });
+  const isAuthenticated = role === "customer";
   const [openId, setOpenId] = useState<number | null>(null);
   const utils = trpc.useUtils();
 

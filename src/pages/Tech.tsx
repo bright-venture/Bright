@@ -6,7 +6,7 @@ import { ServiceIcon } from "@/components/ServiceIcon";
 import { AnswerList } from "@/components/AnswerList";
 import { MediaGrid } from "@/components/MediaGrid";
 import { useI18n } from "@/i18n";
-import { useAuth } from "@/hooks/useAuth";
+import { useRoleGate } from "@/hooks/useRoleGate";
 import { trpc } from "@/providers/trpc";
 import {
   CATEGORY_MAP,
@@ -66,11 +66,9 @@ function useLocationSharing() {
 
 export default function Tech() {
   const { t, p } = useI18n();
-  const { user, isAuthenticated, isLoading: authLoading } = useAuth({
-    redirectOnUnauthenticated: true,
-  });
+  const { role, isLoading: authLoading } = useRoleGate(["technician"], { requireSignIn: true });
   const utils = trpc.useUtils();
-  const isTech = user?.role === "technician" || user?.role === "admin";
+  const isTech = role === "technician";
 
   const jobs = trpc.tech.myJobs.useQuery(undefined, { enabled: !!isTech, refetchInterval: 60_000 });
   const fieldEvent = trpc.tech.fieldEvent.useMutation({
@@ -79,27 +77,10 @@ export default function Tech() {
   const { sharingFor, geoError, start, stop } = useLocationSharing();
   const [notes, setNotes] = useState<Record<number, string>>({});
 
-  if (authLoading) {
+  if (authLoading || !isTech) {
     return (
       <div className="flex min-h-screen items-center justify-center bg-paper">
         <Loader2 className="h-8 w-8 animate-spin text-navy" />
-      </div>
-    );
-  }
-
-  if (isAuthenticated && !isTech) {
-    return (
-      <div className="flex min-h-screen flex-col bg-paper">
-        <Navbar />
-        <main className="flex flex-1 items-center justify-center px-4 pt-16">
-          <div className="card-br max-w-md p-8 text-center">
-            <img src="/assets/mascot-320.webp" width={320} height={408} alt="" className="mx-auto h-auto w-28" />
-            <p className="mt-4 text-sm leading-relaxed text-navy/70">
-              {p(t.tech.notTech)}
-            </p>
-          </div>
-        </main>
-        <Footer />
       </div>
     );
   }

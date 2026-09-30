@@ -1,6 +1,6 @@
 import { z } from "zod";
 import { desc, eq } from "drizzle-orm";
-import { createRouter, adminQuery } from "./middleware";
+import { createRouter, specialistQuery } from "./middleware";
 import { getDb } from "./queries/connection";
 import { requestEvents, requestMedia, serviceRequests, users } from "../db/schema";
 import type { RequestStatus, UrgencyLevel } from "@contracts/services";
@@ -13,8 +13,8 @@ const byId = z.object({ id: z.number().int() });
 const CLOSED: readonly RequestStatus[] = ["completed", "cancelled"];
 const URGENCY_RANK: Record<UrgencyLevel, number> = { critical: 0, urgent: 1, priority: 2, normal: 3 };
 
-export const adminRouter = createRouter({
-  queue: adminQuery.query(async () => {
+export const specialistRouter = createRouter({
+  queue: specialistQuery.query(async () => {
     const rows = await getDb()
       .select({
         request: serviceRequests,
@@ -36,7 +36,7 @@ export const adminRouter = createRouter({
     });
   }),
 
-  detail: adminQuery.input(byId).query(async ({ input }) => {
+  detail: specialistQuery.input(byId).query(async ({ input }) => {
     const db = getDb();
     const row = await findRequest(db, input.id, "any");
     const [customer, media, events] = await Promise.all([
@@ -51,7 +51,7 @@ export const adminRouter = createRouter({
     return { request: row, customer, media, events };
   }),
 
-  startReview: adminQuery
+  startReview: specialistQuery
     .input(z.object({ id: z.number().int(), urgency: z.enum(URGENCY_LEVELS) }))
     .mutation(async ({ ctx, input }) => {
       await applyTransition({
@@ -65,7 +65,7 @@ export const adminRouter = createRouter({
       return { ok: true };
     }),
 
-  sendQuote: adminQuery
+  sendQuote: specialistQuery
     .input(
       z.object({
         id: z.number().int(),
@@ -86,7 +86,7 @@ export const adminRouter = createRouter({
     }),
 
   /** Specialist moves an approved job forward: schedule → start → complete. */
-  setStatus: adminQuery
+  setStatus: specialistQuery
     .input(
       z.object({
         id: z.number().int(),

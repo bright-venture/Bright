@@ -15,11 +15,14 @@ Ported from the Kimi prototype onto Supabase (Postgres, Auth, Storage), per the 
 
 ## Roles
 
-| Role | How they get it | Where they work |
+Three roles, each with its own area. Signing in sends staff straight to theirs, and opening
+another role's page redirects back (enforced on the server too):
+
+| Role | How they get it | Their area |
 | --- | --- | --- |
-| Customer | Any signed-in user | `/book`, `/requests` |
-| Specialist (admin) | Email listed in `ADMIN_EMAILS` (applied on next sign-in) | `/dashboard` |
-| Technician | A specialist adds their email in the dashboard (they must sign in once first) | `/tech` |
+| Customer | Default for every new account | `/book`, `/requests` |
+| Technician | A specialist adds their email in Dashboard → Technicians (they sign up first) | `/tech` |
+| Specialist | Email listed in `SPECIALIST_EMAILS` (applied on next sign-in) | `/dashboard` |
 
 Technician applications from `/join` need no account and appear in the dashboard.
 
@@ -79,7 +82,7 @@ Without Docker: `npm ci && npm run build && NODE_ENV=production npm start`
 (the `VITE_*` variables must be present at build time).
 
 Runtime env needed on the server: `DATABASE_URL`, `SUPABASE_URL`, `SUPABASE_SERVICE_ROLE_KEY`,
-`ADMIN_EMAILS` (and optionally `SUPABASE_STORAGE_BUCKET`, `PORT`). Health check: `GET /api/health`.
+`SPECIALIST_EMAILS` (and optionally `SUPABASE_STORAGE_BUCKET`, `PORT`). Health check: `GET /api/health`.
 
 ## Scripts
 

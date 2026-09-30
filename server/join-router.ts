@@ -1,6 +1,6 @@
 import { z } from "zod";
 import { desc, eq } from "drizzle-orm";
-import { createRouter, publicQuery, adminQuery } from "./middleware";
+import { createRouter, publicQuery, specialistQuery } from "./middleware";
 import { getDb } from "./queries/connection";
 import { technicianApplications } from "../db/schema";
 import { CATEGORIES } from "../contracts/services";
@@ -34,7 +34,7 @@ export const joinRouter = createRouter({
       return { id: res.id };
     }),
 
-  list: adminQuery.query(async () => {
+  list: specialistQuery.query(async () => {
     const db = getDb();
     return db
       .select()
@@ -42,7 +42,7 @@ export const joinRouter = createRouter({
       .orderBy(desc(technicianApplications.createdAt));
   }),
 
-  setStatus: adminQuery
+  setStatus: specialistQuery
     .input(
       z.object({
         id: z.number().int().positive(),

@@ -6,6 +6,7 @@ import { AuthPanel, type AuthMode } from "@/components/AuthPanel";
 import { useI18n } from "@/i18n";
 import { useAuth } from "@/hooks/useAuth";
 import { safeNext } from "@/lib/navigation";
+import { HOME_BY_ROLE, isStaff, type Role } from "@contracts/roles";
 
 /** Sign in (/login) and create account (/signup). */
 export default function Login({ mode = "signin" }: { mode?: AuthMode }) {
@@ -13,11 +14,14 @@ export default function Login({ mode = "signin" }: { mode?: AuthMode }) {
   const [params] = useSearchParams();
   const navigate = useNavigate();
   const next = safeNext(params.get("next"));
-  const { isAuthenticated, isLoading } = useAuth();
+  const { user, isLoading } = useAuth();
+  const role = user?.role as Role | undefined;
 
+  // Specialists → dashboard, technicians → jobs; customers return to where they were.
   useEffect(() => {
-    if (!isLoading && isAuthenticated) navigate(next, { replace: true });
-  }, [isAuthenticated, isLoading, navigate, next]);
+    if (isLoading || !role) return;
+    navigate(isStaff(role) ? HOME_BY_ROLE[role] : next, { replace: true });
+  }, [role, isLoading, navigate, next]);
 
   return (
     <div className="flex min-h-screen flex-col bg-paper">

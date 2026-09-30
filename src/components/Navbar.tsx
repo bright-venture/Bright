@@ -3,6 +3,7 @@ import { Link, useNavigate } from "react-router";
 import { Menu, X } from "lucide-react";
 import { useAuth } from "@/hooks/useAuth";
 import { useI18n } from "@/i18n";
+import { HOME_BY_ROLE, isStaff, type Role } from "@contracts/roles";
 
 export function Navbar() {
   const { lang, setLang, t, p } = useI18n();
@@ -10,12 +11,23 @@ export function Navbar() {
   const [open, setOpen] = useState(false);
   const navigate = useNavigate();
 
+  const role = user?.role as Role | undefined;
+  const staff = !!role && isStaff(role);
+  // Each role sees only its own area: My requests / Jobs / Dashboard.
+  const area = role
+    ? {
+        to: HOME_BY_ROLE[role],
+        label: p({ customer: t.nav.myRequests, technician: t.nav.jobs, specialist: t.nav.dashboard }[role]),
+      }
+    : null;
+
   const links = [
     { href: "/#services", label: p(t.nav.services) },
     { href: "/#how", label: p(t.nav.how) },
     { href: "/#why", label: p(t.nav.why) },
     { href: "/#trust", label: p(t.nav.trust) },
   ];
+  const menuItem = "flex min-h-11 items-center rounded-2xl px-4 font-semibold text-navy hover:bg-white";
 
   return (
     <header className="fixed inset-x-0 top-0 z-50 border-b-2 border-navy bg-paper/95 backdrop-blur">
@@ -62,28 +74,14 @@ export function Navbar() {
 
           {isAuthenticated ? (
             <>
-              {user?.role === "admin" && (
+              {area && !staff && (
                 <Link
-                  to="/dashboard"
+                  to={area.to}
                   className="hidden min-h-11 items-center whitespace-nowrap rounded-full px-3 text-sm font-semibold text-navy hover:bg-white sm:inline-flex"
                 >
-                  {p(t.nav.dashboard)}
+                  {area.label}
                 </Link>
               )}
-              {(user?.role === "technician" || user?.role === "admin") && (
-                <Link
-                  to="/tech"
-                  className="hidden min-h-11 items-center whitespace-nowrap rounded-full px-3 text-sm font-semibold text-navy hover:bg-white sm:inline-flex"
-                >
-                  {p(t.nav.jobs)}
-                </Link>
-              )}
-              <Link
-                to="/requests"
-                className="hidden min-h-11 items-center whitespace-nowrap rounded-full px-3 text-sm font-semibold text-navy hover:bg-white sm:inline-flex"
-              >
-                {p(t.nav.myRequests)}
-              </Link>
               <button
                 onClick={() => logout()}
                 className="hidden min-h-11 whitespace-nowrap rounded-full px-3 text-sm font-semibold text-navy/70 hover:text-navy sm:block"
@@ -100,9 +98,16 @@ export function Navbar() {
             </button>
           )}
 
-          <Link to="/book" className="btn-pill-primary !min-h-11 whitespace-nowrap !px-5 !py-2">
-            {p(t.nav.book)}
-          </Link>
+          {/* Primary action: staff go to their workspace; everyone else books. */}
+          {staff && area ? (
+            <Link to={area.to} className="btn-pill-primary !min-h-11 whitespace-nowrap !px-5 !py-2">
+              {area.label}
+            </Link>
+          ) : (
+            <Link to="/book" className="btn-pill-primary !min-h-11 whitespace-nowrap !px-5 !py-2">
+              {p(t.nav.book)}
+            </Link>
+          )}
 
           <button
             className={`inline-flex min-h-11 min-w-11 shrink-0 items-center justify-center rounded-full border-2 border-navy bg-white text-navy ${isAuthenticated ? "" : "lg:hidden"}`}
@@ -118,13 +123,13 @@ export function Navbar() {
       {open && (
         <nav className={`border-t-2 border-navy bg-paper px-4 py-4 ${isAuthenticated ? "" : "lg:hidden"}`}>
           <div className="flex flex-col gap-1">
+            {area && (
+              <Link to={area.to} onClick={() => setOpen(false)} className={menuItem}>
+                {area.label}
+              </Link>
+            )}
             {links.map((l) => (
-              <a
-                key={l.href}
-                href={l.href}
-                onClick={() => setOpen(false)}
-                className="flex min-h-11 items-center rounded-2xl px-4 font-semibold text-navy hover:bg-white"
-              >
+              <a key={l.href} href={l.href} onClick={() => setOpen(false)} className={menuItem}>
                 {l.label}
               </a>
             ))}
@@ -136,53 +141,18 @@ export function Navbar() {
               {p(t.nav.join)}
             </Link>
             {isAuthenticated ? (
-              <>
-                {user?.role === "admin" && (
-                  <Link
-                    to="/dashboard"
-                    onClick={() => setOpen(false)}
-                    className="flex min-h-11 items-center rounded-2xl px-4 font-semibold text-navy hover:bg-white"
-                  >
-                    {p(t.nav.dashboard)}
-                  </Link>
-                )}
-                {(user?.role === "technician" || user?.role === "admin") && (
-                  <Link
-                    to="/tech"
-                    onClick={() => setOpen(false)}
-                    className="flex min-h-11 items-center rounded-2xl px-4 font-semibold text-navy hover:bg-white"
-                  >
-                    {p(t.nav.jobs)}
-                  </Link>
-                )}
-                <Link
-                  to="/requests"
-                  onClick={() => setOpen(false)}
-                  className="flex min-h-11 items-center rounded-2xl px-4 font-semibold text-navy hover:bg-white"
-                >
-                  {p(t.nav.myRequests)}
-                </Link>
-                <button
-                  onClick={() => logout()}
-                  className="flex min-h-11 items-center rounded-2xl px-4 text-start font-semibold text-navy/70 hover:bg-white"
-                >
-                  {p(t.nav.logout)}
-                </button>
-              </>
+              <button
+                onClick={() => logout()}
+                className="flex min-h-11 items-center rounded-2xl px-4 text-start font-semibold text-navy/70 hover:bg-white"
+              >
+                {p(t.nav.logout)}
+              </button>
             ) : (
               <>
-                <Link
-                  to="/login"
-                  onClick={() => setOpen(false)}
-                  className="flex min-h-11 items-center rounded-2xl px-4 font-semibold text-navy hover:bg-white"
-                >
+                <Link to="/login" onClick={() => setOpen(false)} className={menuItem}>
                   {p(t.nav.login)}
                 </Link>
-                <Link
-                  to="/signup"
-                  onClick={() => setOpen(false)}
-                  className="flex min-h-11 items-center rounded-2xl px-4 font-semibold text-navy hover:bg-white"
-                >
+                <Link to="/signup" onClick={() => setOpen(false)} className={menuItem}>
                   {p(t.nav.signup)}
                 </Link>
               </>

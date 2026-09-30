@@ -1,14 +1,14 @@
 import { z } from "zod";
 import { TRPCError } from "@trpc/server";
 import { eq, inArray } from "drizzle-orm";
-import { createRouter, authedQuery } from "./middleware";
+import { createRouter, authedQuery, customerQuery } from "./middleware";
 import { createSignedUrls, createUploadUrl, MAX_UPLOAD_BYTES } from "./lib/storage";
 import { getDb } from "./queries/connection";
 import { requestMedia, serviceRequests } from "../db/schema";
 
 export const storageRouter = createRouter({
   // Returns a one-time signed URL token; the browser uploads the file directly to storage.
-  createUpload: authedQuery
+  createUpload: customerQuery
     .input(
       z.object({
         fileName: z.string().min(1).max(512),
@@ -46,7 +46,7 @@ export const storageRouter = createRouter({
           (r) =>
             r.ownerId === ctx.user.id ||
             r.technicianId === ctx.user.id ||
-            ctx.user.role === "admin",
+            ctx.user.role === "specialist",
         )
         .map((r) => r.key);
       return { urls: await createSignedUrls(allowed) };

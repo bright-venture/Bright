@@ -1,7 +1,7 @@
 import { z } from "zod";
 import { TRPCError } from "@trpc/server";
 import { desc, eq } from "drizzle-orm";
-import { createRouter, authedQuery } from "./middleware";
+import { createRouter, customerQuery } from "./middleware";
 import { getDb } from "./queries/connection";
 import {
   requestEvents,
@@ -31,7 +31,7 @@ const mediaItem = z.object({
 const byId = z.object({ id: z.number().int() });
 
 export const requestsRouter = createRouter({
-  create: authedQuery
+  create: customerQuery
     .input(
       z.object({
         category: z.string().max(64),
@@ -94,7 +94,7 @@ export const requestsRouter = createRouter({
       return { id, urgency: urgency.level };
     }),
 
-  mine: authedQuery.query(async ({ ctx }) => {
+  mine: customerQuery.query(async ({ ctx }) => {
     return getDb()
       .select()
       .from(serviceRequests)
@@ -102,12 +102,12 @@ export const requestsRouter = createRouter({
       .orderBy(desc(serviceRequests.createdAt));
   }),
 
-  get: authedQuery.input(byId).query(async ({ ctx, input }) => {
+  get: customerQuery.input(byId).query(async ({ ctx, input }) => {
     const db = getDb();
-    const scope: RequestScope = ctx.user.role === "admin" ? "any" : { customerId: ctx.user.id };
+    const scope: RequestScope = { customerId: ctx.user.id };
     const row = await findRequest(db, input.id, scope).catch(async (error) => {
       // Distinguish "someone else's request" from "doesn't exist" for clearer errors.
-      if (scope !== "any" && (await findRequest(db, input.id, "any").catch(() => null))) {
+      if (await findRequest(db, input.id, "any").catch(() => null)) {
         throw new TRPCError({ code: "FORBIDDEN" });
       }
       throw error;
@@ -140,7 +140,7 @@ export const requestsRouter = createRouter({
     };
   }),
 
-  approveQuote: authedQuery.input(byId).mutation(async ({ ctx, input }) => {
+  approveQuote: customerQuery.input(byId).mutation(async ({ ctx, input }) => {
     await applyTransition({
       id: input.id,
       name: "approveQuote",
@@ -150,7 +150,7 @@ export const requestsRouter = createRouter({
     return { ok: true };
   }),
 
-  cancel: authedQuery.input(byId).mutation(async ({ ctx, input }) => {
+  cancel: customerQuery.input(byId).mutation(async ({ ctx, input }) => {
     await applyTransition({
       id: input.id,
       name: "cancel",

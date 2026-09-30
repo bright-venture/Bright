@@ -6,7 +6,7 @@ import { ServiceIcon } from "@/components/ServiceIcon";
 import { MediaGrid } from "@/components/MediaGrid";
 import { AnswerList } from "@/components/AnswerList";
 import { useI18n } from "@/i18n";
-import { useAuth } from "@/hooks/useAuth";
+import { useRoleGate } from "@/hooks/useRoleGate";
 import { trpc } from "@/providers/trpc";
 import {
   CATEGORY_MAP,
@@ -25,9 +25,7 @@ const URGENCY_DOT: Record<UrgencyLevel, string> = {
 
 export default function Dashboard() {
   const { t, p } = useI18n();
-  const { user, isAuthenticated, isLoading: authLoading } = useAuth({
-    redirectOnUnauthenticated: true,
-  });
+  const { role, isLoading: authLoading } = useRoleGate(["specialist"], { requireSignIn: true });
   const utils = trpc.useUtils();
   const [tab, setTab] = useState<"queue" | "applications" | "technicians">("queue");
   const [selected, setSelected] = useState<number | null>(null);
@@ -36,32 +34,32 @@ export default function Dashboard() {
   const [quoteNote, setQuoteNote] = useState("");
   const [note, setNote] = useState("");
 
-  const isAdmin = user?.role === "admin";
-  const queue = trpc.admin.queue.useQuery(undefined, { enabled: isAdmin, refetchInterval: 30_000 });
-  const detail = trpc.admin.detail.useQuery(
+  const isSpecialist = role === "specialist";
+  const queue = trpc.specialist.queue.useQuery(undefined, { enabled: isSpecialist, refetchInterval: 30_000 });
+  const detail = trpc.specialist.detail.useQuery(
     { id: selected! },
-    { enabled: isAdmin && selected !== null },
+    { enabled: isSpecialist && selected !== null },
   );
 
   const invalidate = () => {
-    utils.admin.queue.invalidate();
-    utils.admin.detail.invalidate();
+    utils.specialist.queue.invalidate();
+    utils.specialist.detail.invalidate();
   };
-  const startReview = trpc.admin.startReview.useMutation({ onSuccess: invalidate });
-  const sendQuote = trpc.admin.sendQuote.useMutation({
+  const startReview = trpc.specialist.startReview.useMutation({ onSuccess: invalidate });
+  const sendQuote = trpc.specialist.sendQuote.useMutation({
     onSuccess: () => {
       invalidate();
       setAmount("");
       setQuoteNote("");
     },
   });
-  const setStatus = trpc.admin.setStatus.useMutation({
+  const setStatus = trpc.specialist.setStatus.useMutation({
     onSuccess: () => {
       invalidate();
       setNote("");
     },
   });
-  const techList = trpc.tech.list.useQuery(undefined, { enabled: isAdmin });
+  const techList = trpc.tech.list.useQuery(undefined, { enabled: isSpecialist });
   const addTech = trpc.tech.addByEmail.useMutation({
     onSuccess: () => {
       utils.tech.list.invalidate();
@@ -78,36 +76,16 @@ export default function Dashboard() {
   const [chosenTech, setChosenTech] = useState("");
 
   const applications = trpc.join.list.useQuery(undefined, {
-    enabled: isAdmin && tab === "applications",
+    enabled: isSpecialist && tab === "applications",
   });
   const setAppStatus = trpc.join.setStatus.useMutation({
     onSuccess: () => utils.join.list.invalidate(),
   });
 
-  if (authLoading) {
+  if (authLoading || !isSpecialist) {
     return (
       <div className="flex min-h-screen items-center justify-center bg-paper">
         <Loader2 className="h-8 w-8 animate-spin text-navy" />
-      </div>
-    );
-  }
-
-  /* ---------- access gate ---------- */
-  if (isAuthenticated && !isAdmin) {
-    return (
-      <div className="flex min-h-screen flex-col bg-paper">
-        <Navbar />
-        <main className="flex flex-1 items-center justify-center px-4 pt-16">
-          <div className="card-br max-w-md p-8 text-center">
-            <h1 className="font-display text-2xl font-black text-navy">
-              {p(t.dash.title)}
-            </h1>
-            <p className="mt-3 text-sm leading-relaxed text-navy/70">
-              {p(t.dash.notAdmin)}
-            </p>
-          </div>
-        </main>
-        <Footer />
       </div>
     );
   }

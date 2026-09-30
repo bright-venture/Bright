@@ -12,7 +12,7 @@ vi.mock("./lib/env", () => ({
     supabaseUrl: "",
     supabaseServiceRoleKey: "",
     storageBucket: "test",
-    adminEmails: ["specialist@example.com"],
+    specialistEmails: ["specialist@example.com"],
   },
 }));
 vi.mock("./lib/storage", () => ({
@@ -49,8 +49,8 @@ async function approvedRequest() {
   const c = await callerFor(customer);
   const s = await callerFor(admin);
   const { id } = await c.requests.create(base);
-  await s.admin.startReview({ id, urgency: "normal" });
-  await s.admin.sendQuote({ id, amount: "30" });
+  await s.specialist.startReview({ id, urgency: "normal" });
+  await s.specialist.sendQuote({ id, amount: "30" });
   await c.requests.approveQuote({ id });
   return id;
 }
@@ -83,15 +83,15 @@ describe("booking validation", () => {
 describe("specialist rules", () => {
   it("confirms urgency before quoting", async () => {
     const { id } = await (await callerFor(customer)).requests.create(base);
-    await rejected((await callerFor(admin)).admin.sendQuote({ id, amount: "20" }));
+    await rejected((await callerFor(admin)).specialist.sendQuote({ id, amount: "20" }));
   });
 
   it("requires a numeric quote amount", async () => {
     const { id } = await (await callerFor(customer)).requests.create(base);
     const s = await callerFor(admin);
-    await s.admin.startReview({ id, urgency: "normal" });
-    await rejected(s.admin.sendQuote({ id, amount: "call me" }));
-    await s.admin.sendQuote({ id, amount: "45.50" });
+    await s.specialist.startReview({ id, urgency: "normal" });
+    await rejected(s.specialist.sendQuote({ id, amount: "call me" }));
+    await s.specialist.sendQuote({ id, amount: "45.50" });
   });
 
   it("assigns technicians only after the customer approves", async () => {
@@ -112,11 +112,11 @@ describe("specialist rules", () => {
   it("needs a technician before scheduling", async () => {
     const id = await approvedRequest();
     const s = await callerFor(admin);
-    await expect(s.admin.setStatus({ id, status: "scheduled" })).rejects.toMatchObject({
+    await expect(s.specialist.setStatus({ id, status: "scheduled" })).rejects.toMatchObject({
       message: "Assign a technician before scheduling",
     });
     await s.tech.assign({ requestId: id, technicianId: tech.id });
-    await s.admin.setStatus({ id, status: "scheduled" });
+    await s.specialist.setStatus({ id, status: "scheduled" });
   });
 
   it("cannot demote a specialist by adding them as a technician", async () => {
@@ -130,11 +130,36 @@ describe("customer rules", () => {
     const c = await callerFor(customer);
     const id = await approvedRequest();
     await s.tech.assign({ requestId: id, technicianId: tech.id });
-    await s.admin.setStatus({ id, status: "scheduled" });
+    await s.specialist.setStatus({ id, status: "scheduled" });
     await rejected(c.requests.cancel({ id }));
 
     const early = await approvedRequest();
     await c.requests.cancel({ id: early });
+  });
+});
+
+describe("role separation", () => {
+  it("keeps specialists out of technician and customer areas", async () => {
+    const s = await callerFor(admin);
+    await rejected(s.tech.myJobs(), "FORBIDDEN");
+    await rejected(s.requests.create(base), "FORBIDDEN");
+    await rejected(s.requests.mine(), "FORBIDDEN");
+    await rejected(s.storage.createUpload({ fileName: "a.jpg", size: 1, contentType: "image/jpeg" }), "FORBIDDEN");
+  });
+
+  it("keeps technicians out of the dashboard and customer areas", async () => {
+    const t = await callerFor(tech);
+    await rejected(t.specialist.queue(), "FORBIDDEN");
+    await rejected(t.join.list(), "FORBIDDEN");
+    await rejected(t.tech.assign({ requestId: 1, technicianId: tech.id }), "FORBIDDEN");
+    await rejected(t.requests.create(base), "FORBIDDEN");
+  });
+
+  it("keeps customers out of staff areas", async () => {
+    const c = await callerFor(customer);
+    await rejected(c.specialist.queue(), "FORBIDDEN");
+    await rejected(c.tech.myJobs(), "FORBIDDEN");
+    await rejected(c.tech.list(), "FORBIDDEN");
   });
 });
 

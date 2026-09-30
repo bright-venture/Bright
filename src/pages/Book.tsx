@@ -13,7 +13,7 @@ import { Footer } from "@/components/Footer";
 import { ServiceIcon } from "@/components/ServiceIcon";
 import { AuthPanel } from "@/components/AuthPanel";
 import { useI18n } from "@/i18n";
-import { useAuth } from "@/hooks/useAuth";
+import { useRoleGate } from "@/hooks/useRoleGate";
 import { trpc } from "@/providers/trpc";
 import { MEDIA_BUCKET, supabase } from "@/lib/supabase";
 import {
@@ -56,7 +56,8 @@ const STEPS = ["stepCategory", "stepQuestions", "stepPhotos", "stepWhen", "stepR
 
 export default function Book() {
   const { t, p } = useI18n();
-  const { user, isAuthenticated, isLoading: authLoading } = useAuth();
+  // Visitors can fill everything in; staff accounts are sent to their workspace.
+  const { user, isAuthenticated, isLoading: authLoading } = useRoleGate(["customer"]);
   const [params] = useSearchParams();
   const navigate = useNavigate();
 

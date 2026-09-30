@@ -1,22 +1,15 @@
 import { z } from "zod";
 import { TRPCError } from "@trpc/server";
 import { and, desc, eq, inArray } from "drizzle-orm";
-import { createRouter, authedQuery, adminQuery } from "./middleware";
+import { createRouter, technicianQuery, specialistQuery } from "./middleware";
 import { getDb } from "./queries/connection";
 import { requestMedia, serviceRequests, technicianLocations, users } from "../db/schema";
 import { ACTIVE_JOB_STATUSES, ASSIGNABLE_STATUSES } from "@contracts/workflow";
-import type { User } from "@db/schema";
 import { applyTransition, findRequest, logEvent } from "./lib/workflow";
-
-function requireTechnician(user: User) {
-  if (user.role !== "technician" && user.role !== "admin") {
-    throw new TRPCError({ code: "FORBIDDEN", message: "Technician access required" });
-  }
-}
 
 export const techRouter = createRouter({
   /** Admin: list technician accounts */
-  list: adminQuery.query(async () => {
+  list: specialistQuery.query(async () => {
     return getDb()
       .select({ id: users.id, name: users.name, email: users.email })
       .from(users)
@@ -24,7 +17,7 @@ export const techRouter = createRouter({
   }),
 
   /** Admin: make a signed-in customer account a technician, by email */
-  addByEmail: adminQuery
+  addByEmail: specialistQuery
     .input(z.object({ email: z.string().trim().toLowerCase().email() }))
     .mutation(async ({ input }) => {
       const db = getDb();
@@ -35,7 +28,7 @@ export const techRouter = createRouter({
           message: "No account with this email — ask them to sign in once first",
         });
       }
-      if (user.role === "admin") {
+      if (user.role === "specialist") {
         throw new TRPCError({ code: "BAD_REQUEST", message: "This account is a specialist" });
       }
       await db.update(users).set({ role: "technician" }).where(eq(users.id, user.id));
@@ -43,7 +36,7 @@ export const techRouter = createRouter({
     }),
 
   /** Admin: turn a technician back into a regular account (no active jobs allowed) */
-  remove: adminQuery
+  remove: specialistQuery
     .input(z.object({ technicianId: z.number().int() }))
     .mutation(async ({ input }) => {
       const db = getDb();
@@ -65,13 +58,13 @@ export const techRouter = createRouter({
       }
       await db
         .update(users)
-        .set({ role: "user" })
+        .set({ role: "customer" })
         .where(and(eq(users.id, input.technicianId), eq(users.role, "technician")));
       return { ok: true };
     }),
 
   /** Admin: assign a technician — only once the customer has approved the quote */
-  assign: adminQuery
+  assign: specialistQuery
     .input(z.object({ requestId: z.number().int(), technicianId: z.number().int() }))
     .mutation(async ({ ctx, input }) => {
       const db = getDb();
@@ -97,8 +90,7 @@ export const techRouter = createRouter({
     }),
 
   /** Technician: my assigned jobs, with the photos the customer uploaded */
-  myJobs: authedQuery.query(async ({ ctx }) => {
-    requireTechnician(ctx.user);
+  myJobs: technicianQuery.query(async ({ ctx }) => {
     const db = getDb();
     const jobs = await db
       .select()
@@ -115,7 +107,7 @@ export const techRouter = createRouter({
   }),
 
   /** Technician: field events — arrived / start work / complete */
-  fieldEvent: authedQuery
+  fieldEvent: technicianQuery
     .input(
       z.object({
         requestId: z.number().int(),
@@ -124,8 +116,7 @@ export const techRouter = createRouter({
       }),
     )
     .mutation(async ({ ctx, input }) => {
-      requireTechnician(ctx.user);
-      const scope = { technicianId: ctx.user.id };
+        const scope = { technicianId: ctx.user.id };
       if (input.action === "arrived") {
         const job = await findRequest(getDb(), input.requestId, scope);
         if (job.status !== "scheduled") {
@@ -145,7 +136,7 @@ export const techRouter = createRouter({
     }),
 
   /** Technician: report current position for an active job */
-  reportLocation: authedQuery
+  reportLocation: technicianQuery
     .input(
       z.object({
         requestId: z.number().int(),
@@ -155,8 +146,7 @@ export const techRouter = createRouter({
       }),
     )
     .mutation(async ({ ctx, input }) => {
-      requireTechnician(ctx.user);
-      const db = getDb();
+        const db = getDb();
       const job = await findRequest(db, input.requestId, { technicianId: ctx.user.id });
       if (!ACTIVE_JOB_STATUSES.includes(job.status)) {
         throw new TRPCError({ code: "BAD_REQUEST", message: "Job is not active" });

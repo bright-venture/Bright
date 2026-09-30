@@ -1,0 +1,18 @@
+// The three kinds of account and where each one lives in the app.
+//   customer   — books services, follows and approves their requests
+//   technician — works the jobs a specialist assigns to them
+//   specialist — office staff: reviews, quotes, dispatches, manages technicians
+
+export const ROLES = ["customer", "technician", "specialist"] as const;
+export type Role = (typeof ROLES)[number];
+
+/** Each role's own area. Staff are sent here after signing in. */
+export const HOME_BY_ROLE: Record<Role, string> = {
+  customer: "/requests",
+  technician: "/tech",
+  specialist: "/dashboard",
+};
+
+export function isStaff(role: Role) {
+  return role !== "customer";
+}
