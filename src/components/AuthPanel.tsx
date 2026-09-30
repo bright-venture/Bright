@@ -75,6 +75,7 @@ export function AuthPanel({
       case "weak_password":
         return p(t.auth.errWeak);
       case "over_email_send_rate_limit":
+        return p(t.auth.errEmailRate);
       case "over_request_rate_limit":
         return p(t.auth.errRate);
       default:

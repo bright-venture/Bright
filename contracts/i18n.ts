@@ -103,6 +103,10 @@ export const t = {
       en: "Too many attempts. Please wait a minute and try again.",
       ar: "محاولات كتير. استنى دقيقة وجرّب مرة تانية.",
     },
+    errEmailRate: {
+      en: "We can't send more emails right now. Please try again later.",
+      ar: "ما فينا نبعت إيميلات هلّق. جرّب بعدين.",
+    },
     errGeneric: { en: "Something went wrong. Please try again.", ar: "صار خطأ. جرّب مرة تانية." },
   },
   hero: {

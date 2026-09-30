@@ -47,6 +47,22 @@ Technician applications from `/join` need no account and appear in the dashboard
 
 The storage bucket (`request-media`, private, 20 MB, images/videos only) is created automatically on first upload.
 
+## Emails (Resend + Supabase)
+
+Auth emails (confirm sign-up, password reset, sign-in code) are sent by Supabase through Resend.
+
+- **Resend:** domain `brightlb.com` verified (region EU), API key with *Sending access*.
+- **Supabase → Authentication → Emails → SMTP Settings:** host `smtp.resend.com`, port `465`,
+  user `resend`, password = Resend API key, sender `noreply@brightlb.com` / `Be Right`.
+- **Supabase → Authentication → Rate Limits:** raise emails per hour (e.g. 100).
+- **Templates** (Authentication → Emails → Templates) — paste from `supabase/email-templates/`:
+
+| Template | File | Subject |
+| --- | --- | --- |
+| Confirm signup | `confirm-signup.html` | Confirm your Be Right account · أكّد حسابك |
+| Reset password | `reset-password.html` | Reset your Be Right password · غيّر كلمة السر |
+| Magic link | `magic-link.html` | Your Be Right sign-in code · رمز الدخول |
+
 ## Deploy
 
 ### Netlify
