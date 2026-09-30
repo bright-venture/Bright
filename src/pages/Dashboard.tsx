@@ -5,6 +5,7 @@ import { Footer } from "@/components/Footer";
 import { ServiceIcon } from "@/components/ServiceIcon";
 import { MediaGrid } from "@/components/MediaGrid";
 import { AnswerList } from "@/components/AnswerList";
+import { ApplicationsTab } from "@/components/dashboard/ApplicationsTab";
 import { useI18n } from "@/i18n";
 import { useRoleGate } from "@/hooks/useRoleGate";
 import { trpc } from "@/providers/trpc";
@@ -75,12 +76,6 @@ export default function Dashboard() {
   const [techEmail, setTechEmail] = useState("");
   const [chosenTech, setChosenTech] = useState("");
 
-  const applications = trpc.join.list.useQuery(undefined, {
-    enabled: isSpecialist && tab === "applications",
-  });
-  const setAppStatus = trpc.join.setStatus.useMutation({
-    onSuccess: () => utils.join.list.invalidate(),
-  });
 
   if (authLoading || !isSpecialist) {
     return (
@@ -115,54 +110,7 @@ export default function Dashboard() {
           ))}
         </div>
 
-        {tab === "applications" && (
-          <div className="mt-8 flex flex-col gap-3">
-            {(applications.data ?? []).length === 0 && !applications.isLoading && (
-              <div className="card-br p-10 text-center font-semibold text-navy/70">
-                {p(t.dash3.noApplications)}
-              </div>
-            )}
-            {(applications.data ?? []).map((a) => (
-              <div key={a.id} className="card-br flex flex-wrap items-center gap-4 p-4">
-                <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl border-2 border-navy/15 bg-paper text-bird">
-                  <ServiceIcon id={a.trade} className="h-5 w-5" />
-                </span>
-                <div className="min-w-0 flex-1">
-                  <p className="font-display text-sm font-extrabold text-navy">
-                    {a.name}{" "}
-                    <span className="font-normal text-navy/70">
-                      · {CATEGORY_MAP[a.trade] ? p(CATEGORY_MAP[a.trade].name) : a.trade}
-                    </span>
-                  </p>
-                  <p className="text-xs text-navy/70">
-                    <span dir="ltr">{a.phone}</span> · {a.area}
-                  </p>
-                  {a.notes && (
-                    <p className="mt-1 line-clamp-2 text-xs text-navy/70">{a.notes}</p>
-                  )}
-                </div>
-                <div className="flex shrink-0 items-center gap-2">
-                  {(["new", "contacted", "hired", "rejected"] as const).map((s) => (
-                    <button
-                      key={s}
-                      onClick={() => setAppStatus.mutate({ id: a.id, status: s })}
-                      disabled={setAppStatus.isPending}
-                      className={`min-h-9 rounded-full border-2 px-3 text-[11px] font-bold transition-colors ${
-                        a.status === s
-                          ? s === "rejected"
-                            ? "border-flame bg-flame text-white"
-                            : "border-navy bg-navy text-paper"
-                          : "border-navy/25 text-navy/70 hover:border-navy hover:text-navy"
-                      }`}
-                    >
-                      {p(t.dash3[s])}
-                    </button>
-                  ))}
-                </div>
-              </div>
-            ))}
-          </div>
-        )}
+        {tab === "applications" && <ApplicationsTab />}
 
         {tab === "technicians" && (
           <div className="mt-8 flex max-w-2xl flex-col gap-3">

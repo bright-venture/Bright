@@ -62,6 +62,10 @@ Auth emails (confirm sign-up, password reset, sign-in code) are sent by Supabase
 | Confirm signup | `confirm-signup.html` | Confirm your Be Right account · أكّد حسابك |
 | Reset password | `reset-password.html` | Reset your Be Right password · غيّر كلمة السر |
 | Magic link | `magic-link.html` | Your Be Right sign-in code · رمز الدخول |
+| Invite user | `invite-technician.html` | You're on the Be Right team · أهلاً فيك بالفريق |
+
+Hiring an applicant (Dashboard → Technician applications → *Hire as technician*) promotes an
+existing account, or sends the *Invite user* email and creates the technician account at once.
 
 ## Deploy
 

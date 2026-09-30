@@ -9,6 +9,7 @@ import {
   timestamp,
   uuid,
   index,
+  boolean,
 } from "drizzle-orm/pg-core";
 
 // Every table enables Row Level Security with no policies. The app server talks to
@@ -137,7 +138,16 @@ export const technicianApplications = pgTable("technician_applications", {
   trade: varchar("trade", { length: 64 }).notNull(),
   area: varchar("area", { length: 255 }).notNull(),
   notes: text("notes"),
+  /** Contact + login email; required for new applications (older ones may lack it). */
+  email: varchar("email", { length: 320 }),
+  /** See contracts/applications.ts for the allowed values. */
+  experience: varchar("experience", { length: 16 }),
+  availability: varchar("availability", { length: 16 }),
+  hasTools: boolean("has_tools"),
+  hasTransport: boolean("has_transport"),
   status: applicationStatus("status").default("new").notNull(),
+  /** The technician account created or promoted when the applicant was hired. */
+  hiredUserId: integer("hired_user_id").references(() => users.id),
   createdAt: timestamp("created_at", { withTimezone: true }).defaultNow().notNull(),
 }).enableRLS();
 

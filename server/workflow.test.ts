@@ -2,7 +2,7 @@ import { beforeAll, describe, expect, it, vi } from "vitest";
 import type { User } from "@db/schema";
 import { ADMIN_EMAIL, callerFor, createTestDb, futureDate, makeUser, type TestDb } from "./test/harness";
 
-const state = vi.hoisted(() => ({ db: undefined as unknown }));
+const state = vi.hoisted(() => ({ db: undefined as unknown, invites: [] as string[] }));
 
 vi.mock("./queries/connection", () => ({ getDb: () => state.db }));
 vi.mock("./lib/env", () => ({
@@ -25,6 +25,31 @@ vi.mock("./lib/storage", () => ({
   createSignedUrls: async (keys: string[]) =>
     Object.fromEntries(keys.map((k) => [k, `https://signed/${k}`])),
 }));
+
+vi.mock("./lib/supabase", () => ({
+  getSupabaseAdmin: () => ({
+    auth: {
+      admin: {
+        inviteUserByEmail: async (email: string) => {
+          state.invites.push(email);
+          return { data: { user: { id: crypto.randomUUID() } }, error: null };
+        },
+      },
+    },
+  }),
+}));
+
+const application = {
+  name: "Hassan Khalil",
+  phone: "+961 71 111 111",
+  email: "hassan@example.com",
+  trade: "electrical",
+  area: "Beirut",
+  experience: "5-10" as const,
+  availability: "full_time" as const,
+  hasTools: true,
+  hasTransport: false,
+};
 
 const leak = {
   problem: "leak",
@@ -90,13 +115,8 @@ describe("accounts", () => {
 });
 
 describe("technician applications (public)", () => {
-  it("lets visitors apply and only admins review", async () => {
-    const { id } = await (await callerFor()).join.submit({
-      name: "Hassan Khalil",
-      phone: "+961 71 111 111",
-      trade: "electrical",
-      area: "Beirut",
-    });
+  it("lets visitors apply and only specialists review", async () => {
+    const { id } = await (await callerFor()).join.submit(application);
     await expect((await callerFor(alice)).join.list()).rejects.toMatchObject({ code: "FORBIDDEN" });
     const list = await (await callerFor(admin)).join.list();
     expect(list.map((a) => a.id)).toContain(id);
@@ -108,8 +128,53 @@ describe("technician applications (public)", () => {
 
   it("rejects unknown trades", async () => {
     await expect(
-      (await callerFor()).join.submit({ name: "X Y", phone: "123456", trade: "hacking", area: "Z Z" }),
+      (await callerFor()).join.submit({ ...application, trade: "hacking" }),
     ).rejects.toMatchObject({ code: "BAD_REQUEST" });
+  });
+});
+
+describe("hiring technicians from applications", () => {
+  it("invites a new applicant and creates their technician account right away", async () => {
+    const { id } = await (await callerFor()).join.submit({ ...application, email: "New.Tech@Example.com" });
+    const s = await callerFor(admin);
+    const res = await s.join.hire({ id });
+    expect(res).toMatchObject({ invited: true, email: "new.tech@example.com" });
+    expect(state.invites).toContain("new.tech@example.com");
+    const techs = await s.tech.list();
+    expect(techs.map((x) => x.email)).toContain("new.tech@example.com");
+    const app = (await s.join.list()).find((a) => a.id === id);
+    expect(app?.status).toBe("hired");
+    expect(app?.hiredUserId).toBeTruthy();
+  });
+
+  it("promotes an applicant who already has an account, without inviting", async () => {
+    const existing = await makeUser("already@example.com", "Already");
+    const { id } = await (await callerFor()).join.submit({ ...application, email: "already@example.com" });
+    const before = state.invites.length;
+    const res = await (await callerFor(admin)).join.hire({ id });
+    expect(res.invited).toBe(false);
+    expect(state.invites.length).toBe(before);
+    expect((await (await callerFor(admin)).tech.list()).map((x) => x.id)).toContain(existing.id);
+  });
+
+  it("refuses to hire a specialist's email or an application without email", async () => {
+    const s = await callerFor(admin);
+    const { id } = await (await callerFor()).join.submit({ ...application, email: ADMIN_EMAIL });
+    await expect(s.join.hire({ id })).rejects.toMatchObject({ code: "BAD_REQUEST" });
+    // Older applications had no email: the specialist supplies one when hiring.
+    const { technicianApplications } = await import("@db/schema");
+    const [old] = await db
+      .insert(technicianApplications)
+      .values({ name: "Old Applicant", phone: "+961 1 000 000", trade: "plumbing", area: "Saida" })
+      .returning({ id: technicianApplications.id });
+    await expect(s.join.hire({ id: old.id })).rejects.toMatchObject({ code: "BAD_REQUEST" });
+    const res = await s.join.hire({ id: old.id, email: "old.applicant@example.com" });
+    expect(res.invited).toBe(true);
+  });
+
+  it("only specialists can hire", async () => {
+    const { id } = await (await callerFor()).join.submit({ ...application, email: "x@example.com" });
+    await expect((await callerFor(alice)).join.hire({ id })).rejects.toMatchObject({ code: "FORBIDDEN" });
   });
 });
 

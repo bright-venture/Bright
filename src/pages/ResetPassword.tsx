@@ -18,6 +18,8 @@ export default function ResetPassword() {
   const [params] = useSearchParams();
   const navigate = useNavigate();
   const next = safeNext(params.get("next"));
+  // Invited technicians arrive here too (?welcome=1): same form, friendlier wording.
+  const welcome = params.get("welcome") === "1";
   const [ready, setReady] = useState<"waiting" | "ok" | "expired">("waiting");
   const [password, setPassword] = useState("");
   const [show, setShow] = useState(false);
@@ -57,7 +59,12 @@ export default function ResetPassword() {
       <Navbar />
       <main className="flex flex-1 items-center justify-center px-4 py-24">
         <div className="card-br w-full max-w-md p-6 sm:p-8">
-          <h1 className="font-display text-2xl font-black text-navy">{p(t.auth.setNewTitle)}</h1>
+          <h1 className="font-display text-2xl font-black text-navy">
+            {welcome ? p(t.auth.welcomeTitle) : p(t.auth.setNewTitle)}
+          </h1>
+          {welcome && ready !== "expired" && (
+            <p className="mt-2 text-sm leading-relaxed text-navy/70">{p(t.auth.welcomeSub)}</p>
+          )}
 
           {ready === "waiting" && <Loader2 className="mx-auto mt-6 h-6 w-6 animate-spin text-navy" />}
 
