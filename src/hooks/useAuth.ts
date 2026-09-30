@@ -2,7 +2,6 @@ import { trpc } from "@/providers/trpc";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { useNavigate } from "react-router";
 import { LOGIN_PATH } from "@/const";
-import { supabase } from "@/lib/supabase";
 
 type UseAuthOptions = {
   redirectOnUnauthenticated?: boolean;
@@ -30,6 +29,7 @@ export function useAuth(options?: UseAuthOptions) {
   const logout = useCallback(async () => {
     setSigningOut(true);
     try {
+      const { supabase } = await import("@/lib/supabase");
       await supabase.auth.signOut();
       utils.auth.me.setData(undefined, null);
       await utils.invalidate();

@@ -24,7 +24,7 @@ const STATUS_STYLE: Record<RequestStatus, string> = {
   scheduled: "border-navy bg-navy text-paper",
   in_progress: "border-flame bg-flame/15 text-flame-dark",
   completed: "border-green-700 bg-green-700 text-white",
-  cancelled: "border-navy/30 bg-navy/5 text-navy/50",
+  cancelled: "border-navy/30 bg-navy/5 text-navy/70",
 };
 
 function StatusBadge({ status }: { status: RequestStatus }) {
@@ -56,7 +56,7 @@ function TechnicianCard({
           <MapPin className="h-5 w-5" />
         </span>
         <div>
-          <p className="font-display text-xs font-bold uppercase tracking-[0.2em] text-navy/50">
+          <p className="font-display text-xs font-bold uppercase tracking-[0.2em] text-navy/70">
             {p(t.tracking.techOnWay)}
           </p>
           <p className="font-display text-base font-extrabold text-navy">
@@ -81,13 +81,13 @@ function TechnicianCard({
             className="mt-3 h-56 w-full rounded-2xl border-2 border-navy/20"
             loading="lazy"
           />
-          <p className="mt-2 text-xs text-navy/60">
+          <p className="mt-2 text-xs text-navy/70">
             {p(t.tracking.lastUpdate)}:{" "}
             {new Date(location!.updatedAt).toLocaleTimeString()}
           </p>
         </>
       ) : (
-        <p className="mt-3 text-sm text-navy/60">{p(t.tracking.noLocationYet)}</p>
+        <p className="mt-3 text-sm text-navy/70">{p(t.tracking.noLocationYet)}</p>
       )}
     </div>
   );
@@ -146,7 +146,7 @@ export default function Requests() {
 
         {rows.length === 0 && !list.isLoading && (
           <div className="card-br mt-10 p-10 text-center">
-            <img src="/assets/mascot.png" alt="" className="mx-auto w-28" />
+            <img src="/assets/mascot-320.webp" width={320} height={408} alt="" className="mx-auto h-auto w-28" />
             <p className="mt-4 font-semibold text-navy/70">{p(t.requests.empty)}</p>
           </div>
         )}
@@ -167,9 +167,9 @@ export default function Requests() {
                   <span className="min-w-0 flex-1">
                     <span className="block truncate font-display text-base font-extrabold text-navy">
                       {cat ? p(cat.name) : r.category}{" "}
-                      <span className="text-xs font-bold text-navy/40">#{r.id}</span>
+                      <span className="text-xs font-bold text-navy/70">#{r.id}</span>
                     </span>
-                    <span className="mt-0.5 block text-xs text-navy/60">
+                    <span className="mt-0.5 block text-xs text-navy/70">
                       {p(t.requests.preferred)}: {r.preferredDate} · {r.area}
                     </span>
                   </span>
@@ -182,7 +182,7 @@ export default function Requests() {
                 {open && detail.data && detail.data.request.id === r.id && (
                   <div className="border-t-2 border-navy/10 p-5 animate-rise-in">
                     {/* timeline */}
-                    <p className="font-display text-xs font-bold uppercase tracking-[0.2em] text-navy/50">
+                    <p className="font-display text-xs font-bold uppercase tracking-[0.2em] text-navy/70">
                       {p(t.requests.timeline)}
                     </p>
                     <ol className="mt-3 flex flex-wrap items-center gap-1">
@@ -198,7 +198,7 @@ export default function Requests() {
                               className={`rounded-full border-2 px-3 py-1 text-[11px] font-bold ${
                                 reached
                                   ? "border-navy bg-navy text-paper"
-                                  : "border-navy/20 text-navy/40"
+                                  : "border-navy/20 text-navy/70"
                               }`}
                             >
                               {p(t.status[s])}
@@ -214,7 +214,7 @@ export default function Requests() {
                     {/* urgency + quote */}
                     <div className="mt-5 grid gap-4 sm:grid-cols-2">
                       <div className="rounded-2xl border-2 border-navy/15 bg-paper p-4">
-                        <p className="font-display text-xs font-bold uppercase tracking-[0.2em] text-navy/50">
+                        <p className="font-display text-xs font-bold uppercase tracking-[0.2em] text-navy/70">
                           {p(t.requests.urgency)}
                         </p>
                         <p className="mt-2 font-display text-lg font-extrabold text-navy">
@@ -228,7 +228,7 @@ export default function Requests() {
                         </p>
                       </div>
                       <div className="rounded-2xl border-2 border-navy/15 bg-paper p-4">
-                        <p className="font-display text-xs font-bold uppercase tracking-[0.2em] text-navy/50">
+                        <p className="font-display text-xs font-bold uppercase tracking-[0.2em] text-navy/70">
                           {p(t.requests.quote)}
                         </p>
                         {detail.data.request.quoteAmount ? (
@@ -237,13 +237,13 @@ export default function Requests() {
                               ${detail.data.request.quoteAmount}
                             </p>
                             {detail.data.request.quoteNote && (
-                              <p className="mt-1 text-xs text-navy/60">
+                              <p className="mt-1 text-xs text-navy/70">
                                 {detail.data.request.quoteNote}
                               </p>
                             )}
                           </>
                         ) : (
-                          <p className="mt-2 text-sm text-navy/50">—</p>
+                          <p className="mt-2 text-sm text-navy/70">—</p>
                         )}
                       </div>
                     </div>
@@ -279,7 +279,7 @@ export default function Requests() {
                     )}
 
                     {/* answers */}
-                    <p className="mt-6 font-display text-xs font-bold uppercase tracking-[0.2em] text-navy/50">
+                    <p className="mt-6 font-display text-xs font-bold uppercase tracking-[0.2em] text-navy/70">
                       {p(t.requests.answers)}
                     </p>
                     <dl className="mt-3 flex flex-col gap-1.5 text-sm">
@@ -292,7 +292,7 @@ export default function Requests() {
                         const opt = q.options?.find((o) => o.value === val);
                         return (
                           <div key={q.id} className="flex justify-between gap-4">
-                            <dt className="text-navy/60">{p(q.label)}</dt>
+                            <dt className="text-navy/70">{p(q.label)}</dt>
                             <dd className="text-end font-semibold text-navy">
                               {opt ? p(opt.label) : val}
                             </dd>
@@ -304,7 +304,7 @@ export default function Requests() {
                     {/* photos */}
                     {detail.data.media.length > 0 && (
                       <>
-                        <p className="mt-6 font-display text-xs font-bold uppercase tracking-[0.2em] text-navy/50">
+                        <p className="mt-6 font-display text-xs font-bold uppercase tracking-[0.2em] text-navy/70">
                           {p(t.requests.photos)}
                         </p>
                         <div className="mt-3">

@@ -7,7 +7,7 @@ import { defineConfig, globalIgnores } from 'eslint/config'
 
 export default defineConfig([
   // src/components/ui is generated shadcn/ui code; keep it as upstream ships it.
-  globalIgnores(['dist', 'src/components/ui']),
+  globalIgnores(['dist', 'src/components/ui', 'netlify/functions', '.netlify']),
   {
     files: ['**/*.{ts,tsx}'],
     extends: [

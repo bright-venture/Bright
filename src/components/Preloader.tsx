@@ -93,8 +93,6 @@ export function Preloader({ onDone }: { onDone: () => void }) {
   return (
     <div
       onClick={finish}
-      role="button"
-      aria-label="Skip intro"
       className={`fixed inset-0 z-[100] cursor-pointer overflow-hidden bg-navy-deep transition-opacity duration-500 ${
         leaving ? "pointer-events-none opacity-0" : "opacity-100"
       }`}
@@ -147,7 +145,9 @@ export function Preloader({ onDone }: { onDone: () => void }) {
               style={{ animation: "pl-bob 0.3s ease-in-out infinite" }}
             >
               <img
-                src="/assets/mascot.png"
+                src="/assets/mascot-320.webp"
+                width={320}
+                height={408}
                 alt=""
                 draggable={false}
                 className="w-28 select-none drop-shadow-[0_10px_20px_rgba(0,0,0,0.45)] sm:w-36"
@@ -187,7 +187,9 @@ export function Preloader({ onDone }: { onDone: () => void }) {
             />
           </svg>
           <img
-            src="/assets/mascot.png"
+            src="/assets/mascot-480.webp"
+            width={480}
+            height={612}
             alt=""
             draggable={false}
             className="relative w-44 select-none sm:w-52"
@@ -202,9 +204,13 @@ export function Preloader({ onDone }: { onDone: () => void }) {
         </div>
       )}
 
-      <p className="absolute bottom-6 inset-x-0 text-center font-display text-[11px] font-bold uppercase tracking-[0.3em] text-paper/40">
+      <button
+        type="button"
+        onClick={finish}
+        className="absolute bottom-4 left-1/2 -translate-x-1/2 rounded-full px-4 py-2 font-display text-[11px] font-bold uppercase tracking-[0.3em] text-paper/70 focus-visible:outline focus-visible:outline-2 focus-visible:outline-paper"
+      >
         {p(t.preloader.skip)}
-      </p>
+      </button>
     </div>
   );
 }

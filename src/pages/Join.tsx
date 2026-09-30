@@ -63,7 +63,7 @@ export default function Join() {
             </div>
           ) : (
             <>
-              <span className="tech-label text-flame">{p(t.join.kicker)}</span>
+              <span className="tech-label text-flame-ink">{p(t.join.kicker)}</span>
               <h1 className="mt-4 font-display text-4xl font-black tracking-tight text-navy sm:text-5xl">
                 {p(t.join.title)}
               </h1>

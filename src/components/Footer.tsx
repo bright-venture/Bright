@@ -10,7 +10,10 @@ export function Footer() {
           <div>
             <div className="inline-block rounded-3xl bg-white px-5 py-3">
               <img
-                src="/assets/wordmark.png"
+                src="/assets/wordmark.webp"
+                width={239}
+                height={96}
+                loading="lazy"
                 alt="Be Right"
                 className="h-12 w-auto"
               />

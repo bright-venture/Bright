@@ -1,0 +1,8 @@
+User-agent: *
+Allow: /
+Disallow: /dashboard
+Disallow: /tech
+Disallow: /requests
+Disallow: /api/
+
+Sitemap: https://brightlb.com/sitemap.xml

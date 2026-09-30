@@ -14,9 +14,12 @@ module.exports = {
           DEFAULT: "#0C2B5C",
           deep: "#081E42",
         },
+        // Brand orange tuned for WCAG AA: white text on flame ≥ 4.5:1.
         flame: {
-          DEFAULT: "#F4530A",
-          dark: "#D84505",
+          DEFAULT: "#C94407",
+          dark: "#A33706",
+          ink: "#A33706", // small orange text on paper/white
+          light: "#FF8A50", // orange text on navy
         },
         bird: "#0B63CE",
         ink: "#1B1B18",

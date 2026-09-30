@@ -85,7 +85,7 @@ export default function Tech() {
         <Navbar />
         <main className="flex flex-1 items-center justify-center px-4 pt-16">
           <div className="card-br max-w-md p-8 text-center">
-            <img src="/assets/mascot.png" alt="" className="mx-auto w-28" />
+            <img src="/assets/mascot-320.webp" width={320} height={408} alt="" className="mx-auto h-auto w-28" />
             <p className="mt-4 text-sm leading-relaxed text-navy/70">
               {p(t.tech.notTech)}
             </p>
@@ -107,7 +107,7 @@ export default function Tech() {
         </h1>
 
         {rows.length === 0 && !jobs.isLoading && (
-          <div className="card-br mt-10 p-10 text-center font-semibold text-navy/60">
+          <div className="card-br mt-10 p-10 text-center font-semibold text-navy/70">
             {p(t.tech.empty)}
           </div>
         )}
@@ -130,7 +130,7 @@ export default function Tech() {
                           ? p(CATEGORY_MAP[r.category].name)
                           : r.category}
                       </p>
-                      <p className="text-xs text-navy/60">
+                      <p className="text-xs text-navy/70">
                         {p(t.tech.appointment)}: {r.preferredDate} · {r.timeSlot}
                       </p>
                     </div>
@@ -155,7 +155,7 @@ export default function Tech() {
                         <Navigation className="h-4 w-4 text-bird" />
                         {p(t.tracking.liveLocation)}
                       </div>
-                      <p className="mt-1 text-xs text-navy/60">
+                      <p className="mt-1 text-xs text-navy/70">
                         {p(t.tech.shareHint)}
                       </p>
                       {geoError && (

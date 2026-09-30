@@ -141,7 +141,7 @@ export function EmailSignIn({
               setSent(false);
               setCode("");
             }}
-            className="w-full text-sm font-bold text-navy/60 underline underline-offset-4 hover:text-navy"
+            className="w-full text-sm font-bold text-navy/70 underline underline-offset-4 hover:text-navy"
           >
             {p(t.login.useOtherEmail)}
           </button>

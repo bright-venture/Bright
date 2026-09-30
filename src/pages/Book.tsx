@@ -209,7 +209,7 @@ export default function Book() {
             <h1 className="mt-5 font-display text-3xl font-black text-navy">
               {p(t.book.successTitle)}
             </h1>
-            <p className="mt-2 font-display text-sm font-bold uppercase tracking-[0.2em] text-navy/50">
+            <p className="mt-2 font-display text-sm font-bold uppercase tracking-[0.2em] text-navy/70">
               #{doneId}
             </p>
             {doneUrgency && (
@@ -259,7 +259,7 @@ export default function Book() {
             />
           ))}
         </div>
-        <p className="mt-2 font-display text-xs font-bold uppercase tracking-[0.2em] text-navy/60">
+        <p className="mt-2 font-display text-xs font-bold uppercase tracking-[0.2em] text-navy/70">
           {step + 1} / {STEPS.length} — {p(stepLabels[step])}
         </p>
 
@@ -493,7 +493,7 @@ export default function Book() {
                     );
                     return (
                       <div key={q.id} className="flex justify-between gap-4">
-                        <dt className="text-navy/60">{p(q.label)}</dt>
+                        <dt className="text-navy/70">{p(q.label)}</dt>
                         <dd className="text-end font-bold text-navy">
                           {opt ? p(opt.label) : answers[q.id]}
                         </dd>
@@ -502,7 +502,7 @@ export default function Book() {
                   })}
                   <div className="mt-2 border-t-2 border-navy/10 pt-3">
                     <div className="flex justify-between gap-4">
-                      <dt className="text-navy/60">{p(t.book.date)}</dt>
+                      <dt className="text-navy/70">{p(t.book.date)}</dt>
                       <dd className="font-bold text-navy">
                         {date} · {p(
                           slot === "morning"
@@ -514,11 +514,11 @@ export default function Book() {
                       </dd>
                     </div>
                     <div className="mt-2 flex justify-between gap-4">
-                      <dt className="text-navy/60">{p(t.book.area)}</dt>
+                      <dt className="text-navy/70">{p(t.book.area)}</dt>
                       <dd className="text-end font-bold text-navy">{area}</dd>
                     </div>
                     <div className="mt-2 flex justify-between gap-4">
-                      <dt className="text-navy/60">{p(t.book.phone)}</dt>
+                      <dt className="text-navy/70">{p(t.book.phone)}</dt>
                       <dd className="font-bold text-navy" dir="ltr">{phone}</dd>
                     </div>
                   </div>
@@ -526,7 +526,7 @@ export default function Book() {
               </div>
 
               <div className="card-br border-flame p-5">
-                <p className="font-display text-xs font-bold uppercase tracking-[0.2em] text-navy/60">
+                <p className="font-display text-xs font-bold uppercase tracking-[0.2em] text-navy/70">
                   {p(t.book.suggestedUrgency)}
                 </p>
                 <span
@@ -537,7 +537,7 @@ export default function Book() {
                 <p className="mt-2 text-sm text-navy/80">
                   {p(URGENCY_META[urgency.level].note)}
                 </p>
-                <p className="mt-3 text-xs leading-relaxed text-navy/60">
+                <p className="mt-3 text-xs leading-relaxed text-navy/70">
                   {p(t.book.urgencyDisclaimer)}
                 </p>
               </div>
@@ -559,7 +559,7 @@ export default function Book() {
                 </div>
               )}
               {isAuthenticated && user?.email && (
-                <p className="text-sm text-navy/60">
+                <p className="text-sm text-navy/70">
                   {p(t.book.sendingAs)}{" "}
                   <span className="font-bold text-navy" dir="ltr">
                     {user.email}

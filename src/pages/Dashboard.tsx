@@ -122,7 +122,7 @@ export default function Dashboard() {
               key={k}
               onClick={() => setTab(k)}
               className={`min-h-10 rounded-full px-5 text-sm font-bold transition-colors ${
-                tab === k ? "bg-navy text-paper" : "text-navy/60 hover:text-navy"
+                tab === k ? "bg-navy text-paper" : "text-navy/70 hover:text-navy"
               }`}
             >
               {k === "queue" ? p(t.dash3.tabQueue) : p(t.dash3.tabApplications)}
@@ -133,7 +133,7 @@ export default function Dashboard() {
         {tab === "applications" && (
           <div className="mt-8 flex flex-col gap-3">
             {(applications.data ?? []).length === 0 && !applications.isLoading && (
-              <div className="card-br p-10 text-center font-semibold text-navy/60">
+              <div className="card-br p-10 text-center font-semibold text-navy/70">
                 {p(t.dash3.noApplications)}
               </div>
             )}
@@ -145,11 +145,11 @@ export default function Dashboard() {
                 <div className="min-w-0 flex-1">
                   <p className="font-display text-sm font-extrabold text-navy">
                     {a.name}{" "}
-                    <span className="font-normal text-navy/50">
+                    <span className="font-normal text-navy/70">
                       · {CATEGORY_MAP[a.trade] ? p(CATEGORY_MAP[a.trade].name) : a.trade}
                     </span>
                   </p>
-                  <p className="text-xs text-navy/60">
+                  <p className="text-xs text-navy/70">
                     <span dir="ltr">{a.phone}</span> · {a.area}
                   </p>
                   {a.notes && (
@@ -167,7 +167,7 @@ export default function Dashboard() {
                           ? s === "rejected"
                             ? "border-flame bg-flame text-white"
                             : "border-navy bg-navy text-paper"
-                          : "border-navy/25 text-navy/60 hover:border-navy hover:text-navy"
+                          : "border-navy/25 text-navy/70 hover:border-navy hover:text-navy"
                       }`}
                     >
                       {p(t.dash3[s])}
@@ -180,7 +180,7 @@ export default function Dashboard() {
         )}
 
         {tab === "queue" && rows.length === 0 && !queue.isLoading && (
-          <div className="card-br mt-10 p-10 text-center font-semibold text-navy/60">
+          <div className="card-br mt-10 p-10 text-center font-semibold text-navy/70">
             {p(t.dash.empty)}
           </div>
         )}
@@ -212,7 +212,7 @@ export default function Dashboard() {
                     <span className="block truncate font-display text-sm font-extrabold text-navy">
                       #{r.id} · {CATEGORY_MAP[r.category] ? p(CATEGORY_MAP[r.category].name) : r.category}
                     </span>
-                    <span className="block truncate text-xs text-navy/60">
+                    <span className="block truncate text-xs text-navy/70">
                       {customerName ?? customerEmail ?? "—"} · {r.area} · {r.preferredDate}
                     </span>
                   </span>
@@ -240,7 +240,7 @@ export default function Dashboard() {
               </div>
 
               <div className="mt-4 rounded-2xl border-2 border-navy/15 bg-paper p-4 text-sm">
-                <p className="font-display text-xs font-bold uppercase tracking-[0.2em] text-navy/50">
+                <p className="font-display text-xs font-bold uppercase tracking-[0.2em] text-navy/70">
                   {p(t.dash.customer)}
                 </p>
                 <p className="mt-2 font-bold text-navy">
@@ -257,7 +257,7 @@ export default function Dashboard() {
               </div>
 
               <div className="mt-4 text-sm">
-                <p className="font-display text-xs font-bold uppercase tracking-[0.2em] text-navy/50">
+                <p className="font-display text-xs font-bold uppercase tracking-[0.2em] text-navy/70">
                   {p(t.dash.answers)}
                 </p>
                 <dl className="mt-2 flex flex-col gap-1.5">
@@ -268,7 +268,7 @@ export default function Dashboard() {
                     const opt = q.options?.find((o) => o.value === val);
                     return (
                       <div key={q.id} className="flex justify-between gap-4">
-                        <dt className="text-navy/60">{p(q.label)}</dt>
+                        <dt className="text-navy/70">{p(q.label)}</dt>
                         <dd className="text-end font-semibold text-navy">
                           {opt ? p(opt.label) : val}
                         </dd>
@@ -285,7 +285,7 @@ export default function Dashboard() {
 
               {d.media.length > 0 && (
                 <div className="mt-4">
-                  <p className="font-display text-xs font-bold uppercase tracking-[0.2em] text-navy/50">
+                  <p className="font-display text-xs font-bold uppercase tracking-[0.2em] text-navy/70">
                     {p(t.dash.media)}
                   </p>
                   <MediaGrid items={d.media} className="mt-2 grid grid-cols-4 gap-2" />
@@ -293,7 +293,7 @@ export default function Dashboard() {
               )}
 
               <div className="mt-4 rounded-2xl border-2 border-navy/15 bg-paper p-4 text-sm">
-                <p className="font-display text-xs font-bold uppercase tracking-[0.2em] text-navy/50">
+                <p className="font-display text-xs font-bold uppercase tracking-[0.2em] text-navy/70">
                   {p(t.dash.suggested)}
                 </p>
                 <p className="mt-1 font-display text-base font-extrabold text-navy">
@@ -304,7 +304,7 @@ export default function Dashboard() {
               {/* technician assignment */}
               {!["completed", "cancelled"].includes(d.request.status) && (
                 <div className="mt-4 rounded-2xl border-2 border-navy/15 bg-paper p-4">
-                  <p className="font-display text-xs font-bold uppercase tracking-[0.2em] text-navy/50">
+                  <p className="font-display text-xs font-bold uppercase tracking-[0.2em] text-navy/70">
                     {p(t.dash2.currentTech)}
                   </p>
                   <p className="mt-1 text-sm font-bold text-navy">
@@ -340,7 +340,7 @@ export default function Dashboard() {
                     </button>
                   </div>
                   <div className="mt-3 border-t border-navy/10 pt-3">
-                    <p className="text-xs text-navy/60">{p(t.dash2.addTechHint)}</p>
+                    <p className="text-xs text-navy/70">{p(t.dash2.addTechHint)}</p>
                     <div className="mt-2 flex flex-wrap gap-2">
                       <input
                         value={techEmail}
@@ -480,7 +480,7 @@ export default function Dashboard() {
               </div>
 
               {/* event log */}
-              <ol className="mt-5 flex flex-col gap-2 border-t-2 border-navy/10 pt-4 text-xs text-navy/60">
+              <ol className="mt-5 flex flex-col gap-2 border-t-2 border-navy/10 pt-4 text-xs text-navy/70">
                 {d.events.map((e) => (
                   <li key={e.id} className="flex justify-between gap-3">
                     <span className="font-bold text-navy">

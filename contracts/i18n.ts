@@ -403,6 +403,13 @@ export const t = {
     verify: { en: "Sign in", ar: "تسجيل الدخول" },
     useOtherEmail: { en: "Use a different email", ar: "استعمل إيميل تاني" },
   },
+  notFound: {
+    title: { en: "This page went missing", ar: "هالصفحة ضايعة" },
+    body: {
+      en: "The link may be old or mistyped. Head home or book a service directly.",
+      ar: "يمكن الرابط قديم أو فيه غلطة. ارجع عالرئيسية أو احجز خدمة مباشرة.",
+    },
+  },
   misc: {
     langName: { en: "العربية", ar: "English" },
     loading: { en: "Loading…", ar: "عم نحمّل…" },

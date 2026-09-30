@@ -31,7 +31,7 @@ export default function Login() {
       <main className="flex flex-1 items-center justify-center px-4 py-24">
         <div className="card-br w-full max-w-md p-8">
           <div className="text-center">
-            <img src="/assets/mascot.png" alt="" className="mx-auto w-28" />
+            <img src="/assets/mascot-320.webp" width={320} height={408} alt="" className="mx-auto h-auto w-28" />
             <h1 className="mt-4 font-display text-3xl font-black text-navy">
               {p(t.login.title)}
             </h1>
@@ -45,7 +45,7 @@ export default function Login() {
           <div className="mt-6 text-center">
             <Link
               to="/"
-              className="text-sm font-bold text-navy/60 underline underline-offset-4 hover:text-navy"
+              className="text-sm font-bold text-navy/70 underline underline-offset-4 hover:text-navy"
             >
               {p(t.join.backHome)}
             </Link>

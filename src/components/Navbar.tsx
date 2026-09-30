@@ -22,11 +22,13 @@ export function Navbar() {
       <div className="mx-auto flex h-16 max-w-6xl items-center justify-between gap-3 px-4 sm:px-6">
         <Link to="/" className="flex min-h-11 shrink-0 items-center gap-2">
           <img
-            src="/assets/wordmark.png"
+            src="/assets/wordmark.webp"
+            width={239}
+            height={96}
             alt="Be Right"
             className="h-9 w-auto"
           />
-          <span className="hidden whitespace-nowrap font-display text-[11px] font-bold uppercase tracking-[0.2em] text-navy/60 xl:block">
+          <span className="hidden whitespace-nowrap font-display text-[11px] font-bold uppercase tracking-[0.2em] text-navy/70 xl:block">
             {p(t.brandByline)}
           </span>
         </Link>
@@ -53,7 +55,7 @@ export function Navbar() {
           <button
             onClick={() => setLang(lang === "en" ? "ar" : "en")}
             className="min-h-11 whitespace-nowrap rounded-full border-2 border-navy bg-white px-4 text-sm font-bold text-navy transition-colors hover:bg-navy hover:text-paper"
-            aria-label="Switch language"
+            lang={lang === "en" ? "ar" : "en"}
           >
             {p(t.misc.langName)}
           </button>
@@ -84,7 +86,7 @@ export function Navbar() {
               </Link>
               <button
                 onClick={() => logout()}
-                className="hidden min-h-11 whitespace-nowrap rounded-full px-3 text-sm font-semibold text-navy/60 hover:text-navy sm:block"
+                className="hidden min-h-11 whitespace-nowrap rounded-full px-3 text-sm font-semibold text-navy/70 hover:text-navy sm:block"
               >
                 {p(t.nav.logout)}
               </button>
