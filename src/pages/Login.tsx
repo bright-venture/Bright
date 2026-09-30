@@ -14,7 +14,7 @@ export default function Login({ mode = "signin" }: { mode?: AuthMode }) {
   const [params] = useSearchParams();
   const navigate = useNavigate();
   const next = safeNext(params.get("next"));
-  const { user, isLoading } = useAuth();
+  const { user, isLoading, error: accountError } = useAuth();
   const role = user?.role as Role | undefined;
 
   // Specialists → dashboard, technicians → jobs; customers return to where they were.
@@ -36,6 +36,11 @@ export default function Login({ mode = "signin" }: { mode?: AuthMode }) {
             className="mx-auto mb-5 h-auto w-20"
           />
           <AuthPanel key={mode} next={next} initialMode={mode} headingLevel="h1" />
+          {accountError && (
+            <p role="alert" className="mt-4 text-center text-sm font-semibold text-red-700">
+              {accountError.message}
+            </p>
+          )}
           <div className="mt-6 text-center">
             <Link
               to="/"
