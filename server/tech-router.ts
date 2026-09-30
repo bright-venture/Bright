@@ -3,7 +3,13 @@ import { TRPCError } from "@trpc/server";
 import { and, desc, eq, inArray } from "drizzle-orm";
 import { createRouter, technicianQuery, specialistQuery } from "./middleware";
 import { getDb } from "./queries/connection";
-import { requestMedia, serviceRequests, technicianLocations, users } from "../db/schema";
+import {
+  requestMedia,
+  serviceRequests,
+  technicianApplications,
+  technicianLocations,
+  users,
+} from "../db/schema";
 import { ACTIVE_JOB_STATUSES, ASSIGNABLE_STATUSES } from "@contracts/workflow";
 import { applyTransition, findRequest, logEvent } from "./lib/workflow";
 
@@ -56,10 +62,17 @@ export const techRouter = createRouter({
           message: `Reassign job #${active.id} before removing this technician`,
         });
       }
-      await db
-        .update(users)
-        .set({ role: "customer" })
-        .where(and(eq(users.id, input.technicianId), eq(users.role, "technician")));
+      await db.transaction(async (tx) => {
+        await tx
+          .update(users)
+          .set({ role: "customer" })
+          .where(and(eq(users.id, input.technicianId), eq(users.role, "technician")));
+        // Reopen any application this account was hired from, so it can be hired again.
+        await tx
+          .update(technicianApplications)
+          .set({ status: "contacted", hiredUserId: null })
+          .where(eq(technicianApplications.hiredUserId, input.technicianId));
+      });
       return { ok: true };
     }),
 

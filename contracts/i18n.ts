@@ -480,6 +480,10 @@ export const t = {
       en: "Create a technician account for {email}? If they don't have an account yet, they'll get an email to set their password.",
       ar: "نعمل حساب فني لـ {email}؟ إذا ما عندو حساب، رح يوصلو إيميل ليختار كلمة سر.",
     },
+    hireConfirmExisting: {
+      en: "{email} already belongs to the account \"{name}\". That account (not a new one for {applicant}) will become a technician and can no longer book as a customer. Continue?",
+      ar: "{email} تابع لحساب \"{name}\". هيدا الحساب (مش حساب جديد لـ {applicant}) رح يصير فني وما بقى فيه يحجز كعميل. نكمّل؟",
+    },
     hireEmail: { en: "Applicant's email (needed to hire)", ar: "إيميل المتقدّم (لازم للتوظيف)" },
     hiredInvited: {
       en: "Hired. Invitation sent to {email}. They can be assigned jobs now.",

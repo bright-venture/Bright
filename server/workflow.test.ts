@@ -172,6 +172,23 @@ describe("hiring technicians from applications", () => {
     expect(res.invited).toBe(true);
   });
 
+  it("warns before hiring onto an existing account, and removal reopens the application", async () => {
+    const s = await callerFor(admin);
+    const customer = await makeUser("david@example.com", "David");
+    await (await callerFor(customer)).requests.create(booking());
+    expect(await s.join.hireCheck({ email: "nobody-yet@example.com" })).toEqual({ existing: null });
+    expect(await s.join.hireCheck({ email: "david@example.com" })).toEqual({
+      existing: { name: "David", role: "customer", bookings: 1 },
+    });
+
+    const { id } = await (await callerFor()).join.submit({ ...application, email: "david@example.com" });
+    await s.join.hire({ id });
+    await s.tech.remove({ technicianId: customer.id });
+    const reopened = (await s.join.list()).find((a) => a.id === id);
+    expect(reopened).toMatchObject({ status: "contacted", hiredUserId: null });
+    expect((await s.tech.list()).map((x) => x.id)).not.toContain(customer.id);
+  });
+
   it("only specialists can hire", async () => {
     const { id } = await (await callerFor()).join.submit({ ...application, email: "x@example.com" });
     await expect((await callerFor(alice)).join.hire({ id })).rejects.toMatchObject({ code: "FORBIDDEN" });

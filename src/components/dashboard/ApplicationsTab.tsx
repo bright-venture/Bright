@@ -72,6 +72,7 @@ function ApplicationCard({
   const { t, p, lang } = useI18n();
   const [email, setEmail] = useState("");
   const [result, setResult] = useState<string | null>(null);
+  const utils = trpc.useUtils();
   const setStatus = trpc.join.setStatus.useMutation({ onSuccess: onChanged });
   const hire = trpc.join.hire.useMutation({
     onSuccess: (res) => {
@@ -94,8 +95,15 @@ function ApplicationCard({
     </div>
   );
 
-  function onHire() {
-    const question = p(t.dash3.hireConfirm).replace("{email}", hireEmail);
+  async function onHire() {
+    // If the email already has an account, say whose: that account becomes the technician.
+    const { existing } = await utils.join.hireCheck.fetch({ email: hireEmail });
+    const question = existing
+      ? p(t.dash3.hireConfirmExisting)
+          .replace("{email}", hireEmail)
+          .replace("{name}", existing.name ?? hireEmail)
+          .replace("{applicant}", app.name)
+      : p(t.dash3.hireConfirm).replace("{email}", hireEmail);
     if (window.confirm(question)) {
       hire.mutate({ id: app.id, email: app.email ? undefined : hireEmail });
     }

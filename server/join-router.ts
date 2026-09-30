@@ -3,7 +3,7 @@ import { TRPCError } from "@trpc/server";
 import { desc, eq } from "drizzle-orm";
 import { createRouter, publicQuery, specialistQuery } from "./middleware";
 import { getDb } from "./queries/connection";
-import { technicianApplications, users } from "../db/schema";
+import { serviceRequests, technicianApplications, users } from "../db/schema";
 import { CATEGORIES } from "../contracts/services";
 import { AVAILABILITY, EXPERIENCE_LEVELS, MANUAL_APPLICATION_STATUSES } from "@contracts/applications";
 import { getSupabaseAdmin } from "./lib/supabase";
@@ -65,6 +65,15 @@ export const joinRouter = createRouter({
         .where(eq(technicianApplications.id, input.id));
       return { ok: true };
     }),
+
+  /** Before hiring: does this email already belong to an account? (shown in the confirmation) */
+  hireCheck: specialistQuery.input(z.object({ email })).query(async ({ input }) => {
+    const db = getDb();
+    const existing = await db.query.users.findFirst({ where: eq(users.email, input.email) });
+    if (!existing) return { existing: null };
+    const bookings = await db.$count(serviceRequests, eq(serviceRequests.userId, existing.id));
+    return { existing: { name: existing.name, role: existing.role, bookings } };
+  }),
 
   /**
    * Hire an applicant: an existing account becomes a technician right away;
