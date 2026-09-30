@@ -511,6 +511,10 @@ export const t = {
       ar: "عيّن فني قبل ما تحدد الموعد.",
     },
     remove: { en: "Remove", ar: "شيل" },
+    noTechToAssign: {
+      en: "No technicians yet. Hire one from Technician applications (open the application → Hire as technician).",
+      ar: "ما في فنيين بعد. وظّف واحد من طلبات الفنيين (افتح الطلب ← وظّف كفني).",
+    },
     noTechnicians: {
       en: "No technicians yet. Add one by email below.",
       ar: "ما في فنيين بعد. زيد واحد بالإيميل تحت.",

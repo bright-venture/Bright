@@ -286,7 +286,18 @@ export default function Dashboard() {
                     {techList.data?.find((x) => x.id === d.request.technicianId)?.name ??
                       (d.request.technicianId ? `#${d.request.technicianId}` : p(t.dash2.none))}
                   </p>
-                  {ASSIGNABLE_STATUSES.includes(d.request.status) ? (
+                  {ASSIGNABLE_STATUSES.includes(d.request.status) && techList.data?.length === 0 ? (
+                    <div className="mt-2 text-xs text-navy/70">
+                      <p>{p(t.dash2.noTechToAssign)}</p>
+                      <button
+                        type="button"
+                        onClick={() => setTab("applications")}
+                        className="mt-2 font-bold text-navy underline underline-offset-4"
+                      >
+                        {p(t.dash3.tabApplications)}
+                      </button>
+                    </div>
+                  ) : ASSIGNABLE_STATUSES.includes(d.request.status) ? (
                     <div className="mt-3 flex flex-wrap items-center gap-2">
                       <select
                         value={chosenTech}

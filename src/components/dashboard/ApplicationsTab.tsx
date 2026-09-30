@@ -81,8 +81,11 @@ function ApplicationCard({
   });
 
   const trade = CATEGORY_MAP[app.trade];
+  // Only a linked account counts as hired: older applications could be labelled
+  // "hired" by hand without an account ever being created.
+  const hired = app.status === "hired" && app.hiredUserId != null;
   const hireEmail = app.email ?? email.trim();
-  const canHire = app.status !== "hired" && EMAIL_PATTERN.test(hireEmail);
+  const canHire = !hired && EMAIL_PATTERN.test(hireEmail);
   const yesNo = (v: boolean | null) => (v === null ? p(t.dash3.notProvided) : v ? p(t.join.yes) : p(t.join.no));
   const detail = (label: string, value: string) => (
     <div className="flex justify-between gap-4">
@@ -119,7 +122,7 @@ function ApplicationCard({
         </span>
         <span
           className={`shrink-0 rounded-full border-2 px-2.5 py-0.5 text-[11px] font-bold ${
-            app.status === "hired" ? "border-navy bg-navy text-paper" : "border-navy/25 text-navy"
+            hired ? "border-navy bg-navy text-paper" : "border-navy/25 text-navy"
           }`}
         >
           {p(t.dash3[app.status])}
@@ -162,7 +165,7 @@ function ApplicationCard({
 
           {/* status + hire */}
           <div className="mt-5 flex flex-wrap items-center gap-2 border-t-2 border-navy/10 pt-4">
-            {app.status === "hired" ? (
+            {hired ? (
               <span className="inline-flex items-center gap-2 text-sm font-bold text-navy">
                 <UserCheck className="h-5 w-5 text-bird" /> {p(t.dash3.technicianAccount)}
               </span>
@@ -186,7 +189,7 @@ function ApplicationCard({
             )}
           </div>
 
-          {app.status !== "hired" && (
+          {!hired && (
             <div className="mt-4 flex flex-wrap items-end gap-2">
               {!app.email && (
                 <label className="flex min-w-60 flex-1 flex-col text-xs font-bold text-navy">
