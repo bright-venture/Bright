@@ -21,14 +21,14 @@ export async function authenticateRequest(headers: Headers) {
 
   const claims = data.claims;
   const meta = (claims.user_metadata ?? {}) as Record<string, unknown>;
-  const name =
-    (typeof meta.full_name === "string" && meta.full_name) ||
-    (typeof meta.name === "string" && meta.name) ||
-    null;
+  const text = (v: unknown) => (typeof v === "string" && v.trim() ? v.trim().slice(0, 255) : null);
+  const name = text(meta.full_name) ?? text(meta.name);
+  const phone = text(meta.phone)?.slice(0, 64) ?? null;
 
   return findOrCreateUser({
     authId: claims.sub,
     email: typeof claims.email === "string" && claims.email ? claims.email : null,
     name,
+    phone,
   });
 }

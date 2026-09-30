@@ -75,6 +75,15 @@ describe("accounts", () => {
     expect(again.id).toBe(alice.id);
   });
 
+  it("keeps the phone given at sign-up, without overwriting a saved one", async () => {
+    const { findOrCreateUser } = await import("./queries/users");
+    const authId = crypto.randomUUID();
+    const created = await findOrCreateUser({ authId, email: "dana@example.com", name: "Dana", phone: "+961 3 123 456" });
+    expect(created.phone).toBe("+961 3 123 456");
+    const again = await findOrCreateUser({ authId, email: "dana@example.com", name: "Dana", phone: "+961 70 999 999" });
+    expect(again.phone).toBe("+961 3 123 456");
+  });
+
   it("auth.me is null for visitors", async () => {
     expect(await (await callerFor()).auth.me()).toBeNull();
   });

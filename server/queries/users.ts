@@ -24,6 +24,7 @@ export async function findOrCreateUser(identity: {
   authId: string;
   email: string | null;
   name: string | null;
+  phone?: string | null;
 }): Promise<User> {
   const db = getDb();
   const existing = await findByAuthId(identity.authId);
@@ -35,6 +36,7 @@ export async function findOrCreateUser(identity: {
         authId: identity.authId,
         email: identity.email,
         name: identity.name,
+        phone: identity.phone ?? null,
         role: isAdminEmail(identity.email) ? "admin" : "user",
       })
       .onConflictDoNothing({ target: schema.users.authId });
@@ -46,6 +48,7 @@ export async function findOrCreateUser(identity: {
   const patch: Partial<typeof schema.users.$inferInsert> = {};
   if (identity.email && identity.email !== existing.email) patch.email = identity.email;
   if (identity.name && !existing.name) patch.name = identity.name;
+  if (identity.phone && !existing.phone) patch.phone = identity.phone;
   if (existing.role !== "admin" && isAdminEmail(identity.email ?? existing.email)) {
     patch.role = "admin";
   }

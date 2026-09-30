@@ -170,13 +170,22 @@ export function Navbar() {
                 </button>
               </>
             ) : (
-              <Link
-                to="/login"
-                onClick={() => setOpen(false)}
-                className="flex min-h-11 items-center rounded-2xl px-4 font-semibold text-navy hover:bg-white"
-              >
-                {p(t.nav.login)}
-              </Link>
+              <>
+                <Link
+                  to="/login"
+                  onClick={() => setOpen(false)}
+                  className="flex min-h-11 items-center rounded-2xl px-4 font-semibold text-navy hover:bg-white"
+                >
+                  {p(t.nav.login)}
+                </Link>
+                <Link
+                  to="/signup"
+                  onClick={() => setOpen(false)}
+                  className="flex min-h-11 items-center rounded-2xl px-4 font-semibold text-navy hover:bg-white"
+                >
+                  {p(t.nav.signup)}
+                </Link>
+              </>
             )}
           </div>
         </nav>

@@ -4,5 +4,6 @@ Disallow: /dashboard
 Disallow: /tech
 Disallow: /requests
 Disallow: /api/
+Disallow: /reset-password
 
 Sitemap: https://brightlb.com/sitemap.xml

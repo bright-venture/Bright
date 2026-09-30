@@ -11,7 +11,7 @@ import {
 import { Navbar } from "@/components/Navbar";
 import { Footer } from "@/components/Footer";
 import { ServiceIcon } from "@/components/ServiceIcon";
-import { EmailSignIn } from "@/components/EmailSignIn";
+import { AuthPanel } from "@/components/AuthPanel";
 import { useI18n } from "@/i18n";
 import { useAuth } from "@/hooks/useAuth";
 import { trpc } from "@/providers/trpc";
@@ -109,6 +109,9 @@ export default function Book() {
 
   const stepLabels = [t.book.stepCategory, t.book.stepQuestions, t.book.stepPhotos, t.book.stepWhen, t.book.stepReview];
 
+  // The account's phone (given at sign-up) fills in until the customer types their own.
+  const contactPhone = phone || user?.phone || "";
+
   /* ---------- draft persistence ---------- */
   const filesRestored = useRef(false);
   useEffect(() => {
@@ -184,7 +187,7 @@ export default function Book() {
         timeSlot: slot as TimeSlot, // the "Next" button requires a slot
         area,
         address,
-        phone,
+        phone: contactPhone,
         notes: notes || undefined,
         media: uploaded,
       });
@@ -446,7 +449,7 @@ export default function Book() {
                 {[
                   { l: t.book.area, v: area, set: setArea, ph: p(t.book.areaPh) },
                   { l: t.book.address, v: address, set: setAddress, ph: p(t.book.addressPh) },
-                  { l: t.book.phone, v: phone, set: setPhone, ph: p(t.book.phonePh) },
+                  { l: t.book.phone, v: contactPhone, set: setPhone, ph: p(t.book.phonePh) },
                 ].map((f, i) => (
                   <div key={i}>
                     <label className="font-display text-base font-extrabold text-navy">
@@ -522,7 +525,7 @@ export default function Book() {
                     </div>
                     <div className="mt-2 flex justify-between gap-4">
                       <dt className="text-navy/70">{p(t.book.phone)}</dt>
-                      <dd className="font-bold text-navy" dir="ltr">{phone}</dd>
+                      <dd className="font-bold text-navy" dir="ltr">{contactPhone}</dd>
                     </div>
                   </div>
                 </dl>
@@ -553,11 +556,8 @@ export default function Book() {
                   <p className="mt-1 text-sm leading-relaxed text-navy/70">
                     {p(t.book.confirmBody)}
                   </p>
-                  <div className="mt-4">
-                    <EmailSignIn
-                      redirectTo={`${window.location.origin}/book`}
-                      sendLabel={p(t.book.confirmSend)}
-                    />
+                  <div className="mt-5">
+                    <AuthPanel next="/book" initialMode="signup" headingLevel="h3" />
                   </div>
                 </div>
               )}
@@ -590,7 +590,7 @@ export default function Book() {
               disabled={
                 (step === 0 && !category) ||
                 (step === 1 && !questionsAnswered()) ||
-                (step === 3 && (!date || !slot || !area || !address || !phone))
+                (step === 3 && (!date || !slot || !area || !address || !contactPhone))
               }
               className="btn-pill-primary disabled:opacity-40"
             >

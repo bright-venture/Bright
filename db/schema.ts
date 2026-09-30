@@ -53,6 +53,8 @@ export const users = pgTable("users", {
   authId: uuid("auth_id").notNull().unique(),
   name: varchar("name", { length: 255 }),
   email: varchar("email", { length: 320 }),
+  /** Given at sign-up; pre-fills bookings. */
+  phone: varchar("phone", { length: 64 }),
   avatar: text("avatar"),
   role: userRole("role").default("user").notNull(),
   ...timestamps,
