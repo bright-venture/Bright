@@ -20,6 +20,7 @@ export const t = {
     jobs: { en: "Jobs", ar: "مهامي" },
     login: { en: "Sign in", ar: "تسجيل الدخول" },
     logout: { en: "Sign out", ar: "تسجيل الخروج" },
+    menu: { en: "Menu", ar: "القائمة" },
   },
   hero: {
     kicker: { en: "Home maintenance · Lebanon", ar: "صيانة منزلية · لبنان" },
@@ -286,6 +287,9 @@ export const t = {
   } as Record<UrgencyLevel, { en: string; ar: string }>,
   tech: {
     title: { en: "My jobs", ar: "مهامي" },
+    problem: { en: "What the customer told us", ar: "شو خبّرنا العميل" },
+    photos: { en: "Customer photos", ar: "صور العميل" },
+    urgency: { en: "Urgency", ar: "الاستعجال" },
     empty: { en: "No jobs assigned to you yet.", ar: "ما في مهام معيّنة إلك بعد." },
     notTech: {
       en: "This area is for Be Right technicians. A specialist can grant access from the dashboard.",
@@ -366,6 +370,7 @@ export const t = {
   dash3: {
     tabQueue: { en: "Requests queue", ar: "طابور الطلبات" },
     tabApplications: { en: "Technician applications", ar: "طلبات الفنيين" },
+    tabTechnicians: { en: "Technicians", ar: "الفنيين" },
     noApplications: { en: "No applications yet.", ar: "ما في طلبات بعد." },
     new: { en: "New", ar: "جديد" },
     contacted: { en: "Contacted", ar: "تم التواصل" },
@@ -383,6 +388,19 @@ export const t = {
     },
     currentTech: { en: "Assigned technician", ar: "الفني المعيّن" },
     none: { en: "Not assigned", ar: "غير معيّن" },
+    assignAfterApproval: {
+      en: "A technician can be assigned once the customer approves the quote.",
+      ar: "فيك تعيّن فني بس يوافق العميل على العرض.",
+    },
+    needTechToSchedule: {
+      en: "Assign a technician before scheduling.",
+      ar: "عيّن فني قبل ما تحدد الموعد.",
+    },
+    remove: { en: "Remove", ar: "شيل" },
+    noTechnicians: {
+      en: "No technicians yet. Add one by email below.",
+      ar: "ما في فنيين بعد. زيد واحد بالإيميل تحت.",
+    },
   },
   login: {
     title: { en: "Welcome", ar: "أهلاً فيك" },

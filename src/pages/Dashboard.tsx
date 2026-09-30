@@ -4,6 +4,7 @@ import { Navbar } from "@/components/Navbar";
 import { Footer } from "@/components/Footer";
 import { ServiceIcon } from "@/components/ServiceIcon";
 import { MediaGrid } from "@/components/MediaGrid";
+import { AnswerList } from "@/components/AnswerList";
 import { useI18n } from "@/i18n";
 import { useAuth } from "@/hooks/useAuth";
 import { trpc } from "@/providers/trpc";
@@ -13,6 +14,7 @@ import {
   type RequestStatus,
   type UrgencyLevel,
 } from "@contracts/services";
+import { ASSIGNABLE_STATUSES, QUOTE_AMOUNT_PATTERN } from "@contracts/workflow";
 
 const URGENCY_DOT: Record<UrgencyLevel, string> = {
   normal: "bg-navy/30",
@@ -27,7 +29,7 @@ export default function Dashboard() {
     redirectOnUnauthenticated: true,
   });
   const utils = trpc.useUtils();
-  const [tab, setTab] = useState<"queue" | "applications">("queue");
+  const [tab, setTab] = useState<"queue" | "applications" | "technicians">("queue");
   const [selected, setSelected] = useState<number | null>(null);
   const [urgency, setUrgency] = useState<UrgencyLevel>("normal");
   const [amount, setAmount] = useState("");
@@ -35,7 +37,7 @@ export default function Dashboard() {
   const [note, setNote] = useState("");
 
   const isAdmin = user?.role === "admin";
-  const queue = trpc.admin.queue.useQuery(undefined, { enabled: isAdmin });
+  const queue = trpc.admin.queue.useQuery(undefined, { enabled: isAdmin, refetchInterval: 30_000 });
   const detail = trpc.admin.detail.useQuery(
     { id: selected! },
     { enabled: isAdmin && selected !== null },
@@ -67,6 +69,11 @@ export default function Dashboard() {
     },
   });
   const assign = trpc.tech.assign.useMutation({ onSuccess: invalidate });
+  const removeTech = trpc.tech.remove.useMutation({
+    onSuccess: () => utils.tech.list.invalidate(),
+  });
+  const requestActions = [startReview, sendQuote, setStatus, assign];
+  const actionError = requestActions.find((m) => m.isError)?.error?.message;
   const [techEmail, setTechEmail] = useState("");
   const [chosenTech, setChosenTech] = useState("");
 
@@ -117,7 +124,7 @@ export default function Dashboard() {
         </h1>
 
         <div className="mt-6 inline-flex rounded-full border-2 border-navy bg-white p-1">
-          {(["queue", "applications"] as const).map((k) => (
+          {(["queue", "applications", "technicians"] as const).map((k) => (
             <button
               key={k}
               onClick={() => setTab(k)}
@@ -125,7 +132,7 @@ export default function Dashboard() {
                 tab === k ? "bg-navy text-paper" : "text-navy/70 hover:text-navy"
               }`}
             >
-              {k === "queue" ? p(t.dash3.tabQueue) : p(t.dash3.tabApplications)}
+              {p({ queue: t.dash3.tabQueue, applications: t.dash3.tabApplications, technicians: t.dash3.tabTechnicians }[k])}
             </button>
           ))}
         </div>
@@ -179,6 +186,58 @@ export default function Dashboard() {
           </div>
         )}
 
+        {tab === "technicians" && (
+          <div className="mt-8 flex max-w-2xl flex-col gap-3">
+            {(techList.data ?? []).length === 0 && !techList.isLoading && (
+              <div className="card-br p-8 text-center font-semibold text-navy/70">
+                {p(t.dash2.noTechnicians)}
+              </div>
+            )}
+            {(techList.data ?? []).map((x) => (
+              <div key={x.id} className="card-br flex items-center gap-4 p-4">
+                <div className="min-w-0 flex-1">
+                  <p className="truncate font-display text-sm font-extrabold text-navy">
+                    {x.name ?? "—"}
+                  </p>
+                  <p className="truncate text-xs text-navy/70">{x.email}</p>
+                </div>
+                <button
+                  onClick={() => removeTech.mutate({ technicianId: x.id })}
+                  disabled={removeTech.isPending}
+                  className="min-h-9 rounded-full border-2 border-navy/25 px-4 text-xs font-bold text-navy/70 hover:border-navy hover:text-navy disabled:opacity-40"
+                >
+                  {p(t.dash2.remove)}
+                </button>
+              </div>
+            ))}
+            {removeTech.isError && (
+              <p className="text-sm font-semibold text-destructive">{removeTech.error.message}</p>
+            )}
+            <div className="card-br p-4">
+              <p className="text-xs text-navy/70">{p(t.dash2.addTechHint)}</p>
+              <div className="mt-2 flex flex-wrap gap-2">
+                <input
+                  value={techEmail}
+                  onChange={(e) => setTechEmail(e.target.value)}
+                  placeholder={p(t.dash2.techEmail)}
+                  type="email"
+                  className="min-h-11 flex-1 rounded-2xl border-2 border-navy/30 bg-white px-4 text-sm font-semibold text-navy focus:border-flame focus:outline-none"
+                />
+                <button
+                  onClick={() => addTech.mutate({ email: techEmail })}
+                  disabled={!techEmail || addTech.isPending}
+                  className="btn-pill-primary !min-h-11 !py-2 text-xs disabled:opacity-40"
+                >
+                  {p(t.dash2.addTech)}
+                </button>
+              </div>
+              {addTech.isError && (
+                <p className="mt-1 text-xs font-semibold text-destructive">{addTech.error.message}</p>
+              )}
+            </div>
+          </div>
+        )}
+
         {tab === "queue" && rows.length === 0 && !queue.isLoading && (
           <div className="card-br mt-10 p-10 text-center font-semibold text-navy/70">
             {p(t.dash.empty)}
@@ -196,6 +255,7 @@ export default function Dashboard() {
                   onClick={() => {
                     setSelected(r.id);
                     setUrgency(level);
+                    requestActions.forEach((m) => m.reset());
                   }}
                   className={`card-br flex min-h-16 items-center gap-3 p-4 text-start transition-all hover:-translate-y-0.5 ${
                     selected === r.id ? "!border-flame !bg-flame/5" : ""
@@ -260,22 +320,11 @@ export default function Dashboard() {
                 <p className="font-display text-xs font-bold uppercase tracking-[0.2em] text-navy/70">
                   {p(t.dash.answers)}
                 </p>
-                <dl className="mt-2 flex flex-col gap-1.5">
-                  {CATEGORY_MAP[d.request.category]?.questions.map((q) => {
-                    const answers = JSON.parse(d.request.answers) as Record<string, string>;
-                    const val = answers[q.id];
-                    if (!val) return null;
-                    const opt = q.options?.find((o) => o.value === val);
-                    return (
-                      <div key={q.id} className="flex justify-between gap-4">
-                        <dt className="text-navy/70">{p(q.label)}</dt>
-                        <dd className="text-end font-semibold text-navy">
-                          {opt ? p(opt.label) : val}
-                        </dd>
-                      </div>
-                    );
-                  })}
-                </dl>
+                <AnswerList
+                  category={d.request.category}
+                  answersJson={d.request.answers}
+                  className="mt-2 flex flex-col gap-1.5"
+                />
                 {d.request.notes && (
                   <p className="mt-3 rounded-xl bg-navy/5 p-3 text-navy/80">
                     {d.request.notes}
@@ -301,68 +350,47 @@ export default function Dashboard() {
                 </p>
               </div>
 
-              {/* technician assignment */}
+              {/* technician assignment — only after the customer approved */}
               {!["completed", "cancelled"].includes(d.request.status) && (
                 <div className="mt-4 rounded-2xl border-2 border-navy/15 bg-paper p-4">
                   <p className="font-display text-xs font-bold uppercase tracking-[0.2em] text-navy/70">
                     {p(t.dash2.currentTech)}
                   </p>
                   <p className="mt-1 text-sm font-bold text-navy">
-                    {techList.data?.find((x) => x.id === d.request.technicianId)
-                      ?.name ??
+                    {techList.data?.find((x) => x.id === d.request.technicianId)?.name ??
                       (d.request.technicianId ? `#${d.request.technicianId}` : p(t.dash2.none))}
                   </p>
-                  <div className="mt-3 flex flex-wrap items-center gap-2">
-                    <select
-                      value={chosenTech}
-                      onChange={(e) => setChosenTech(e.target.value)}
-                      className="min-h-12 rounded-2xl border-2 border-navy/30 bg-white px-4 text-sm font-semibold text-navy focus:border-flame focus:outline-none"
-                    >
-                      <option value="">{p(t.dash2.chooseTech)}</option>
-                      {techList.data?.map((x) => (
-                        <option key={x.id} value={x.id}>
-                          {x.name ?? x.email}
-                        </option>
-                      ))}
-                    </select>
-                    <button
-                      onClick={() =>
-                        assign.mutate({
-                          requestId: d.request.id,
-                          technicianId: Number(chosenTech),
-                        })
-                      }
-                      disabled={!chosenTech || assign.isPending}
-                      className="btn-pill-outline !min-h-12 !py-2 disabled:opacity-40"
-                    >
-                      {assign.isPending && <Loader2 className="h-4 w-4 animate-spin" />}
-                      {p(t.dash2.assignTech)}
-                    </button>
-                  </div>
-                  <div className="mt-3 border-t border-navy/10 pt-3">
-                    <p className="text-xs text-navy/70">{p(t.dash2.addTechHint)}</p>
-                    <div className="mt-2 flex flex-wrap gap-2">
-                      <input
-                        value={techEmail}
-                        onChange={(e) => setTechEmail(e.target.value)}
-                        placeholder={p(t.dash2.techEmail)}
-                        type="email"
-                        className="min-h-11 flex-1 rounded-2xl border-2 border-navy/30 bg-white px-4 text-sm font-semibold text-navy focus:border-flame focus:outline-none"
-                      />
-                      <button
-                        onClick={() => addTech.mutate({ email: techEmail })}
-                        disabled={!techEmail || addTech.isPending}
-                        className="btn-pill-white !min-h-11 !py-2 text-xs disabled:opacity-40"
+                  {ASSIGNABLE_STATUSES.includes(d.request.status) ? (
+                    <div className="mt-3 flex flex-wrap items-center gap-2">
+                      <select
+                        value={chosenTech}
+                        onChange={(e) => setChosenTech(e.target.value)}
+                        className="min-h-12 rounded-2xl border-2 border-navy/30 bg-white px-4 text-sm font-semibold text-navy focus:border-flame focus:outline-none"
                       >
-                        {p(t.dash2.addTech)}
+                        <option value="">{p(t.dash2.chooseTech)}</option>
+                        {techList.data?.map((x) => (
+                          <option key={x.id} value={x.id}>
+                            {x.name ?? x.email}
+                          </option>
+                        ))}
+                      </select>
+                      <button
+                        onClick={() =>
+                          assign.mutate({
+                            requestId: d.request.id,
+                            technicianId: Number(chosenTech),
+                          })
+                        }
+                        disabled={!chosenTech || assign.isPending}
+                        className="btn-pill-outline !min-h-12 !py-2 disabled:opacity-40"
+                      >
+                        {assign.isPending && <Loader2 className="h-4 w-4 animate-spin" />}
+                        {p(t.dash2.assignTech)}
                       </button>
                     </div>
-                    {addTech.isError && (
-                      <p className="mt-1 text-xs font-semibold text-destructive">
-                        {addTech.error.message}
-                      </p>
-                    )}
-                  </div>
+                  ) : (
+                    <p className="mt-2 text-xs text-navy/70">{p(t.dash2.assignAfterApproval)}</p>
+                  )}
                 </div>
               )}
 
@@ -429,7 +457,7 @@ export default function Dashboard() {
                           note: quoteNote || undefined,
                         })
                       }
-                      disabled={!amount || sendQuote.isPending}
+                      disabled={!QUOTE_AMOUNT_PATTERN.test(amount.trim()) || sendQuote.isPending}
                       className="btn-pill-primary disabled:opacity-40"
                     >
                       {sendQuote.isPending && (
@@ -463,8 +491,11 @@ export default function Dashboard() {
                           note: note || undefined,
                         })
                       }
-                      disabled={setStatus.isPending}
-                      className="btn-pill-primary"
+                      disabled={
+                        setStatus.isPending ||
+                        (d.request.status === "approved" && !d.request.technicianId)
+                      }
+                      className="btn-pill-primary disabled:opacity-40"
                     >
                       {setStatus.isPending && (
                         <Loader2 className="h-4 w-4 animate-spin" />
@@ -475,7 +506,15 @@ export default function Dashboard() {
                           ? p(t.dash.startWork)
                           : p(t.dash.complete)}
                     </button>
+                    {d.request.status === "approved" && !d.request.technicianId && (
+                      <p className="text-xs text-navy/70">{p(t.dash2.needTechToSchedule)}</p>
+                    )}
                   </div>
+                )}
+                {actionError && (
+                  <p role="alert" className="mt-3 text-sm font-semibold text-destructive">
+                    {actionError}
+                  </p>
                 )}
               </div>
 

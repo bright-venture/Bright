@@ -1,17 +1,21 @@
 import { z } from "zod";
-import { TRPCError } from "@trpc/server";
 import { desc, eq } from "drizzle-orm";
 import { createRouter, adminQuery } from "./middleware";
 import { getDb } from "./queries/connection";
 import { requestEvents, requestMedia, serviceRequests, users } from "../db/schema";
+import type { RequestStatus, UrgencyLevel } from "@contracts/services";
+import { QUOTE_AMOUNT_PATTERN, URGENCY_LEVELS } from "@contracts/workflow";
+import { applyTransition, findRequest } from "./lib/workflow";
 
-const urgencyEnum = z.enum(["normal", "priority", "urgent", "critical"]);
-const statusEnum = z.enum(["scheduled", "in_progress", "completed"]);
+const byId = z.object({ id: z.number().int() });
+
+// Queue order: open cases first, most urgent first, then oldest first.
+const CLOSED: readonly RequestStatus[] = ["completed", "cancelled"];
+const URGENCY_RANK: Record<UrgencyLevel, number> = { critical: 0, urgent: 1, priority: 2, normal: 3 };
 
 export const adminRouter = createRouter({
   queue: adminQuery.query(async () => {
-    const db = getDb();
-    const rows = await db
+    const rows = await getDb()
       .select({
         request: serviceRequests,
         customerName: users.name,
@@ -19,52 +23,44 @@ export const adminRouter = createRouter({
       })
       .from(serviceRequests)
       .leftJoin(users, eq(serviceRequests.userId, users.id))
-      .orderBy(desc(serviceRequests.createdAt));
-    return rows;
+      .orderBy(desc(serviceRequests.createdAt))
+      .limit(500);
+    const rank = (r: (typeof rows)[number]["request"]) => [
+      CLOSED.includes(r.status) ? 1 : 0,
+      URGENCY_RANK[r.urgencyFinal ?? r.urgencySuggested],
+      r.createdAt.getTime(),
+    ];
+    return rows.sort((a, b) => {
+      const [x, y] = [rank(a.request), rank(b.request)];
+      return x[0] - y[0] || x[1] - y[1] || x[2] - y[2];
+    });
   }),
 
-  detail: adminQuery
-    .input(z.object({ id: z.number().int() }))
-    .query(async ({ input }) => {
-      const db = getDb();
-      const row = await db.query.serviceRequests.findFirst({
-        where: eq(serviceRequests.id, input.id),
-      });
-      if (!row) throw new TRPCError({ code: "NOT_FOUND" });
-      const customer = await db.query.users.findFirst({
-        where: eq(users.id, row.userId),
-      });
-      const media = await db
-        .select()
-        .from(requestMedia)
-        .where(eq(requestMedia.requestId, row.id));
-      const events = await db
+  detail: adminQuery.input(byId).query(async ({ input }) => {
+    const db = getDb();
+    const row = await findRequest(db, input.id, "any");
+    const [customer, media, events] = await Promise.all([
+      db.query.users.findFirst({ where: eq(users.id, row.userId) }),
+      db.select().from(requestMedia).where(eq(requestMedia.requestId, row.id)),
+      db
         .select()
         .from(requestEvents)
         .where(eq(requestEvents.requestId, row.id))
-        .orderBy(desc(requestEvents.createdAt));
-      return { request: row, customer, media, events };
-    }),
+        .orderBy(desc(requestEvents.createdAt)),
+    ]);
+    return { request: row, customer, media, events };
+  }),
 
   startReview: adminQuery
-    .input(z.object({ id: z.number().int(), urgency: urgencyEnum }))
+    .input(z.object({ id: z.number().int(), urgency: z.enum(URGENCY_LEVELS) }))
     .mutation(async ({ ctx, input }) => {
-      const db = getDb();
-      const row = await db.query.serviceRequests.findFirst({
-        where: eq(serviceRequests.id, input.id),
-      });
-      if (!row) throw new TRPCError({ code: "NOT_FOUND" });
-      if (row.status !== "submitted")
-        throw new TRPCError({ code: "BAD_REQUEST", message: "Already reviewed" });
-      await db
-        .update(serviceRequests)
-        .set({ status: "in_review", urgencyFinal: input.urgency })
-        .where(eq(serviceRequests.id, row.id));
-      await db.insert(requestEvents).values({
-        requestId: row.id,
-        status: "in_review",
-        note: `Urgency confirmed: ${input.urgency}`,
+      await applyTransition({
+        id: input.id,
+        name: "startReview",
         actorId: ctx.user.id,
+        scope: "any",
+        patch: { urgencyFinal: input.urgency },
+        note: `Urgency confirmed: ${input.urgency}`,
       });
       return { ok: true };
     }),
@@ -73,68 +69,43 @@ export const adminRouter = createRouter({
     .input(
       z.object({
         id: z.number().int(),
-        amount: z.string().min(1).max(32),
+        amount: z.string().trim().regex(QUOTE_AMOUNT_PATTERN, "Enter the amount in USD, e.g. 45 or 45.50"),
         note: z.string().max(2000).optional(),
       }),
     )
     .mutation(async ({ ctx, input }) => {
-      const db = getDb();
-      const row = await db.query.serviceRequests.findFirst({
-        where: eq(serviceRequests.id, input.id),
-      });
-      if (!row) throw new TRPCError({ code: "NOT_FOUND" });
-      if (!["in_review", "submitted"].includes(row.status))
-        throw new TRPCError({ code: "BAD_REQUEST", message: "Quote not expected now" });
-      await db
-        .update(serviceRequests)
-        .set({
-          status: "quote_ready",
-          quoteAmount: input.amount,
-          quoteNote: input.note ?? null,
-        })
-        .where(eq(serviceRequests.id, row.id));
-      await db.insert(requestEvents).values({
-        requestId: row.id,
-        status: "quote_ready",
-        note: `Quote: $${input.amount}${input.note ? ` — ${input.note}` : ""}`,
+      await applyTransition({
+        id: input.id,
+        name: "sendQuote",
         actorId: ctx.user.id,
+        scope: "any",
+        patch: { quoteAmount: input.amount, quoteNote: input.note ?? null },
+        note: `Quote: $${input.amount}${input.note ? ` — ${input.note}` : ""}`,
       });
       return { ok: true };
     }),
 
+  /** Specialist moves an approved job forward: schedule → start → complete. */
   setStatus: adminQuery
     .input(
       z.object({
         id: z.number().int(),
-        status: statusEnum,
+        status: z.enum(["scheduled", "in_progress", "completed"]),
         note: z.string().max(2000).optional(),
       }),
     )
     .mutation(async ({ ctx, input }) => {
-      const db = getDb();
-      const row = await db.query.serviceRequests.findFirst({
-        where: eq(serviceRequests.id, input.id),
-      });
-      if (!row) throw new TRPCError({ code: "NOT_FOUND" });
-      const allowed: Record<string, string[]> = {
-        approved: ["scheduled"],
-        scheduled: ["in_progress"],
-        in_progress: ["completed"],
-      };
-      if (!(allowed[row.status] ?? []).includes(input.status))
-        throw new TRPCError({
-          code: "BAD_REQUEST",
-          message: `Cannot move ${row.status} → ${input.status}`,
-        });
-      await db
-        .update(serviceRequests)
-        .set({ status: input.status })
-        .where(eq(serviceRequests.id, row.id));
-      await db.insert(requestEvents).values({
-        requestId: row.id,
-        status: input.status,
-        note: input.note ?? null,
+      const name = ({ scheduled: "schedule", in_progress: "startWork", completed: "complete" } as const)[
+        input.status
+      ];
+      await applyTransition({
+        id: input.id,
+        name,
         actorId: ctx.user.id,
+        scope: "any",
+        note: input.note,
+        guard: (row) =>
+          name === "schedule" && !row.technicianId ? "Assign a technician before scheduling" : null,
       });
       return { ok: true };
     }),

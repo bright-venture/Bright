@@ -5,6 +5,7 @@ import { Navbar } from "@/components/Navbar";
 import { Footer } from "@/components/Footer";
 import { ServiceIcon } from "@/components/ServiceIcon";
 import { MediaGrid } from "@/components/MediaGrid";
+import { AnswerList } from "@/components/AnswerList";
 import { useI18n } from "@/i18n";
 import { useAuth } from "@/hooks/useAuth";
 import { trpc } from "@/providers/trpc";
@@ -15,6 +16,7 @@ import {
   type RequestStatus,
   type UrgencyLevel,
 } from "@contracts/services";
+import { canTransition } from "@contracts/workflow";
 
 const STATUS_STYLE: Record<RequestStatus, string> = {
   submitted: "border-navy/40 bg-white text-navy",
@@ -106,7 +108,12 @@ export default function Requests() {
   });
   const detail = trpc.requests.get.useQuery(
     { id: openId! },
-    { enabled: openId !== null },
+    {
+      enabled: openId !== null,
+      // Keep the technician's live location fresh while a job is active.
+      refetchInterval: (query) =>
+        ["scheduled", "in_progress"].includes(query.state.data?.request.status ?? "") ? 15_000 : false,
+    },
   );
   const approve = trpc.requests.approveQuote.useMutation({
     onSuccess: () => {
@@ -282,24 +289,11 @@ export default function Requests() {
                     <p className="mt-6 font-display text-xs font-bold uppercase tracking-[0.2em] text-navy/70">
                       {p(t.requests.answers)}
                     </p>
-                    <dl className="mt-3 flex flex-col gap-1.5 text-sm">
-                      {cat?.questions.map((q) => {
-                        const answers = JSON.parse(
-                          detail.data!.request.answers,
-                        ) as Record<string, string>;
-                        const val = answers[q.id];
-                        if (!val) return null;
-                        const opt = q.options?.find((o) => o.value === val);
-                        return (
-                          <div key={q.id} className="flex justify-between gap-4">
-                            <dt className="text-navy/70">{p(q.label)}</dt>
-                            <dd className="text-end font-semibold text-navy">
-                              {opt ? p(opt.label) : val}
-                            </dd>
-                          </div>
-                        );
-                      })}
-                    </dl>
+                    <AnswerList
+                      category={r.category}
+                      answersJson={detail.data.request.answers}
+                      className="mt-3 flex flex-col gap-1.5 text-sm"
+                    />
 
                     {/* photos */}
                     {detail.data.media.length > 0 && (
@@ -313,9 +307,8 @@ export default function Requests() {
                       </>
                     )}
 
-                    {["submitted", "in_review"].includes(
-                      detail.data.request.status,
-                    ) && (
+                    {detail.data.request.status !== "quote_ready" &&
+                      canTransition("cancel", detail.data.request.status as RequestStatus) && (
                       <button
                         onClick={() => cancel.mutate({ id: r.id })}
                         disabled={cancel.isPending}
@@ -323,6 +316,11 @@ export default function Requests() {
                       >
                         {p(t.requests.cancel)}
                       </button>
+                    )}
+                    {(cancel.isError || approve.isError) && (
+                      <p role="alert" className="mt-3 text-sm font-semibold text-destructive">
+                        {(cancel.error ?? approve.error)?.message}
+                      </p>
                     )}
                   </div>
                 )}

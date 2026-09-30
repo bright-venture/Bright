@@ -107,7 +107,8 @@ export function Navbar() {
           <button
             className={`inline-flex min-h-11 min-w-11 shrink-0 items-center justify-center rounded-full border-2 border-navy bg-white text-navy ${isAuthenticated ? "" : "lg:hidden"}`}
             onClick={() => setOpen(!open)}
-            aria-label="Menu"
+            aria-label={p(t.nav.menu)}
+            aria-expanded={open}
           >
             {open ? <X className="h-5 w-5" /> : <Menu className="h-5 w-5" />}
           </button>

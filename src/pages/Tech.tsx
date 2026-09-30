@@ -3,10 +3,18 @@ import { Loader2, MapPin, Navigation } from "lucide-react";
 import { Navbar } from "@/components/Navbar";
 import { Footer } from "@/components/Footer";
 import { ServiceIcon } from "@/components/ServiceIcon";
+import { AnswerList } from "@/components/AnswerList";
+import { MediaGrid } from "@/components/MediaGrid";
 import { useI18n } from "@/i18n";
 import { useAuth } from "@/hooks/useAuth";
 import { trpc } from "@/providers/trpc";
-import { CATEGORY_MAP, type RequestStatus } from "@contracts/services";
+import {
+  CATEGORY_MAP,
+  URGENCY_META,
+  type RequestStatus,
+  type UrgencyLevel,
+} from "@contracts/services";
+import { ACTIVE_JOB_STATUSES } from "@contracts/workflow";
 
 /** Watches GPS and reports position for the given active job. */
 function useLocationSharing() {
@@ -64,7 +72,7 @@ export default function Tech() {
   const utils = trpc.useUtils();
   const isTech = user?.role === "technician" || user?.role === "admin";
 
-  const jobs = trpc.tech.myJobs.useQuery(undefined, { enabled: !!isTech });
+  const jobs = trpc.tech.myJobs.useQuery(undefined, { enabled: !!isTech, refetchInterval: 60_000 });
   const fieldEvent = trpc.tech.fieldEvent.useMutation({
     onSuccess: () => utils.tech.myJobs.invalidate(),
   });
@@ -114,7 +122,7 @@ export default function Tech() {
 
         <div className="mt-8 flex flex-col gap-4">
           {rows.map((r) => {
-            const active = ["scheduled", "in_progress"].includes(r.status);
+            const active = ACTIVE_JOB_STATUSES.includes(r.status as RequestStatus);
             const sharing = sharingFor === r.id;
             return (
               <div key={r.id} className="card-br p-5">
@@ -145,6 +153,27 @@ export default function Tech() {
                   <p>{r.address}</p>
                   <p dir="ltr" className="mt-1 text-start">{r.phone}</p>
                   {r.notes && <p className="mt-1 italic">{r.notes}</p>}
+                </div>
+
+                <div className="mt-4 rounded-2xl border-2 border-navy/15 p-4">
+                  <div className="flex items-center justify-between gap-3">
+                    <p className="font-display text-xs font-bold uppercase tracking-[0.2em] text-navy/70">
+                      {p(t.tech.problem)}
+                    </p>
+                    <span className="text-xs font-bold text-navy">
+                      {p(t.tech.urgency)}:{" "}
+                      {p(URGENCY_META[(r.urgencyFinal ?? r.urgencySuggested) as UrgencyLevel].label)}
+                    </span>
+                  </div>
+                  <AnswerList category={r.category} answersJson={r.answers} className="mt-2 flex flex-col gap-1.5 text-sm" />
+                  {r.media.length > 0 && (
+                    <>
+                      <p className="mt-4 font-display text-xs font-bold uppercase tracking-[0.2em] text-navy/70">
+                        {p(t.tech.photos)}
+                      </p>
+                      <MediaGrid items={r.media} className="mt-2 grid grid-cols-3 gap-2 sm:grid-cols-4" />
+                    </>
+                  )}
                 </div>
 
                 {active && (

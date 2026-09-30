@@ -30,6 +30,7 @@ import {
   URGENCY_META,
   type UrgencyLevel,
 } from "@contracts/services";
+import { TIME_SLOTS, todayInBeirut, type TimeSlot } from "@contracts/workflow";
 
 /** A photo/video kept on the device until the request is submitted. */
 type MediaDraft = {
@@ -77,7 +78,9 @@ export default function Book() {
   const [media, setMedia] = useState<MediaDraft[]>([]);
   const [uploadError, setUploadError] = useState(false);
   const [date, setDate] = useState(draft?.date ?? "");
-  const [slot, setSlot] = useState(draft?.slot ?? "");
+  const [slot, setSlot] = useState<TimeSlot | "">(
+    TIME_SLOTS.includes(draft?.slot as TimeSlot) ? (draft!.slot as TimeSlot) : "",
+  );
   const [area, setArea] = useState(draft?.area ?? "");
   const [address, setAddress] = useState(draft?.address ?? "");
   const [phone, setPhone] = useState(draft?.phone ?? "");
@@ -178,7 +181,7 @@ export default function Book() {
         category,
         answers,
         preferredDate: date,
-        timeSlot: slot,
+        timeSlot: slot as TimeSlot, // the "Next" button requires a slot
         area,
         address,
         phone,
@@ -414,15 +417,15 @@ export default function Book() {
                 <input
                   type="date"
                   value={date}
-                  min={new Date().toISOString().slice(0, 10)}
+                  min={todayInBeirut()}
                   onChange={(e) => setDate(e.target.value)}
                   className="mt-2 min-h-12 w-full rounded-2xl border-2 border-navy/30 bg-white px-4 font-semibold text-navy focus:border-flame focus:outline-none"
                 />
                 <div className="mt-4 flex flex-wrap gap-2">
                   {[
-                    { v: "morning", l: t.book.slotMorning },
-                    { v: "afternoon", l: t.book.slotAfternoon },
-                    { v: "evening", l: t.book.slotEvening },
+                    { v: "morning" as const, l: t.book.slotMorning },
+                    { v: "afternoon" as const, l: t.book.slotAfternoon },
+                    { v: "evening" as const, l: t.book.slotEvening },
                   ].map((s) => (
                     <button
                       key={s.v}
