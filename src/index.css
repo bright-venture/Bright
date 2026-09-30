@@ -1,0 +1,204 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  :root {
+    --background: 39 30% 90%; /* warm paper #EDE7DC */
+    --foreground: 218 77% 20%; /* deep navy #0C2B5C */
+    --card: 0 0% 100%;
+    --card-foreground: 218 77% 20%;
+    --popover: 0 0% 100%;
+    --popover-foreground: 218 77% 20%;
+    --primary: 218 77% 20%;
+    --primary-foreground: 39 30% 94%;
+    --secondary: 39 22% 85%;
+    --secondary-foreground: 218 77% 20%;
+    --muted: 39 18% 85%;
+    --muted-foreground: 218 20% 38%;
+    --accent: 19 92% 50%; /* flame orange #F4530A */
+    --accent-foreground: 0 0% 100%;
+    --destructive: 0 72% 45%;
+    --destructive-foreground: 0 0% 98%;
+    --border: 218 40% 30%;
+    --input: 218 30% 70%;
+    --ring: 19 92% 50%;
+    --radius: 1rem;
+  }
+}
+
+@layer base {
+  * {
+    border-color: hsl(var(--border) / 0.18);
+  }
+  html {
+    scroll-behavior: smooth;
+  }
+  body {
+    background-color: #ede7dc;
+    color: #0c2b5c;
+    font-family: "Rubik", "Archivo", sans-serif;
+    -webkit-font-smoothing: antialiased;
+    text-rendering: optimizeLegibility;
+  }
+  [dir="rtl"] body,
+  [dir="rtl"] input,
+  [dir="rtl"] textarea,
+  [dir="rtl"] button {
+    font-family: "Rubik", sans-serif;
+  }
+  ::selection {
+    background: #f4530a;
+    color: #fff;
+  }
+}
+
+@layer components {
+  /* Pill button system — 2px navy border, reference-style hover fills */
+  .btn-pill {
+    @apply inline-flex min-h-12 items-center justify-center gap-2 rounded-full border-2 border-navy px-7 py-3 font-display text-sm font-bold tracking-wide transition-all duration-200;
+  }
+  .btn-pill-primary {
+    @apply btn-pill border-flame bg-flame text-white hover:bg-flame-dark hover:border-flame-dark active:scale-[0.97];
+  }
+  .btn-pill-outline {
+    @apply btn-pill bg-transparent text-navy hover:bg-navy hover:text-paper active:scale-[0.97];
+  }
+  .btn-pill-white {
+    @apply btn-pill bg-white text-navy hover:bg-flame hover:border-flame hover:text-white active:scale-[0.97];
+  }
+
+  /* Bordered card */
+  .card-br {
+    @apply rounded-3xl border-2 border-navy bg-white;
+  }
+
+  /* Technical label — uppercase chip with rounded border frame */
+  .tech-label {
+    @apply inline-block rounded-full border-2 border-current px-4 py-1 font-display text-[11px] font-bold uppercase tracking-[0.18em];
+  }
+}
+
+@layer utilities {
+  .text-balance {
+    text-wrap: balance;
+  }
+  /* Split-line reveal used in the hero */
+  .reveal-line {
+    display: block;
+    overflow: hidden;
+  }
+  .reveal-line > span {
+    display: block;
+    animation: rise-in 0.9s cubic-bezier(0.22, 1, 0.36, 1) both;
+  }
+  .reveal-line:nth-child(2) > span {
+    animation-delay: 0.12s;
+  }
+  .reveal-line:nth-child(3) > span {
+    animation-delay: 0.24s;
+  }
+  @keyframes rise-in {
+    from {
+      opacity: 0;
+      transform: translateY(110%);
+    }
+    to {
+      opacity: 1;
+      transform: translateY(0);
+    }
+  }
+}
+/* ---------- Preloader (road-runner intro) ---------- */
+@keyframes pl-run {
+  0% {
+    transform: translateX(124vw);
+  }
+  26% {
+    transform: translateX(62vw); /* halt mid-screen */
+  }
+  40% {
+    transform: translateX(62vw);
+  }
+  100% {
+    transform: translateX(-24vw);
+  }
+}
+@keyframes pl-bob {
+  0%,
+  100% {
+    transform: translateY(0) rotate(-3deg);
+  }
+  50% {
+    transform: translateY(-10px) rotate(2deg);
+  }
+}
+@keyframes pl-dust {
+  0% {
+    opacity: 0.9;
+    transform: translate(0, 0) scale(0.5);
+  }
+  100% {
+    opacity: 0;
+    transform: translate(-34px, -14px) scale(1.5);
+  }
+}
+@keyframes pl-meep {
+  0%,
+  27% {
+    opacity: 0;
+    transform: translate(-50%, 6px) scale(0.6);
+  }
+  31%,
+  37% {
+    opacity: 1;
+    transform: translate(-50%, 0) scale(1);
+  }
+  39.5% {
+    opacity: 0;
+  }
+  41.5%,
+  48% {
+    opacity: 1;
+    transform: translate(-50%, 0) scale(1.06);
+  }
+  51%,
+  100% {
+    opacity: 0;
+    transform: translate(-50%, -8px) scale(1);
+  }
+}
+@keyframes pl-dash {
+  to {
+    stroke-dashoffset: -36;
+  }
+}
+@keyframes pl-blink {
+  0%,
+  100% {
+    opacity: 1;
+    transform: scale(1);
+  }
+  50% {
+    opacity: 0.45;
+    transform: scale(0.82);
+  }
+}
+@keyframes pl-burst {
+  from {
+    transform: scale(0) rotate(-24deg);
+  }
+  to {
+    transform: scale(1) rotate(6deg);
+  }
+}
+@keyframes pl-pop {
+  from {
+    opacity: 0;
+    transform: scale(0.5);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}

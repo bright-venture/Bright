@@ -1,0 +1,621 @@
+import { useEffect, useMemo, useRef, useState } from "react";
+import { Link, useNavigate, useSearchParams } from "react-router";
+import {
+  ArrowLeft,
+  ArrowRight,
+  Check,
+  ImagePlus,
+  Loader2,
+  X,
+} from "lucide-react";
+import { Navbar } from "@/components/Navbar";
+import { Footer } from "@/components/Footer";
+import { ServiceIcon } from "@/components/ServiceIcon";
+import { EmailSignIn } from "@/components/EmailSignIn";
+import { useI18n } from "@/i18n";
+import { useAuth } from "@/hooks/useAuth";
+import { trpc } from "@/providers/trpc";
+import { MEDIA_BUCKET, supabase } from "@/lib/supabase";
+import {
+  clearDraft,
+  loadDraftFields,
+  loadDraftFiles,
+  saveDraftFields,
+  saveDraftFiles,
+} from "@/lib/bookingDraft";
+import {
+  CATEGORIES,
+  CATEGORY_MAP,
+  computeUrgency,
+  URGENCY_META,
+  type UrgencyLevel,
+} from "@contracts/services";
+
+/** A photo/video kept on the device until the request is submitted. */
+type MediaDraft = {
+  id: string;
+  file: File;
+  previewUrl: string;
+};
+
+function toMediaDraft(file: File): MediaDraft {
+  return { id: crypto.randomUUID(), file, previewUrl: URL.createObjectURL(file) };
+}
+
+const URGENCY_BADGE: Record<UrgencyLevel, string> = {
+  normal: "border-navy text-navy",
+  priority: "border-bird bg-bird text-white",
+  urgent: "border-flame bg-flame text-white",
+  critical: "border-navy bg-navy text-white",
+};
+
+const MAX_FILE_BYTES = 20 * 1024 * 1024;
+
+const STEPS = ["stepCategory", "stepQuestions", "stepPhotos", "stepWhen", "stepReview"] as const;
+
+export default function Book() {
+  const { t, p } = useI18n();
+  const { user, isAuthenticated, isLoading: authLoading } = useAuth();
+  const [params] = useSearchParams();
+  const navigate = useNavigate();
+
+  const initialCat = params.get("cat") ?? "";
+  // Restore an unfinished booking (e.g. after returning from the sign-in email link),
+  // unless the visitor came in for a different service.
+  const [draft] = useState(() => {
+    const d = loadDraftFields();
+    if (d && initialCat && CATEGORY_MAP[initialCat] && d.category !== initialCat) return null;
+    return d;
+  });
+  const [step, setStep] = useState(
+    draft?.step ?? (initialCat && CATEGORY_MAP[initialCat] ? 1 : 0),
+  );
+  const [category, setCategory] = useState(
+    draft?.category ?? (initialCat && CATEGORY_MAP[initialCat] ? initialCat : ""),
+  );
+  const [answers, setAnswers] = useState<Record<string, string>>(draft?.answers ?? {});
+  const [media, setMedia] = useState<MediaDraft[]>([]);
+  const [uploadError, setUploadError] = useState(false);
+  const [date, setDate] = useState(draft?.date ?? "");
+  const [slot, setSlot] = useState(draft?.slot ?? "");
+  const [area, setArea] = useState(draft?.area ?? "");
+  const [address, setAddress] = useState(draft?.address ?? "");
+  const [phone, setPhone] = useState(draft?.phone ?? "");
+  const [notes, setNotes] = useState(draft?.notes ?? "");
+  const [submitting, setSubmitting] = useState(false);
+  const [uploadProgress, setUploadProgress] = useState<{ done: number; total: number } | null>(
+    null,
+  );
+  const [submitError, setSubmitError] = useState(false);
+  const [doneId, setDoneId] = useState<number | null>(null);
+  const [doneUrgency, setDoneUrgency] = useState<UrgencyLevel | null>(null);
+  const fileRef = useRef<HTMLInputElement>(null);
+
+  const cat = category ? CATEGORY_MAP[category] : null;
+  const questions = useMemo(
+    () =>
+      (cat?.questions ?? []).filter(
+        (q) => !q.when || answers[q.when.id] === q.when.equals,
+      ),
+    [cat, answers],
+  );
+  const urgency = category ? computeUrgency(category, answers) : null;
+
+  const createUpload = trpc.storage.createUpload.useMutation();
+  const createMutation = trpc.requests.create.useMutation();
+
+  const stepLabels = [t.book.stepCategory, t.book.stepQuestions, t.book.stepPhotos, t.book.stepWhen, t.book.stepReview];
+
+  /* ---------- draft persistence ---------- */
+  const filesRestored = useRef(false);
+  useEffect(() => {
+    let cancelled = false;
+    if (!draft) {
+      filesRestored.current = true;
+      void saveDraftFiles([]); // drop photos left over from an older, expired draft
+      return;
+    }
+    loadDraftFiles().then((files) => {
+      if (cancelled) return;
+      filesRestored.current = true;
+      setMedia(files.map(toMediaDraft));
+    });
+    return () => {
+      cancelled = true;
+    };
+  }, [draft]);
+
+  useEffect(() => {
+    if (doneId !== null || !category) return;
+    saveDraftFields({ step, category, answers, date, slot, area, address, phone, notes });
+  }, [doneId, step, category, answers, date, slot, area, address, phone, notes]);
+
+  useEffect(() => {
+    if (filesRestored.current && doneId === null) void saveDraftFiles(media.map((m) => m.file));
+  }, [media, doneId]);
+
+  function onFiles(files: FileList | null) {
+    if (!files) return;
+    setUploadError(false);
+    const accepted: MediaDraft[] = [];
+    for (const file of Array.from(files).slice(0, 8 - media.length)) {
+      if (file.size > MAX_FILE_BYTES || !/^(image|video)\//.test(file.type)) {
+        setUploadError(true);
+        continue;
+      }
+      accepted.push(toMediaDraft(file));
+    }
+    setMedia((m) => [...m, ...accepted]);
+    if (fileRef.current) fileRef.current.value = "";
+  }
+
+  function questionsAnswered() {
+    return questions.every((q) => answers[q.id]);
+  }
+
+  async function submit() {
+    setSubmitting(true);
+    setSubmitError(false);
+    try {
+      // Photos are uploaded only now that we know who the customer is.
+      const uploaded = [];
+      for (const [i, m] of media.entries()) {
+        setUploadProgress({ done: i, total: media.length });
+        const contentType = m.file.type || "application/octet-stream";
+        const target = await createUpload.mutateAsync({
+          fileName: m.file.name,
+          size: m.file.size,
+          contentType,
+        });
+        const { error } = await supabase.storage
+          .from(MEDIA_BUCKET)
+          .uploadToSignedUrl(target.key, target.token, m.file, { contentType });
+        if (error) throw error;
+        uploaded.push({ key: target.key, fileName: m.file.name, size: m.file.size, contentType });
+      }
+      setUploadProgress(null);
+      const res = await createMutation.mutateAsync({
+        category,
+        answers,
+        preferredDate: date,
+        timeSlot: slot,
+        area,
+        address,
+        phone,
+        notes: notes || undefined,
+        media: uploaded,
+      });
+      await clearDraft();
+      setDoneId(res.id);
+      setDoneUrgency(res.urgency as UrgencyLevel);
+    } catch {
+      setSubmitError(true);
+    } finally {
+      setSubmitting(false);
+      setUploadProgress(null);
+    }
+  }
+
+  /* ---------- success ---------- */
+  if (doneId !== null) {
+    return (
+      <div className="flex min-h-screen flex-col bg-paper">
+        <Navbar />
+        <main className="flex flex-1 items-center justify-center px-4 py-24 pt-24">
+          <div className="card-br w-full max-w-lg p-8 text-center">
+            <span className="mx-auto flex h-16 w-16 items-center justify-center rounded-full border-2 border-navy bg-flame text-white">
+              <Check className="h-8 w-8" />
+            </span>
+            <h1 className="mt-5 font-display text-3xl font-black text-navy">
+              {p(t.book.successTitle)}
+            </h1>
+            <p className="mt-2 font-display text-sm font-bold uppercase tracking-[0.2em] text-navy/50">
+              #{doneId}
+            </p>
+            {doneUrgency && (
+              <span
+                className={`mt-4 inline-block rounded-full border-2 px-4 py-1 text-sm font-bold ${URGENCY_BADGE[doneUrgency]}`}
+              >
+                {p(URGENCY_META[doneUrgency].label)} — {p(URGENCY_META[doneUrgency].note)}
+              </span>
+            )}
+            <p className="mt-4 text-sm leading-relaxed text-navy/70">
+              {p(t.book.successBody)}
+            </p>
+            <div className="mt-6 flex flex-col gap-3 sm:flex-row sm:justify-center">
+              <Link to="/requests" className="btn-pill-primary">
+                {p(t.book.viewRequests)}
+              </Link>
+              <button
+                onClick={() => navigate(0)}
+                className="btn-pill-outline"
+              >
+                {p(t.book.bookAnother)}
+              </button>
+            </div>
+          </div>
+        </main>
+        <Footer />
+      </div>
+    );
+  }
+
+  return (
+    <div className="flex min-h-screen flex-col bg-paper">
+      <Navbar />
+      <main className="mx-auto w-full max-w-3xl flex-1 px-4 pb-20 pt-24 sm:px-6">
+        <h1 className="font-display text-3xl font-black text-navy sm:text-4xl">
+          {p(t.book.title)}
+        </h1>
+
+        {/* segmented progress */}
+        <div className="mt-6 flex gap-2">
+          {STEPS.map((_, i) => (
+            <div
+              key={i}
+              className={`h-2 flex-1 rounded-full border border-navy/40 ${
+                i <= step ? "bg-flame border-flame" : "bg-white"
+              }`}
+            />
+          ))}
+        </div>
+        <p className="mt-2 font-display text-xs font-bold uppercase tracking-[0.2em] text-navy/60">
+          {step + 1} / {STEPS.length} — {p(stepLabels[step])}
+        </p>
+
+        <div className="mt-8 animate-rise-in" key={step}>
+          {/* STEP 0 — category */}
+          {step === 0 && (
+            <>
+              <h2 className="font-display text-xl font-extrabold text-navy">
+                {p(t.book.pickCategory)}
+              </h2>
+              <div className="mt-5 grid grid-cols-2 gap-3 sm:grid-cols-3">
+                {CATEGORIES.map((c) => (
+                  <button
+                    key={c.id}
+                    onClick={() => {
+                      setCategory(c.id);
+                      setAnswers({});
+                      setStep(1);
+                    }}
+                    className={`card-br flex min-h-32 flex-col items-start justify-between p-4 text-start transition-all hover:-translate-y-1 hover:bg-navy hover:text-paper ${
+                      category === c.id ? "!bg-navy !text-paper" : ""
+                    }`}
+                  >
+                    <ServiceIcon id={c.id} className="h-8 w-8 text-bird" />
+                    <span className="font-display text-sm font-extrabold sm:text-base">
+                      {p(c.name)}
+                    </span>
+                  </button>
+                ))}
+              </div>
+            </>
+          )}
+
+          {/* STEP 1 — guided questions */}
+          {step === 1 && cat && (
+            <>
+              <h2 className="flex items-center gap-3 font-display text-xl font-extrabold text-navy">
+                <ServiceIcon id={cat.id} className="h-7 w-7 text-bird" />
+                {p(cat.name)}
+              </h2>
+              <div className="mt-6 flex flex-col gap-6">
+                {questions.map((q) => (
+                  <fieldset key={q.id} className="card-br p-5">
+                    <legend className="px-2 font-display text-base font-extrabold text-navy">
+                      {p(q.label)}
+                    </legend>
+                    {q.hint && (
+                      <p className="mb-3 text-xs font-medium text-flame">
+                        {p(q.hint)}
+                      </p>
+                    )}
+                    <div className="flex flex-wrap gap-2">
+                      {q.options?.map((o) => {
+                        const active = answers[q.id] === o.value;
+                        return (
+                          <button
+                            key={o.value}
+                            onClick={() =>
+                              setAnswers((a) => ({ ...a, [q.id]: o.value }))
+                            }
+                            className={`min-h-11 rounded-full border-2 px-5 py-2 text-sm font-bold transition-all active:scale-[0.97] ${
+                              active
+                                ? "border-navy bg-navy text-paper"
+                                : "border-navy/30 bg-white text-navy hover:border-navy"
+                            }`}
+                          >
+                            {p(o.label)}
+                          </button>
+                        );
+                      })}
+                    </div>
+                  </fieldset>
+                ))}
+              </div>
+            </>
+          )}
+
+          {/* STEP 2 — photos */}
+          {step === 2 && (
+            <>
+              <h2 className="font-display text-xl font-extrabold text-navy">
+                {p(t.book.photosTitle)}
+              </h2>
+              <p className="mt-1 text-sm text-navy/70">{p(t.book.photosOptional)}</p>
+              <div className="card-br mt-5 p-5">
+                <p className="rounded-2xl border-2 border-dashed border-flame/60 bg-flame/5 p-4 text-xs leading-relaxed text-navy/80">
+                  {p(t.book.photosHint)}
+                </p>
+                <input
+                  ref={fileRef}
+                  type="file"
+                  accept="image/*,video/*"
+                  multiple
+                  className="hidden"
+                  onChange={(e) => onFiles(e.target.files)}
+                />
+                <button
+                  onClick={() => fileRef.current?.click()}
+                  disabled={media.length >= 8}
+                  className="btn-pill-outline mt-4 w-full sm:w-auto"
+                >
+                  <ImagePlus className="h-5 w-5" />
+                  {p(t.book.addPhotos)}
+                </button>
+                {uploadError && (
+                  <p className="mt-2 text-sm font-semibold text-destructive">
+                    {p(t.book.uploadFailed)}
+                  </p>
+                )}
+                {media.length > 0 && (
+                  <div className="mt-4 grid grid-cols-3 gap-2 sm:grid-cols-4">
+                    {media.map((m) => (
+                      <div key={m.id} className="group relative">
+                        {m.file.type.startsWith("video/") ? (
+                          <video
+                            src={m.previewUrl}
+                            muted
+                            playsInline
+                            className="aspect-square w-full rounded-2xl border-2 border-navy object-cover"
+                          />
+                        ) : (
+                          <img
+                            src={m.previewUrl}
+                            alt={m.file.name}
+                            className="aspect-square w-full rounded-2xl border-2 border-navy object-cover"
+                          />
+                        )}
+                        <button
+                          onClick={() =>
+                            setMedia((arr) => arr.filter((x) => x.id !== m.id))
+                          }
+                          className="absolute -end-2 -top-2 flex h-8 w-8 items-center justify-center rounded-full border-2 border-navy bg-white text-navy"
+                          aria-label="Remove"
+                        >
+                          <X className="h-4 w-4" />
+                        </button>
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </div>
+            </>
+          )}
+
+          {/* STEP 3 — time & place */}
+          {step === 3 && (
+            <div className="flex flex-col gap-5">
+              <div className="card-br p-5">
+                <label className="font-display text-base font-extrabold text-navy">
+                  {p(t.book.date)}
+                </label>
+                <input
+                  type="date"
+                  value={date}
+                  min={new Date().toISOString().slice(0, 10)}
+                  onChange={(e) => setDate(e.target.value)}
+                  className="mt-2 min-h-12 w-full rounded-2xl border-2 border-navy/30 bg-white px-4 font-semibold text-navy focus:border-flame focus:outline-none"
+                />
+                <div className="mt-4 flex flex-wrap gap-2">
+                  {[
+                    { v: "morning", l: t.book.slotMorning },
+                    { v: "afternoon", l: t.book.slotAfternoon },
+                    { v: "evening", l: t.book.slotEvening },
+                  ].map((s) => (
+                    <button
+                      key={s.v}
+                      onClick={() => setSlot(s.v)}
+                      className={`min-h-11 rounded-full border-2 px-5 py-2 text-sm font-bold transition-all ${
+                        slot === s.v
+                          ? "border-navy bg-navy text-paper"
+                          : "border-navy/30 bg-white text-navy hover:border-navy"
+                      }`}
+                    >
+                      {p(s.l)}
+                    </button>
+                  ))}
+                </div>
+              </div>
+
+              <div className="card-br flex flex-col gap-4 p-5">
+                {[
+                  { l: t.book.area, v: area, set: setArea, ph: p(t.book.areaPh) },
+                  { l: t.book.address, v: address, set: setAddress, ph: p(t.book.addressPh) },
+                  { l: t.book.phone, v: phone, set: setPhone, ph: p(t.book.phonePh) },
+                ].map((f, i) => (
+                  <div key={i}>
+                    <label className="font-display text-base font-extrabold text-navy">
+                      {p(f.l)}
+                    </label>
+                    <input
+                      value={f.v}
+                      onChange={(e) => f.set(e.target.value)}
+                      placeholder={f.ph}
+                      className="mt-2 min-h-12 w-full rounded-2xl border-2 border-navy/30 bg-white px-4 font-semibold text-navy placeholder:font-normal placeholder:text-navy/40 focus:border-flame focus:outline-none"
+                    />
+                  </div>
+                ))}
+                <div>
+                  <label className="font-display text-base font-extrabold text-navy">
+                    {p(t.book.notes)}
+                  </label>
+                  <textarea
+                    value={notes}
+                    onChange={(e) => setNotes(e.target.value)}
+                    placeholder={p(t.book.notesPh)}
+                    rows={3}
+                    className="mt-2 w-full rounded-2xl border-2 border-navy/30 bg-white px-4 py-3 font-semibold text-navy placeholder:font-normal placeholder:text-navy/40 focus:border-flame focus:outline-none"
+                  />
+                </div>
+              </div>
+            </div>
+          )}
+
+          {/* STEP 4 — review */}
+          {step === 4 && cat && urgency && (
+            <div className="flex flex-col gap-5">
+              <h2 className="font-display text-xl font-extrabold text-navy">
+                {p(t.book.reviewTitle)}
+              </h2>
+              <div className="card-br p-5">
+                <div className="flex items-center gap-3">
+                  <ServiceIcon id={cat.id} className="h-8 w-8 text-bird" />
+                  <span className="font-display text-lg font-extrabold text-navy">
+                    {p(cat.name)}
+                  </span>
+                </div>
+                <dl className="mt-4 flex flex-col gap-2 text-sm">
+                  {questions.map((q) => {
+                    const opt = q.options?.find(
+                      (o) => o.value === answers[q.id],
+                    );
+                    return (
+                      <div key={q.id} className="flex justify-between gap-4">
+                        <dt className="text-navy/60">{p(q.label)}</dt>
+                        <dd className="text-end font-bold text-navy">
+                          {opt ? p(opt.label) : answers[q.id]}
+                        </dd>
+                      </div>
+                    );
+                  })}
+                  <div className="mt-2 border-t-2 border-navy/10 pt-3">
+                    <div className="flex justify-between gap-4">
+                      <dt className="text-navy/60">{p(t.book.date)}</dt>
+                      <dd className="font-bold text-navy">
+                        {date} · {p(
+                          slot === "morning"
+                            ? t.book.slotMorning
+                            : slot === "afternoon"
+                              ? t.book.slotAfternoon
+                              : t.book.slotEvening,
+                        )}
+                      </dd>
+                    </div>
+                    <div className="mt-2 flex justify-between gap-4">
+                      <dt className="text-navy/60">{p(t.book.area)}</dt>
+                      <dd className="text-end font-bold text-navy">{area}</dd>
+                    </div>
+                    <div className="mt-2 flex justify-between gap-4">
+                      <dt className="text-navy/60">{p(t.book.phone)}</dt>
+                      <dd className="font-bold text-navy" dir="ltr">{phone}</dd>
+                    </div>
+                  </div>
+                </dl>
+              </div>
+
+              <div className="card-br border-flame p-5">
+                <p className="font-display text-xs font-bold uppercase tracking-[0.2em] text-navy/60">
+                  {p(t.book.suggestedUrgency)}
+                </p>
+                <span
+                  className={`mt-3 inline-block rounded-full border-2 px-5 py-2 font-display text-base font-extrabold ${URGENCY_BADGE[urgency.level]}`}
+                >
+                  {p(URGENCY_META[urgency.level].label)}
+                </span>
+                <p className="mt-2 text-sm text-navy/80">
+                  {p(URGENCY_META[urgency.level].note)}
+                </p>
+                <p className="mt-3 text-xs leading-relaxed text-navy/60">
+                  {p(t.book.urgencyDisclaimer)}
+                </p>
+              </div>
+
+              {!authLoading && !isAuthenticated && (
+                <div className="card-br border-flame p-5">
+                  <h3 className="font-display text-lg font-extrabold text-navy">
+                    {p(t.book.confirmTitle)}
+                  </h3>
+                  <p className="mt-1 text-sm leading-relaxed text-navy/70">
+                    {p(t.book.confirmBody)}
+                  </p>
+                  <div className="mt-4">
+                    <EmailSignIn
+                      redirectTo={`${window.location.origin}/book`}
+                      sendLabel={p(t.book.confirmSend)}
+                    />
+                  </div>
+                </div>
+              )}
+              {isAuthenticated && user?.email && (
+                <p className="text-sm text-navy/60">
+                  {p(t.book.sendingAs)}{" "}
+                  <span className="font-bold text-navy" dir="ltr">
+                    {user.email}
+                  </span>
+                </p>
+              )}
+            </div>
+          )}
+        </div>
+
+        {/* nav buttons */}
+        <div className="mt-10 flex items-center justify-between">
+          <button
+            onClick={() => setStep((s) => Math.max(0, s - 1))}
+            disabled={step === 0}
+            className="btn-pill-outline disabled:opacity-30"
+          >
+            <ArrowLeft className="h-5 w-5 rtl:-scale-x-100" />
+            {p(t.book.back)}
+          </button>
+
+          {step < 4 ? (
+            <button
+              onClick={() => setStep((s) => s + 1)}
+              disabled={
+                (step === 0 && !category) ||
+                (step === 1 && !questionsAnswered()) ||
+                (step === 3 && (!date || !slot || !area || !address || !phone))
+              }
+              className="btn-pill-primary disabled:opacity-40"
+            >
+              {p(t.book.next)}
+              <ArrowRight className="h-5 w-5 rtl:-scale-x-100" />
+            </button>
+          ) : isAuthenticated ? (
+            <button
+              onClick={submit}
+              disabled={submitting}
+              className="btn-pill-primary text-base disabled:opacity-40"
+            >
+              {submitting && <Loader2 className="h-5 w-5 animate-spin" />}
+              {uploadProgress
+                ? `${p(t.book.uploadingPhotos)} ${uploadProgress.done + 1}/${uploadProgress.total}`
+                : submitting
+                  ? p(t.book.submitting)
+                  : p(t.book.submit)}
+            </button>
+          ) : null}
+        </div>
+        {submitError && (
+          <p className="mt-3 text-end text-sm font-semibold text-destructive">
+            {p(t.misc.error)}
+          </p>
+        )}
+      </main>
+      <Footer />
+    </div>
+  );
+}
