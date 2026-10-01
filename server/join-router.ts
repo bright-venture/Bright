@@ -8,6 +8,7 @@ import { CATEGORIES } from "../contracts/services";
 import { AVAILABILITY, EXPERIENCE_LEVELS, MANUAL_APPLICATION_STATUSES } from "@contracts/applications";
 import { getSupabaseAdmin } from "./lib/supabase";
 import { LEGAL_VERSION } from "@contracts/legal";
+import { isValidPhone } from "@contracts/phone";
 import { createDocumentUrls, documentKeyMatches, documentsExist } from "./lib/storage";
 
 const TRADE_IDS = CATEGORIES.map((c) => c.id) as [string, ...string[]];
@@ -27,7 +28,7 @@ export const joinRouter = createRouter({
     .input(
       z.object({
         name: z.string().trim().min(2).max(255),
-        phone: z.string().trim().min(6).max(64),
+        phone: z.string().trim().max(64).refine(isValidPhone, "Invalid phone number"),
         email,
         trade: z.enum(TRADE_IDS),
         area: z.string().trim().min(2).max(255),

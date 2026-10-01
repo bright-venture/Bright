@@ -20,6 +20,7 @@ import {
 } from "@contracts/workflow";
 import { profilePhotoUrl, userUploadPrefix } from "./lib/storage";
 import { isInLebanon } from "@contracts/geo";
+import { isValidPhone } from "@contracts/phone";
 import { applyTransition, findRequest, logEvent, type RequestScope } from "./lib/workflow";
 
 const mediaItem = z.object({
@@ -41,7 +42,7 @@ export const requestsRouter = createRouter({
         timeSlot: z.enum(TIME_SLOTS),
         area: z.string().trim().min(1).max(255),
         address: z.string().trim().min(1).max(1000),
-        phone: z.string().trim().min(6).max(64),
+        phone: z.string().trim().max(64).refine(isValidPhone, "Invalid phone number"),
         notes: z.string().max(4000).optional(),
         media: z.array(mediaItem).max(8).default([]),
         // Map pin for the visit address.

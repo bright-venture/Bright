@@ -62,6 +62,13 @@ describe("booking validation", () => {
     await rejected(c.requests.create({ ...base, preferredDate: "2026-02-30" }));
   });
 
+  it("requires a full phone number", async () => {
+    const c = await callerFor(customer);
+    await rejected(c.requests.create({ ...base, phone: "3432" }));
+    await rejected(c.requests.create({ ...base, phone: "call me maybe" }));
+    await expect(c.requests.create({ ...base, phone: "03 123 456" })).resolves.toMatchObject({ id: expect.any(Number) });
+  });
+
   it("only accepts answers to the category's own questions", async () => {
     const c = await callerFor(customer);
     await rejected(c.requests.create({ ...base, answers: { problem: "fixture", junk: "y" } }));

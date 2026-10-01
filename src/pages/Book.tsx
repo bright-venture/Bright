@@ -19,6 +19,7 @@ import { trpc } from "@/providers/trpc";
 import { supabase } from "@/lib/supabase";
 import LocationPicker, { type Pin } from "@/components/map/LocationPicker";
 import { isInLebanon } from "@contracts/geo";
+import { isValidPhone } from "@contracts/phone";
 import {
   clearDraft,
   loadDraftFields,
@@ -120,6 +121,8 @@ export default function Book() {
 
   // The account's phone (given at sign-up) fills in until the customer types their own.
   const contactPhone = phone || user?.phone || "";
+  // Only complain once something is typed (or carried over from the account).
+  const phoneInvalid = contactPhone.trim() !== "" && !isValidPhone(contactPhone);
 
   /* ---------- draft persistence ---------- */
   const filesRestored = useRef(false);
@@ -170,6 +173,8 @@ export default function Book() {
 
   async function submit() {
     if (needsTerms && !agreedNow) return;
+    // e.g. a short number saved at sign-up, or a draft from before phones were checked
+    if (!isValidPhone(contactPhone)) return setStep(3);
     setSubmitting(true);
     setSubmitError(false);
     try {
@@ -471,7 +476,7 @@ export default function Book() {
                 {[
                   { l: t.book.area, v: area, set: setArea, ph: p(t.book.areaPh) },
                   { l: t.book.address, v: address, set: setAddress, ph: p(t.book.addressPh) },
-                  { l: t.book.phone, v: contactPhone, set: setPhone, ph: p(t.book.phonePh) },
+                  { l: t.book.phone, v: contactPhone, set: setPhone, ph: p(t.book.phonePh), tel: true },
                 ].map((f, i) => (
                   <div key={i}>
                     <label className="font-display text-base font-extrabold text-navy">
@@ -481,8 +486,13 @@ export default function Book() {
                       value={f.v}
                       onChange={(e) => f.set(e.target.value)}
                       placeholder={f.ph}
+                      {...(f.tel && { type: "tel", autoComplete: "tel", dir: "ltr" })}
+                      aria-invalid={f.tel && phoneInvalid ? true : undefined}
                       className="mt-2 min-h-12 w-full rounded-2xl border-2 border-navy/30 bg-white px-4 font-semibold text-navy placeholder:font-normal placeholder:text-navy/40 focus:border-flame focus:outline-none"
                     />
+                    {f.tel && phoneInvalid && (
+                      <p className="mt-1 text-sm font-semibold text-destructive">{p(t.misc.phoneInvalid)}</p>
+                    )}
                   </div>
                 ))}
                 <div>
@@ -616,7 +626,7 @@ export default function Book() {
                 (step === 0 && !category) ||
                 (step === 1 && !questionsAnswered()) ||
                 (step === 3 &&
-                  (!date || !slot || !area || !address || !contactPhone || !pin || !isInLebanon(pin.lat, pin.lng)))
+                  (!date || !slot || !area || !address || !isValidPhone(contactPhone) || !pin || !isInLebanon(pin.lat, pin.lng)))
               }
               className="btn-pill-primary disabled:opacity-40"
             >

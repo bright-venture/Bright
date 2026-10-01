@@ -6,6 +6,7 @@ import { useI18n } from "@/i18n";
 import { supabase } from "@/lib/supabase";
 import { AgreeCheckbox } from "@/components/AgreeCheckbox";
 import { LEGAL_VERSION } from "@contracts/legal";
+import { isValidPhone } from "@contracts/phone";
 
 const INPUT =
   "mt-2 min-h-12 w-full rounded-2xl border-2 border-navy/30 bg-white px-4 font-semibold text-navy placeholder:font-normal placeholder:text-navy/40 focus:border-flame focus:outline-none";
@@ -113,6 +114,7 @@ export function AuthPanel({
 
   const onSignUp = (e: FormEvent) => {
     e.preventDefault();
+    if (!isValidPhone(phone)) return setError(p(t.misc.phoneInvalid));
     if (password.length < MIN_PASSWORD) return setError(p(t.auth.errWeak));
     if (!agreed) return setError(p(t.legal.mustAgree));
     return run(async () => {

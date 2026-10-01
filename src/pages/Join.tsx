@@ -9,6 +9,7 @@ import { AgreeCheckbox } from "@/components/AgreeCheckbox";
 import { useI18n } from "@/i18n";
 import { trpc } from "@/providers/trpc";
 import { CATEGORIES, type LocalText } from "@contracts/services";
+import { isValidPhone } from "@contracts/phone";
 import {
   AVAILABILITY,
   AVAILABILITY_LABELS,
@@ -85,7 +86,7 @@ export default function Join() {
 
   const valid =
     name.trim().length >= 2 &&
-    phone.trim().length >= 6 &&
+    isValidPhone(phone) &&
     EMAIL_PATTERN.test(email.trim()) &&
     trade !== "" &&
     area.trim().length >= 2 &&
@@ -177,8 +178,12 @@ export default function Join() {
                       onChange={(e) => setPhone(e.target.value)}
                       placeholder="+961 70 000 000"
                       dir="ltr"
+                      aria-invalid={phone.trim() !== "" && !isValidPhone(phone) ? true : undefined}
                       className={INPUT}
                     />
+                    {phone.trim() !== "" && !isValidPhone(phone) && (
+                      <p className="mt-1 text-sm font-semibold text-destructive">{p(t.misc.phoneInvalid)}</p>
+                    )}
                   </div>
                   <div>
                     <label htmlFor="join-email" className={LABEL}>
