@@ -5,9 +5,9 @@ export const COMPANY = {
   brand: "Be Right by Bright",
   legalName: "[Company legal name, as registered in Lebanon]",
   address: "[Registered address], Lebanon",
-  email: "hello@brightlb.com",
-  privacyEmail: "privacy@brightlb.com",
-  website: "brightlb.com",
+  email: "hello@be-rightbright.com",
+  privacyEmail: "privacy@be-rightbright.com",
+  website: "be-rightbright.com",
 } as const;
 
 /**

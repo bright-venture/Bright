@@ -264,7 +264,7 @@ export const t = {
       en: "Contact details coming soon — reach us through the app.",
       ar: "معلومات التواصل قريباً — كلمنا من التطبيق.",
     },
-    rights: { en: "Be Right by Bright · brightlb.com", ar: "بي رايت من برايت · brightlb.com" },
+    rights: { en: "Be Right by Bright · be-rightbright.com", ar: "بي رايت من برايت · be-rightbright.com" },
   },
   book: {
     title: { en: "Book a service", ar: "احجز خدمة" },

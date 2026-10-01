@@ -37,8 +37,8 @@ Technician applications from `/join` need no account and appear in the dashboard
    npm run db:migrate
    ```
 4. **Configure Supabase Auth** (*Authentication → URL Configuration*):
-   - Site URL: your production URL (e.g. `https://brightlb.com`)
-   - Redirect URLs: `http://localhost:3000/**` and `https://brightlb.com/**`
+   - Site URL: your production URL (e.g. `https://be-rightbright.com`)
+   - Redirect URLs: `http://localhost:3000/**` and `https://be-rightbright.com/**`
    - Optional: in *Email Templates → Magic Link*, add `{{ .Token }}` so users can type the code
      instead of clicking the link (useful when the email opens in a different browser).
    - For production volume, set up custom SMTP (*Authentication → SMTP*); the built-in sender is rate-limited.
@@ -51,9 +51,9 @@ The storage bucket (`request-media`, private, 20 MB, images/videos only) is crea
 
 Auth emails (confirm sign-up, password reset, sign-in code) are sent by Supabase through Resend.
 
-- **Resend:** domain `brightlb.com` verified (region EU), API key with *Sending access*.
+- **Resend:** domain `be-rightbright.com` verified (region EU), API key with *Sending access*.
 - **Supabase → Authentication → Emails → SMTP Settings:** host `smtp.resend.com`, port `465`,
-  user `resend`, password = Resend API key, sender `noreply@brightlb.com` / `Be Right`.
+  user `resend`, password = Resend API key, sender `noreply@be-rightbright.com` / `Be Right`.
 - **Supabase → Authentication → Rate Limits:** raise emails per hour (e.g. 100).
 - **Templates** (Authentication → Emails → Templates) — paste from `supabase/email-templates/`:
 

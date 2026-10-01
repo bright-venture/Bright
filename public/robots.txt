@@ -6,4 +6,4 @@ Disallow: /requests
 Disallow: /api/
 Disallow: /reset-password
 
-Sitemap: https://brightlb.com/sitemap.xml
+Sitemap: https://be-rightbright.com/sitemap.xml
