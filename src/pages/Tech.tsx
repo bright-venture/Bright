@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { Loader2, MapPin, Navigation } from "lucide-react";
 import { Navbar } from "@/components/Navbar";
 import { Footer } from "@/components/Footer";
@@ -18,21 +18,39 @@ import {
 } from "@contracts/services";
 import { ACTIVE_JOB_STATUSES } from "@contracts/workflow";
 
-/** Watches GPS and reports position for the given active job. */
-function useLocationSharing() {
+/**
+ * Watches GPS and reports position for the given active job. Stops by itself once
+ * that job is no longer active for this technician (completed, cancelled, reassigned).
+ */
+function useLocationSharing(activeJobIds: readonly number[] | undefined) {
   const watchRef = useRef<number | null>(null);
   const lastSent = useRef(0);
   const [sharingFor, setSharingFor] = useState<number | null>(null);
   const [geoError, setGeoError] = useState(false);
-  const report = trpc.tech.reportLocation.useMutation();
 
-  function stop() {
+  const stop = useCallback(() => {
     if (watchRef.current !== null) {
       navigator.geolocation.clearWatch(watchRef.current);
       watchRef.current = null;
     }
     setSharingFor(null);
-  }
+  }, []);
+
+  const report = trpc.tech.reportLocation.useMutation({
+    // The server refuses once the job isn't ours or isn't active any more.
+    onError: (error) => {
+      if (error.data?.code === "BAD_REQUEST" || error.data?.code === "NOT_FOUND") stop();
+    },
+  });
+
+  // The jobs list refreshes every minute and after each field action.
+  const jobGone = sharingFor !== null && activeJobIds !== undefined && !activeJobIds.includes(sharingFor);
+  useEffect(() => {
+    if (jobGone && watchRef.current !== null) {
+      navigator.geolocation.clearWatch(watchRef.current);
+      watchRef.current = null;
+    }
+  }, [jobGone]);
 
   function start(requestId: number) {
     setGeoError(false);
@@ -62,8 +80,8 @@ function useLocationSharing() {
     );
   }
 
-  useEffect(() => stop, []);
-  return { sharingFor, geoError, start, stop };
+  useEffect(() => stop, [stop]);
+  return { sharingFor: jobGone ? null : sharingFor, geoError, start, stop };
 }
 
 export default function Tech() {
@@ -76,7 +94,11 @@ export default function Tech() {
   const fieldEvent = trpc.tech.fieldEvent.useMutation({
     onSuccess: () => utils.tech.myJobs.invalidate(),
   });
-  const { sharingFor, geoError, start, stop } = useLocationSharing();
+  const activeJobIds = useMemo(
+    () => jobs.data?.filter((j) => ACTIVE_JOB_STATUSES.includes(j.status as RequestStatus)).map((j) => j.id),
+    [jobs.data],
+  );
+  const { sharingFor, geoError, start, stop } = useLocationSharing(activeJobIds);
   const [notes, setNotes] = useState<Record<number, string>>({});
 
   if (authLoading || !isTech) {

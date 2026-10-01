@@ -402,8 +402,8 @@ export const t = {
     shareStop: { en: "Stop sharing", ar: "أوقف المشاركة" },
     sharing: { en: "Live location on", ar: "الموقع المباشر شغّال" },
     shareHint: {
-      en: "The customer sees your location while the job is active.",
-      ar: "العميل بيشوف موقعك طالما الشغل شغّال.",
+      en: "The customer sees your location while the job is active. Keep this page open on the way: sharing pauses while your screen is locked.",
+      ar: "العميل بيشوف موقعك طالما الشغل شغّال. خلّي هالصفحة مفتوحة بالطريق: المشاركة بتوقف لما تقفل الشاشة.",
     },
     geoError: {
       en: "Location unavailable — allow location access and try again.",
@@ -418,6 +418,7 @@ export const t = {
     techOnWay: { en: "Your technician", ar: "الفني تبعك" },
     liveLocation: { en: "Live location", ar: "الموقع المباشر" },
     lastUpdate: { en: "Last update", ar: "آخر تحديث" },
+    lastSeen: { en: "Last seen here at {time}", ar: "آخر مرة انشاف هون الساعة {time}" },
     noLocationYet: {
       en: "The technician hasn't shared their location yet.",
       ar: "الفني لسا ما شارك موقعه.",
@@ -430,6 +431,7 @@ export const t = {
     completed: { en: "Job completed", ar: "الشغل خلص" },
     prepared: { en: "Job preparation updated", ar: "تحدّث تحضير المهمة" },
     cancel_requested: { en: "Customer asked to cancel", ar: "العميل طلب الإلغاء" },
+    unassigned: { en: "Technician unassigned", ar: "انشال الفني من المهمة" },
   },
   join: {
     nav: { en: "For technicians", ar: "للفنيين" },
@@ -610,8 +612,8 @@ export const t = {
     documents: { en: "Documents", ar: "المستندات" },
     hideDocuments: { en: "Hide documents", ar: "خبّي المستندات" },
     removeConfirm: {
-      en: "Remove {name} as a technician? Their account becomes a customer account. You can hire them again later.",
-      ar: "تشيل {name} من الفنيين؟ حسابه بيرجع حساب عميل. فيك توظّفه مرة تانية بعدين.",
+      en: "Remove {name} as a technician? Their account becomes a customer account, and jobs waiting to be scheduled go back to Needs you. You can hire them again later.",
+      ar: "تشيل {name} من الفنيين؟ حسابه بيرجع حساب عميل، والمهام يلي ناطرة موعد بترجع لـ«بحاجتك». فيك توظّفه مرة تانية بعدين.",
     },
     noTechnicians: {
       en: "No technicians yet. Technicians join by applying, then you hire them.",

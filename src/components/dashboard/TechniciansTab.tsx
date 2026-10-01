@@ -46,6 +46,7 @@ function TechnicianCard({ tech: x }: { tech: Technician }) {
     onSuccess: () => {
       void utils.tech.list.invalidate();
       void utils.join.list.invalidate();
+      void utils.specialist.queue.invalidate(); // released jobs need a technician again
     },
   });
   const docs = trpc.join.documents.useQuery({ id: x.applicationId ?? 0 }, { enabled: showDocs && !!x.applicationId });

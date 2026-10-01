@@ -274,4 +274,21 @@ describe("technician accounts", () => {
     await s.tech.remove({ technicianId: tech.id });
     expect((await s.tech.list()).map((x) => x.id)).not.toContain(tech.id);
   });
+
+  it("hands jobs waiting to be scheduled back to the specialist when removed", async () => {
+    const s = await callerFor(admin);
+    const leaving = await makeTechnician("leaving@example.com", "Leaving Tech");
+    const waiting = await approvedRequest();
+    await s.tech.assign({ requestId: waiting, technicianId: leaving.id });
+
+    const { unassigned } = await s.tech.remove({ technicianId: leaving.id });
+    expect(unassigned).toEqual([waiting]);
+    const { request, events } = await s.specialist.detail({ id: waiting });
+    expect(request.technicianId).toBeNull();
+    expect(events[0]).toMatchObject({ status: "unassigned", note: "Technician removed: Leaving Tech" });
+    // It can't be scheduled until someone else is assigned.
+    await expect(s.specialist.setStatus({ id: waiting, status: "scheduled" })).rejects.toMatchObject({
+      message: "Assign a technician before scheduling",
+    });
+  });
 });

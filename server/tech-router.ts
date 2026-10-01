@@ -74,28 +74,41 @@ export const techRouter = createRouter({
     );
   }),
 
-  /** Admin: turn a technician back into a regular account (no active jobs allowed) */
+  /**
+   * Admin: turn a technician back into a regular account. Scheduled or in-progress
+   * jobs must be reassigned first; approved jobs not yet scheduled go back to
+   * "needs a technician" (otherwise they could be scheduled with someone who can't see them).
+   */
   remove: specialistQuery
     .input(z.object({ technicianId: z.number().int() }))
-    .mutation(async ({ input }) => {
-      const db = getDb();
-      const [active] = await db
-        .select({ id: serviceRequests.id })
-        .from(serviceRequests)
-        .where(
-          and(
-            eq(serviceRequests.technicianId, input.technicianId),
-            inArray(serviceRequests.status, [...ACTIVE_JOB_STATUSES]),
-          ),
-        )
-        .limit(1);
-      if (active) {
-        throw new TRPCError({
-          code: "BAD_REQUEST",
-          message: `Reassign job #${active.id} before removing this technician`,
-        });
-      }
-      await db.transaction(async (tx) => {
+    .mutation(async ({ ctx, input }) => {
+      const unassigned = await getDb().transaction(async (tx) => {
+        // Lock this technician's open jobs so nothing is assigned or scheduled meanwhile.
+        const jobs = await tx
+          .select({ id: serviceRequests.id, status: serviceRequests.status })
+          .from(serviceRequests)
+          .where(
+            and(
+              eq(serviceRequests.technicianId, input.technicianId),
+              inArray(serviceRequests.status, [...ASSIGNABLE_STATUSES]),
+            ),
+          )
+          .for("update");
+        const active = jobs.find((j) => ACTIVE_JOB_STATUSES.includes(j.status));
+        if (active) {
+          throw new TRPCError({
+            code: "BAD_REQUEST",
+            message: `Reassign job #${active.id} before removing this technician`,
+          });
+        }
+        const tech = await tx.query.users.findFirst({ where: eq(users.id, input.technicianId) });
+        const released = jobs.map((j) => j.id);
+        if (released.length) {
+          await tx.update(serviceRequests).set({ technicianId: null }).where(inArray(serviceRequests.id, released));
+          for (const id of released) {
+            await logEvent(tx, id, "unassigned", ctx.user.id, `Technician removed: ${tech?.name ?? tech?.email ?? input.technicianId}`);
+          }
+        }
         await tx
           .update(users)
           .set({ role: "customer" })
@@ -105,8 +118,9 @@ export const techRouter = createRouter({
           .update(technicianApplications)
           .set({ status: "contacted", hiredUserId: null })
           .where(eq(technicianApplications.hiredUserId, input.technicianId));
+        return released;
       });
-      return { ok: true };
+      return { ok: true, unassigned };
     }),
 
   /** Admin: assign a technician — only once the customer has approved the quote */

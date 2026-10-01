@@ -8,6 +8,7 @@ import { MediaGrid } from "@/components/MediaGrid";
 import JobMap from "@/components/map/JobMap";
 import { AnswerList } from "@/components/AnswerList";
 import { useI18n } from "@/i18n";
+import { isRecent } from "@/lib/time";
 import { useRoleGate } from "@/hooks/useRoleGate";
 import { trpc } from "@/providers/trpc";
 import {
@@ -65,6 +66,9 @@ function TechnicianCard({
   const lat = location ? Number(location.lat) : NaN;
   const lng = location ? Number(location.lng) : NaN;
   const live = Number.isFinite(lat) && Number.isFinite(lng) ? { lat, lng } : null;
+  // Sharing pauses when the technician's screen locks: don't call an old position "live".
+  const fresh = !!live && isRecent(location!.updatedAt, 5);
+  const time = location ? new Date(location.updatedAt).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" }) : "";
   return (
     <div className="mt-5 rounded-2xl border-2 border-bird bg-white p-4">
       <div className="flex items-center gap-3">
@@ -87,7 +91,7 @@ function TechnicianCard({
           </p>
           <p className="font-display text-base font-extrabold text-navy">{name ?? "Be Right"}</p>
         </div>
-        {live && (
+        {fresh && (
           <span className="ms-auto inline-flex items-center gap-1.5 rounded-full bg-bird px-3 py-1 text-xs font-bold text-white">
             <span className="relative flex h-2 w-2">
               <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-white opacity-70" />
@@ -104,7 +108,7 @@ function TechnicianCard({
       )}
       {live ? (
         <p className="mt-2 text-xs text-navy/70">
-          {p(t.tracking.lastUpdate)}: {new Date(location!.updatedAt).toLocaleTimeString()}
+          {fresh ? `${p(t.tracking.lastUpdate)}: ${time}` : p(t.tracking.lastSeen).replace("{time}", time)}
         </p>
       ) : (
         <p className="mt-3 text-sm text-navy/70">{p(t.tracking.noLocationYet)}</p>

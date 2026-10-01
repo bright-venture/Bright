@@ -27,7 +27,7 @@ beforeAll(async () => {
   vi.stubEnv("NODE_ENV", "");
   vi.resetModules();
   app = (await import("./app")).default;
-});
+}, 60_000); // loads the whole API fresh
 
 async function call(path: string, init?: { body?: unknown; token?: string }) {
   const headers: Record<string, string> = { "content-type": "application/json" };
