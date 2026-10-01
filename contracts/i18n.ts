@@ -326,6 +326,13 @@ export const t = {
       ar: "ما فينا نضيف هالملف. صور وفيديو لحد ٢٠ ميغا بس.",
     },
     required: { en: "Required", ar: "مطلوب" },
+    datePast: { en: "Pick a date from today onwards.", ar: "اختار تاريخ من اليوم ورايح." },
+    fixDetails: { en: "Please check the highlighted details.", ar: "راجع التفاصيل المعلّمة." },
+    photoUploadFailed: {
+      en: "A photo or video didn't upload. Check your connection and try again.",
+      ar: "في صورة أو فيديو ما انرفع. تأكّد من الإنترنت وجرّب مرة تانية.",
+    },
+    refused: { en: "We couldn't send your request: {reason}", ar: "ما قدرنا نبعت طلبك: {reason}" },
   },
   requests: {
     title: { en: "My requests", ar: "طلباتي" },
@@ -706,6 +713,10 @@ export const t = {
     langName: { en: "العربية", ar: "English" },
     loading: { en: "Loading…", ar: "عم نحمّل…" },
     error: { en: "Something went wrong.", ar: "صار خطأ." },
+    offline: {
+      en: "Couldn't reach Be Right. Check your connection and try again.",
+      ar: "ما قدرنا نوصل لبي رايت. تأكّد من الإنترنت وجرّب مرة تانية.",
+    },
     tooMany: {
       en: "Too many attempts right now. Please try again in an hour.",
       ar: "محاولات كتير هلّق. جرّب كمان ساعة.",

@@ -51,8 +51,61 @@
   status = 200
   force = true
 
-# Single-page app: any other path that isn't a real file serves index.html
+# Single-page app. Its pages (keep in sync with src/App.tsx; server/routes.test.ts
+# checks) are served index.html. "/" and real files (JS, images…) are served as they are.
+[[redirects]]
+  from = "/book"
+  to = "/index.html"
+  status = 200
+
+[[redirects]]
+  from = "/requests"
+  to = "/index.html"
+  status = 200
+
+[[redirects]]
+  from = "/dashboard"
+  to = "/index.html"
+  status = 200
+
+[[redirects]]
+  from = "/tech"
+  to = "/index.html"
+  status = 200
+
+[[redirects]]
+  from = "/login"
+  to = "/index.html"
+  status = 200
+
+[[redirects]]
+  from = "/signup"
+  to = "/index.html"
+  status = 200
+
+[[redirects]]
+  from = "/reset-password"
+  to = "/index.html"
+  status = 200
+
+[[redirects]]
+  from = "/join"
+  to = "/index.html"
+  status = 200
+
+[[redirects]]
+  from = "/terms"
+  to = "/index.html"
+  status = 200
+
+[[redirects]]
+  from = "/privacy"
+  to = "/index.html"
+  status = 200
+
+# Anything else: the app shows its "page went missing" screen, with a real 404 status
+# so search engines don't index made-up URLs.
 [[redirects]]
   from = "/*"
   to = "/index.html"
-  status = 200
+  status = 404

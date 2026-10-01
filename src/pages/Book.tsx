@@ -20,7 +20,7 @@ import { supabase } from "@/lib/supabase";
 import LocationPicker, { type Pin } from "@/components/map/LocationPicker";
 import { isInLebanon } from "@contracts/geo";
 import { isValidPhone } from "@contracts/phone";
-import { isRateLimited } from "@/lib/errors";
+import { isNetworkError, isRateLimited, refusalMessage } from "@/lib/errors";
 import {
   clearDraft,
   loadDraftFields,
@@ -35,7 +35,7 @@ import {
   URGENCY_META,
   type UrgencyLevel,
 } from "@contracts/services";
-import { TIME_SLOTS, todayInBeirut, type TimeSlot } from "@contracts/workflow";
+import { isValidVisitDate, TIME_SLOTS, todayInBeirut, type TimeSlot } from "@contracts/workflow";
 
 /** A photo/video kept on the device until the request is submitted. */
 type MediaDraft = {
@@ -96,7 +96,8 @@ export default function Book() {
   const [uploadProgress, setUploadProgress] = useState<{ done: number; total: number } | null>(
     null,
   );
-  const [submitError, setSubmitError] = useState<"generic" | "tooMany" | null>(null);
+  /** Shown under the submit button; already translated. */
+  const [submitError, setSubmitError] = useState<string | null>(null);
   const [doneId, setDoneId] = useState<number | null>(null);
   const [doneUrgency, setDoneUrgency] = useState<UrgencyLevel | null>(null);
   const fileRef = useRef<HTMLInputElement>(null);
@@ -124,6 +125,10 @@ export default function Book() {
   const contactPhone = phone || user?.phone || "";
   // Only complain once something is typed (or carried over from the account).
   const phoneInvalid = contactPhone.trim() !== "" && !isValidPhone(contactPhone);
+  // A draft saved yesterday can carry yesterday's date.
+  const dateInvalid = date !== "" && !isValidVisitDate(date, todayInBeirut());
+  const detailsReady =
+    !!date && !dateInvalid && !!slot && !!area.trim() && !!address.trim() && isValidPhone(contactPhone) && !!pin && isInLebanon(pin.lat, pin.lng);
 
   /* ---------- draft persistence ---------- */
   const filesRestored = useRef(false);
@@ -174,10 +179,17 @@ export default function Book() {
 
   async function submit() {
     if (needsTerms && !agreedNow) return;
-    // e.g. a short number saved at sign-up, or a draft from before phones were checked
-    if (!isValidPhone(contactPhone)) return setStep(3);
-    setSubmitting(true);
     setSubmitError(null);
+    // Re-check before sending: a restored draft can be out of date (yesterday's date,
+    // a short phone saved at sign-up, questions that changed). Go back to the step to fix.
+    const fixAt = !category ? 0 : !questionsAnswered() ? 1 : !detailsReady ? 3 : null;
+    if (fixAt !== null) {
+      setStep(fixAt);
+      setSubmitError(p(t.book.fixDetails));
+      return;
+    }
+    setSubmitting(true);
+    let uploading = false;
     try {
       if (needsTerms) await acceptTerms.mutateAsync();
       // Photos are uploaded only now that we know who the customer is.
@@ -185,6 +197,7 @@ export default function Book() {
       for (const [i, m] of media.entries()) {
         setUploadProgress({ done: i, total: media.length });
         const contentType = m.file.type || "application/octet-stream";
+        uploading = true;
         const target = await createUpload.mutateAsync({
           fileName: m.file.name,
           size: m.file.size,
@@ -196,6 +209,7 @@ export default function Book() {
         if (error) throw error;
         uploaded.push({ key: target.key, fileName: m.file.name, size: m.file.size, contentType });
       }
+      uploading = false;
       setUploadProgress(null);
       const res = await createMutation.mutateAsync({
         category,
@@ -214,7 +228,18 @@ export default function Book() {
       setDoneId(res.id);
       setDoneUrgency(res.urgency as UrgencyLevel);
     } catch (err) {
-      setSubmitError(isRateLimited(err) ? "tooMany" : "generic");
+      const reason = refusalMessage(err);
+      setSubmitError(
+        isRateLimited(err)
+          ? p(t.misc.tooMany)
+          : isNetworkError(err)
+            ? p(t.misc.offline)
+            : uploading
+              ? p(t.book.photoUploadFailed)
+              : reason
+                ? p(t.book.refused).replace("{reason}", reason)
+                : p(t.misc.error),
+      );
     } finally {
       setSubmitting(false);
       setUploadProgress(null);
@@ -441,8 +466,10 @@ export default function Book() {
                   value={date}
                   min={todayInBeirut()}
                   onChange={(e) => setDate(e.target.value)}
+                  aria-invalid={dateInvalid || undefined}
                   className="mt-2 min-h-12 w-full rounded-2xl border-2 border-navy/30 bg-white px-4 font-semibold text-navy focus:border-flame focus:outline-none"
                 />
+                {dateInvalid && <p className="mt-1 text-sm font-semibold text-destructive">{p(t.book.datePast)}</p>}
                 <div className="mt-4 flex flex-wrap gap-2">
                   {[
                     { v: "morning" as const, l: t.book.slotMorning },
@@ -622,12 +649,14 @@ export default function Book() {
 
           {step < 4 ? (
             <button
-              onClick={() => setStep((s) => s + 1)}
+              onClick={() => {
+                setSubmitError(null);
+                setStep((s) => s + 1);
+              }}
               disabled={
                 (step === 0 && !category) ||
                 (step === 1 && !questionsAnswered()) ||
-                (step === 3 &&
-                  (!date || !slot || !area || !address || !isValidPhone(contactPhone) || !pin || !isInLebanon(pin.lat, pin.lng)))
+                (step === 3 && !detailsReady)
               }
               className="btn-pill-primary disabled:opacity-40"
             >
@@ -651,7 +680,7 @@ export default function Book() {
         </div>
         {submitError && (
           <p className="mt-3 text-end text-sm font-semibold text-destructive">
-            {p(submitError === "tooMany" ? t.misc.tooMany : t.misc.error)}
+            {submitError}
           </p>
         )}
       </main>
