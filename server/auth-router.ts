@@ -1,5 +1,9 @@
 import { TRPCError } from "@trpc/server";
-import { createRouter, publicQuery } from "./middleware";
+import { eq } from "drizzle-orm";
+import { createRouter, authedQuery, publicQuery } from "./middleware";
+import { getDb } from "./queries/connection";
+import { users } from "../db/schema";
+import { LEGAL_VERSION } from "@contracts/legal";
 
 export const authRouter = createRouter({
   // Returns null for anonymous visitors so the UI can render without an error.
@@ -13,5 +17,14 @@ export const authRouter = createRouter({
       });
     }
     return ctx.user ?? null;
+  }),
+
+  /** Record that the signed-in user accepts the current Terms and Privacy Policy. */
+  acceptTerms: authedQuery.mutation(async ({ ctx }) => {
+    await getDb()
+      .update(users)
+      .set({ termsAcceptedAt: new Date(), termsVersion: LEGAL_VERSION })
+      .where(eq(users.id, ctx.user.id));
+    return { ok: true, version: LEGAL_VERSION };
   }),
 });

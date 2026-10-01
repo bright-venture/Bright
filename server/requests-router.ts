@@ -50,6 +50,9 @@ export const requestsRouter = createRouter({
       }),
     )
     .mutation(async ({ ctx, input }) => {
+      if (!ctx.user.termsAcceptedAt) {
+        throw new TRPCError({ code: "BAD_REQUEST", message: "Please accept the Terms of Service and Privacy Policy" });
+      }
       if (!CATEGORY_MAP[input.category]) {
         throw new TRPCError({ code: "BAD_REQUEST", message: "Unknown category" });
       }

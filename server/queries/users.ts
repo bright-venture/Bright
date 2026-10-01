@@ -25,6 +25,8 @@ export async function findOrCreateUser(identity: {
   email: string | null;
   name: string | null;
   phone?: string | null;
+  /** Terms version accepted at sign-up, if any. */
+  termsVersion?: string | null;
 }): Promise<User> {
   const db = getDb();
   const existing = await findByAuthId(identity.authId);
@@ -37,6 +39,8 @@ export async function findOrCreateUser(identity: {
         email: identity.email,
         name: identity.name,
         phone: identity.phone ?? null,
+        termsVersion: identity.termsVersion ?? null,
+        termsAcceptedAt: identity.termsVersion ? new Date() : null,
         role: isSpecialistEmail(identity.email) ? "specialist" : "customer",
       })
       .onConflictDoNothing({ target: schema.users.authId });
@@ -49,6 +53,10 @@ export async function findOrCreateUser(identity: {
   if (identity.email && identity.email !== existing.email) patch.email = identity.email;
   if (identity.name && !existing.name) patch.name = identity.name;
   if (identity.phone && !existing.phone) patch.phone = identity.phone;
+  if (identity.termsVersion && !existing.termsAcceptedAt) {
+    patch.termsVersion = identity.termsVersion;
+    patch.termsAcceptedAt = new Date();
+  }
   if (existing.role !== "specialist" && isSpecialistEmail(identity.email ?? existing.email)) {
     patch.role = "specialist";
   }

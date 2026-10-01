@@ -36,6 +36,14 @@ export function Footer() {
         </div>
         <div className="mt-12 flex flex-col gap-2 border-t border-paper/20 pt-6 text-xs text-paper/60 sm:flex-row sm:items-center sm:justify-between">
           <span>{p(t.footer.rights)}</span>
+          <nav aria-label={p(t.legal.footerLinks)} className="flex gap-4">
+            <Link to="/terms" className="underline underline-offset-4 hover:text-paper">
+              {p(t.legal.terms)}
+            </Link>
+            <Link to="/privacy" className="underline underline-offset-4 hover:text-paper">
+              {p(t.legal.privacy)}
+            </Link>
+          </nav>
           <span className="font-display uppercase tracking-[0.2em]">
             {p(t.hero.kicker)}
           </span>

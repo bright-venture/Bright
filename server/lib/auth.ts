@@ -24,11 +24,14 @@ export async function authenticateRequest(headers: Headers) {
   const text = (v: unknown) => (typeof v === "string" && v.trim() ? v.trim().slice(0, 255) : null);
   const name = text(meta.full_name) ?? text(meta.name);
   const phone = text(meta.phone)?.slice(0, 64) ?? null;
+  // Recorded by the sign-up form when the "I agree" box is ticked.
+  const termsVersion = text(meta.terms_version)?.slice(0, 32) ?? null;
 
   return findOrCreateUser({
     authId: claims.sub,
     email: typeof claims.email === "string" && claims.email ? claims.email : null,
     name,
     phone,
+    termsVersion,
   });
 }

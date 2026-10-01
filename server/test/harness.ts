@@ -29,9 +29,15 @@ export async function callerFor(user?: User) {
   });
 }
 
-export async function makeUser(email: string, name = email.split("@")[0]) {
+/** A signed-up account; by default it accepted the Terms at sign-up, like the real form. */
+export async function makeUser(email: string, name = email.split("@")[0], { acceptedTerms = true } = {}) {
   const { findOrCreateUser } = await import("../queries/users");
-  return findOrCreateUser({ authId: randomUUID(), email, name });
+  return findOrCreateUser({
+    authId: randomUUID(),
+    email,
+    name,
+    termsVersion: acceptedTerms ? "test-version" : null,
+  });
 }
 
 /** A pin in Achrafieh, Beirut. */

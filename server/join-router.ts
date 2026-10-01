@@ -7,6 +7,7 @@ import { serviceRequests, technicianApplications, users } from "../db/schema";
 import { CATEGORIES } from "../contracts/services";
 import { AVAILABILITY, EXPERIENCE_LEVELS, MANUAL_APPLICATION_STATUSES } from "@contracts/applications";
 import { getSupabaseAdmin } from "./lib/supabase";
+import { LEGAL_VERSION } from "@contracts/legal";
 import { createDocumentUrls, documentKeyMatches, documentsExist } from "./lib/storage";
 
 const TRADE_IDS = CATEGORIES.map((c) => c.id) as [string, ...string[]];
@@ -39,6 +40,8 @@ export const joinRouter = createRouter({
         idDocumentKey: z.string().max(512),
         criminalRecordKey: z.string().max(512),
         photoKey: z.string().max(512),
+        // Privacy Policy + consent to review ID and criminal record.
+        consent: z.literal(true),
       }),
     )
     .mutation(async ({ input }) => {
@@ -51,9 +54,26 @@ export const joinRouter = createRouter({
       ) {
         throw new TRPCError({ code: "BAD_REQUEST", message: "Please upload all three documents" });
       }
+      // \`consent\` is validated above (must be true); what's stored is when and which version.
       const [res] = await getDb()
         .insert(technicianApplications)
-        .values({ ...input, notes: input.notes ?? null })
+        .values({
+          name: input.name,
+          phone: input.phone,
+          email: input.email,
+          trade: input.trade,
+          area: input.area,
+          experience: input.experience,
+          availability: input.availability,
+          hasTools: input.hasTools,
+          hasTransport: input.hasTransport,
+          notes: input.notes ?? null,
+          idDocumentKey: input.idDocumentKey,
+          criminalRecordKey: input.criminalRecordKey,
+          photoKey: input.photoKey,
+          consentAt: new Date(),
+          consentVersion: LEGAL_VERSION,
+        })
         .returning({ id: technicianApplications.id });
       return { id: res.id };
     }),

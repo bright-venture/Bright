@@ -575,6 +575,27 @@ export const t = {
       ar: "المستندات ناقصة. اطلب من المتقدّم يقدّم من جديد مع الهوية والسجل العدلي والصورة.",
     },
   },
+  legal: {
+    terms: { en: "Terms of Service", ar: "شروط الخدمة" },
+    privacy: { en: "Privacy Policy", ar: "سياسة الخصوصية" },
+    otherDocs: { en: "Legal documents", ar: "المستندات القانونية" },
+    footerLinks: { en: "Legal", ar: "قانوني" },
+    lastUpdated: { en: "Last updated", ar: "آخر تحديث" },
+    // "{terms}" and "{privacy}" become links
+    agreeSignup: {
+      en: "I am 18 or older and I agree to the {terms} and the {privacy}.",
+      ar: "عمري ١٨ سنة أو أكثر وأوافق على {terms} و{privacy}.",
+    },
+    agreeBooking: {
+      en: "I agree to the {terms} and the {privacy}.",
+      ar: "أوافق على {terms} و{privacy}.",
+    },
+    agreeApplication: {
+      en: "I agree to the {privacy} and allow Be Right to review my ID and criminal record for hiring.",
+      ar: "أوافق على {privacy} وأسمح لبي رايت بمراجعة هويتي وسجلي العدلي لغرض التوظيف.",
+    },
+    mustAgree: { en: "Please accept to continue.", ar: "لازم توافق لتكمّل." },
+  },
   notFound: {
     title: { en: "This page went missing", ar: "هالصفحة ضايعة" },
     body: {

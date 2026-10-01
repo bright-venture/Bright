@@ -52,6 +52,7 @@ const application = {
   hasTools: true,
   hasTransport: false,
   ...documentKeys(),
+  consent: true as const,
 };
 
 const leak = {
@@ -134,6 +135,31 @@ describe("technician applications (public)", () => {
     await expect(
       (await callerFor()).join.submit({ ...application, trade: "hacking" }),
     ).rejects.toMatchObject({ code: "BAD_REQUEST" });
+  });
+});
+
+describe("terms and consent", () => {
+  it("records the terms version accepted at sign-up", () => {
+    expect(alice.termsVersion).toBe("test-version");
+    expect(alice.termsAcceptedAt).toBeInstanceOf(Date);
+  });
+
+  it("asks older accounts to accept before booking, then lets them book", async () => {
+    const legacy = await makeUser("legacy@example.com", "Legacy", { acceptedTerms: false });
+    const c = await callerFor(legacy);
+    await expect(c.requests.create(booking())).rejects.toMatchObject({ code: "BAD_REQUEST" });
+    const { version } = await c.auth.acceptTerms();
+    const accepted = await callerFor({ ...legacy, termsAcceptedAt: new Date(), termsVersion: version });
+    await expect(accepted.requests.create(booking())).resolves.toMatchObject({ id: expect.any(Number) });
+  });
+
+  it("requires applicants to consent", async () => {
+    await expect(
+      (await callerFor()).join.submit({ ...application, consent: false as unknown as true }),
+    ).rejects.toMatchObject({ code: "BAD_REQUEST" });
+    const { id } = await (await callerFor()).join.submit({ ...application, email: "consent@example.com" });
+    const row = (await (await callerFor(admin)).join.list()).find((a) => a.id === id);
+    expect(row?.consentAt).toBeInstanceOf(Date);
   });
 });
 

@@ -10,6 +10,7 @@ const Tech = lazy(() => import('./pages/Tech'))
 const Login = lazy(() => import('./pages/Login'))
 const ResetPassword = lazy(() => import('./pages/ResetPassword'))
 const Join = lazy(() => import('./pages/Join'))
+const Legal = lazy(() => import('./pages/Legal'))
 const NotFound = lazy(() => import('./pages/NotFound'))
 
 function PageFallback() {
@@ -33,6 +34,8 @@ export default function App() {
         <Route path="/signup" element={<Login mode="signup" />} />
         <Route path="/reset-password" element={<ResetPassword />} />
         <Route path="/join" element={<Join />} />
+        <Route path="/terms" element={<Legal doc="terms" />} />
+        <Route path="/privacy" element={<Legal doc="privacy" />} />
         <Route path="*" element={<NotFound />} />
       </Routes>
     </Suspense>

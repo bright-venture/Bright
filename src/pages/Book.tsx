@@ -12,6 +12,7 @@ import { Navbar } from "@/components/Navbar";
 import { Footer } from "@/components/Footer";
 import { ServiceIcon } from "@/components/ServiceIcon";
 import { AuthPanel } from "@/components/AuthPanel";
+import { AgreeCheckbox } from "@/components/AgreeCheckbox";
 import { useI18n } from "@/i18n";
 import { useRoleGate } from "@/hooks/useRoleGate";
 import { trpc } from "@/providers/trpc";
@@ -110,6 +111,10 @@ export default function Book() {
 
   const createUpload = trpc.storage.createUpload.useMutation();
   const createMutation = trpc.requests.create.useMutation();
+  const acceptTerms = trpc.auth.acceptTerms.useMutation();
+  // Accounts created before the sign-up checkbox (or Google sign-in) accept once here.
+  const needsTerms = isAuthenticated && !user?.termsAcceptedAt;
+  const [agreedNow, setAgreedNow] = useState(false);
 
   const stepLabels = [t.book.stepCategory, t.book.stepQuestions, t.book.stepPhotos, t.book.stepWhen, t.book.stepReview];
 
@@ -164,9 +169,11 @@ export default function Book() {
   }
 
   async function submit() {
+    if (needsTerms && !agreedNow) return;
     setSubmitting(true);
     setSubmitError(false);
     try {
+      if (needsTerms) await acceptTerms.mutateAsync();
       // Photos are uploaded only now that we know who the customer is.
       const uploaded = [];
       for (const [i, m] of media.entries()) {
@@ -584,6 +591,9 @@ export default function Book() {
                   </span>
                 </p>
               )}
+              {needsTerms && (
+                <AgreeCheckbox id="book-agree" text={t.legal.agreeBooking} checked={agreedNow} onChange={setAgreedNow} />
+              )}
             </div>
           )}
         </div>
@@ -616,7 +626,7 @@ export default function Book() {
           ) : isAuthenticated ? (
             <button
               onClick={submit}
-              disabled={submitting}
+              disabled={submitting || (needsTerms && !agreedNow)}
               className="btn-pill-primary text-base disabled:opacity-40"
             >
               {submitting && <Loader2 className="h-5 w-5 animate-spin" />}

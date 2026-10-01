@@ -4,6 +4,8 @@ import { Eye, EyeOff, Loader2, Mail } from "lucide-react";
 import type { AuthError } from "@supabase/supabase-js";
 import { useI18n } from "@/i18n";
 import { supabase } from "@/lib/supabase";
+import { AgreeCheckbox } from "@/components/AgreeCheckbox";
+import { LEGAL_VERSION } from "@contracts/legal";
 
 const INPUT =
   "mt-2 min-h-12 w-full rounded-2xl border-2 border-navy/30 bg-white px-4 font-semibold text-navy placeholder:font-normal placeholder:text-navy/40 focus:border-flame focus:outline-none";
@@ -40,6 +42,7 @@ export function AuthPanel({
   const [phone, setPhone] = useState("");
   const [password, setPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
+  const [agreed, setAgreed] = useState(false);
   const [code, setCode] = useState("");
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -111,13 +114,14 @@ export function AuthPanel({
   const onSignUp = (e: FormEvent) => {
     e.preventDefault();
     if (password.length < MIN_PASSWORD) return setError(p(t.auth.errWeak));
+    if (!agreed) return setError(p(t.legal.mustAgree));
     return run(async () => {
       const { data, error } = await supabase.auth.signUp({
         email: cleanEmail(),
         password,
         options: {
           emailRedirectTo: returnUrl,
-          data: { full_name: name.trim(), phone: phone.trim() },
+          data: { full_name: name.trim(), phone: phone.trim(), terms_version: LEGAL_VERSION },
         },
       });
       if (error) return setError(explain(error));
@@ -375,6 +379,7 @@ export function AuthPanel({
             <p className="mt-1 text-xs text-navy/70">{p(t.auth.phoneHint)}</p>
           </div>
           {passwordField("new-password", p(t.auth.password))}
+          <AgreeCheckbox id="auth-agree" text={t.legal.agreeSignup} checked={agreed} onChange={setAgreed} />
           {submit(p(t.auth.signUp))}
         </form>
       )}

@@ -57,6 +57,9 @@ export const users = pgTable("users", {
   email: varchar("email", { length: 320 }),
   /** Given at sign-up; pre-fills bookings. */
   phone: varchar("phone", { length: 64 }),
+  /** When this account accepted the Terms and Privacy Policy, and which version. */
+  termsAcceptedAt: timestamp("terms_accepted_at", { withTimezone: true }),
+  termsVersion: varchar("terms_version", { length: 32 }),
   avatar: text("avatar"),
   role: userRole("role").default("customer").notNull(),
   ...timestamps,
@@ -153,6 +156,9 @@ export const technicianApplications = pgTable("technician_applications", {
   idDocumentKey: varchar("id_document_key", { length: 512 }),
   criminalRecordKey: varchar("criminal_record_key", { length: 512 }),
   photoKey: varchar("photo_key", { length: 512 }),
+  /** Applicant consented to the Privacy Policy and document review (version accepted). */
+  consentAt: timestamp("consent_at", { withTimezone: true }),
+  consentVersion: varchar("consent_version", { length: 32 }),
   status: applicationStatus("status").default("new").notNull(),
   /** The technician account created or promoted when the applicant was hired. */
   hiredUserId: integer("hired_user_id").references(() => users.id),

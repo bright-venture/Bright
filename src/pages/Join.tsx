@@ -5,6 +5,7 @@ import { Navbar } from "@/components/Navbar";
 import { Footer } from "@/components/Footer";
 import { ServiceIcon } from "@/components/ServiceIcon";
 import { DocumentUpload } from "@/components/DocumentUpload";
+import { AgreeCheckbox } from "@/components/AgreeCheckbox";
 import { useI18n } from "@/i18n";
 import { trpc } from "@/providers/trpc";
 import { CATEGORIES, type LocalText } from "@contracts/services";
@@ -71,6 +72,7 @@ export default function Join() {
   const [idDocumentKey, setIdDocumentKey] = useState<string | null>(null);
   const [criminalRecordKey, setCriminalRecordKey] = useState<string | null>(null);
   const [photoKey, setPhotoKey] = useState<string | null>(null);
+  const [consent, setConsent] = useState(false);
   const [done, setDone] = useState(false);
   const [error, setError] = useState("");
 
@@ -94,7 +96,8 @@ export default function Join() {
     hasTransport !== null &&
     !!idDocumentKey &&
     !!criminalRecordKey &&
-    !!photoKey;
+    !!photoKey &&
+    consent;
 
   async function submit() {
     if (!valid) return;
@@ -114,6 +117,7 @@ export default function Join() {
         idDocumentKey: idDocumentKey!,
         criminalRecordKey: criminalRecordKey!,
         photoKey: photoKey!,
+        consent: true,
       });
       setDone(true);
     } catch {
@@ -308,6 +312,8 @@ export default function Join() {
                     className="mt-2 w-full rounded-2xl border-2 border-navy/30 bg-white px-4 py-3 font-semibold text-navy placeholder:font-normal placeholder:text-navy/40 focus:border-flame focus:outline-none"
                   />
                 </div>
+
+                <AgreeCheckbox id="join-consent" text={t.legal.agreeApplication} checked={consent} onChange={setConsent} />
 
                 {error && (
                   <p className="rounded-xl border-2 border-flame bg-flame/10 px-4 py-2 text-sm font-semibold text-flame-dark">
