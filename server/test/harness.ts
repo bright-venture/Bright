@@ -40,6 +40,16 @@ export async function makeUser(email: string, name = email.split("@")[0], { acce
   });
 }
 
+/** A technician account (in the app they're created by hiring an application). */
+export async function makeTechnician(email: string, name = email.split("@")[0]) {
+  const user = await makeUser(email, name);
+  const { getDb } = await import("../queries/connection");
+  const { users } = await import("@db/schema");
+  const { eq } = await import("drizzle-orm");
+  const [updated] = await getDb().update(users).set({ role: "technician" }).where(eq(users.id, user.id)).returning();
+  return updated;
+}
+
 /** A pin in Achrafieh, Beirut. */
 export const BEIRUT_PIN = { lat: 33.8886, lng: 35.5195 };
 

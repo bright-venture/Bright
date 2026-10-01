@@ -6,7 +6,8 @@ import { requestEvents, requestMedia, serviceRequests, technicianLocations, user
 import { ACTIVE_JOB_STATUSES } from "@contracts/workflow";
 import type { RequestStatus, UrgencyLevel } from "@contracts/services";
 import { QUOTE_AMOUNT_PATTERN, URGENCY_LEVELS } from "@contracts/workflow";
-import { applyTransition, findRequest } from "./lib/workflow";
+import { applyTransition, findRequest, logEvent } from "./lib/workflow";
+import { TRPCError } from "@trpc/server";
 
 const byId = z.object({ id: z.number().int() });
 
@@ -113,6 +114,38 @@ export const specialistRouter = createRouter({
         guard: (row) =>
           name === "schedule" && !row.technicianId ? "Assign a technician before scheduling" : null,
       });
+      return { ok: true };
+    }),
+
+  /** Specialist prepares the job: what's likely wrong, what to bring, how to proceed. */
+  prepare: specialistQuery
+    .input(
+      z.object({
+        id: z.number().int(),
+        diagnosis: z.string().trim().max(2000),
+        tools: z.string().trim().max(2000),
+        parts: z.string().trim().max(2000),
+        instructions: z.string().trim().max(4000),
+      }),
+    )
+    .mutation(async ({ ctx, input }) => {
+      const db = getDb();
+      const row = await findRequest(db, input.id, "any");
+      if (CLOSED.includes(row.status)) {
+        throw new TRPCError({ code: "BAD_REQUEST", message: "This request is closed" });
+      }
+      const empty = (v: string) => v || null;
+      await db
+        .update(serviceRequests)
+        .set({
+          prepDiagnosis: empty(input.diagnosis),
+          prepTools: empty(input.tools),
+          prepParts: empty(input.parts),
+          prepInstructions: empty(input.instructions),
+          preparedAt: new Date(),
+        })
+        .where(eq(serviceRequests.id, row.id));
+      await logEvent(db, row.id, "prepared", ctx.user.id);
       return { ok: true };
     }),
 });

@@ -2,81 +2,27 @@ import { useState } from "react";
 import { Loader2 } from "lucide-react";
 import { Navbar } from "@/components/Navbar";
 import { Footer } from "@/components/Footer";
-import { ServiceIcon } from "@/components/ServiceIcon";
-import { MediaGrid } from "@/components/MediaGrid";
-import { AnswerList } from "@/components/AnswerList";
-import JobMap from "@/components/map/JobMap";
 import { ApplicationsTab } from "@/components/dashboard/ApplicationsTab";
+import { QueueTab } from "@/components/dashboard/QueueTab";
+import { TechniciansTab } from "@/components/dashboard/TechniciansTab";
+import { inView } from "@/components/dashboard/queueMeta";
 import { useI18n } from "@/i18n";
 import { useRoleGate } from "@/hooks/useRoleGate";
 import { trpc } from "@/providers/trpc";
-import {
-  CATEGORY_MAP,
-  URGENCY_META,
-  type RequestStatus,
-  type UrgencyLevel,
-} from "@contracts/services";
-import { ASSIGNABLE_STATUSES, QUOTE_AMOUNT_PATTERN } from "@contracts/workflow";
 
-const URGENCY_DOT: Record<UrgencyLevel, string> = {
-  normal: "bg-navy/30",
-  priority: "bg-bird",
-  urgent: "bg-flame",
-  critical: "bg-red-700",
-};
+type Tab = "queue" | "applications" | "technicians";
 
+/** Specialist control center: requests queue, technician applications, technicians. */
 export default function Dashboard() {
   const { t, p } = useI18n();
   const { role, isLoading: authLoading } = useRoleGate(["specialist"], { requireSignIn: true });
-  const utils = trpc.useUtils();
-  const [tab, setTab] = useState<"queue" | "applications" | "technicians">("queue");
-  const [selected, setSelected] = useState<number | null>(null);
-  const [urgency, setUrgency] = useState<UrgencyLevel>("normal");
-  const [amount, setAmount] = useState("");
-  const [quoteNote, setQuoteNote] = useState("");
-  const [note, setNote] = useState("");
-
   const isSpecialist = role === "specialist";
+  const [tab, setTab] = useState<Tab>("queue");
+
+  // Badge counts (same queries the tabs use, so they share the cache).
   const queue = trpc.specialist.queue.useQuery(undefined, { enabled: isSpecialist, refetchInterval: 30_000 });
-  const detail = trpc.specialist.detail.useQuery(
-    { id: selected! },
-    { enabled: isSpecialist && selected !== null },
-  );
-
-  const invalidate = () => {
-    utils.specialist.queue.invalidate();
-    utils.specialist.detail.invalidate();
-  };
-  const startReview = trpc.specialist.startReview.useMutation({ onSuccess: invalidate });
-  const sendQuote = trpc.specialist.sendQuote.useMutation({
-    onSuccess: () => {
-      invalidate();
-      setAmount("");
-      setQuoteNote("");
-    },
-  });
-  const setStatus = trpc.specialist.setStatus.useMutation({
-    onSuccess: () => {
-      invalidate();
-      setNote("");
-    },
-  });
-  const techList = trpc.tech.list.useQuery(undefined, { enabled: isSpecialist });
-  const addTech = trpc.tech.addByEmail.useMutation({
-    onSuccess: () => {
-      utils.tech.list.invalidate();
-      setTechEmail("");
-    },
-  });
-  const assign = trpc.tech.assign.useMutation({ onSuccess: invalidate });
-  const removeTech = trpc.tech.remove.useMutation({
-    onSuccess: () => utils.tech.list.invalidate(),
-  });
-  const requestActions = [startReview, sendQuote, setStatus, assign];
-  const actionError = requestActions.find((m) => m.isError)?.error?.message;
-  const [techEmail, setTechEmail] = useState("");
-  const [chosenTech, setChosenTech] = useState("");
-
+  const applications = trpc.join.list.useQuery(undefined, { enabled: isSpecialist });
+  const technicians = trpc.tech.list.useQuery(undefined, { enabled: isSpecialist });
 
   if (authLoading || !isSpecialist) {
     return (
@@ -86,412 +32,52 @@ export default function Dashboard() {
     );
   }
 
-  const rows = queue.data ?? [];
-  const d = detail.data;
+  const badges: Record<Tab, number> = {
+    queue: (queue.data ?? []).filter((x) => inView("needsAction", x.request)).length,
+    applications: (applications.data ?? []).filter((a) => a.status === "new").length,
+    technicians: technicians.data?.length ?? 0,
+  };
+  const labels = {
+    queue: t.dash3.tabQueue,
+    applications: t.dash3.tabApplications,
+    technicians: t.dash3.tabTechnicians,
+  };
+  const goToApplications = () => setTab("applications");
 
   return (
     <div className="flex min-h-screen flex-col bg-paper">
       <Navbar />
-      <main className="mx-auto w-full max-w-6xl flex-1 px-4 pb-20 pt-24 sm:px-6">
-        <h1 className="font-display text-3xl font-black text-navy sm:text-4xl">
-          {p(t.dash.title)}
-        </h1>
+      <main className="mx-auto w-full max-w-7xl flex-1 px-4 pb-20 pt-24 sm:px-6">
+        <h1 className="font-display text-3xl font-black text-navy sm:text-4xl">{p(t.dash.title)}</h1>
 
-        <div className="mt-6 inline-flex rounded-full border-2 border-navy bg-white p-1">
+        <div role="tablist" className="mt-6 inline-flex flex-wrap gap-1 rounded-3xl border-2 border-navy bg-white p-1">
           {(["queue", "applications", "technicians"] as const).map((k) => (
             <button
               key={k}
+              role="tab"
+              aria-selected={tab === k}
               onClick={() => setTab(k)}
-              className={`min-h-10 rounded-full px-5 text-sm font-bold transition-colors ${
+              className={`inline-flex min-h-10 items-center gap-2 rounded-full px-5 text-sm font-bold transition-colors ${
                 tab === k ? "bg-navy text-paper" : "text-navy/70 hover:text-navy"
               }`}
             >
-              {p({ queue: t.dash3.tabQueue, applications: t.dash3.tabApplications, technicians: t.dash3.tabTechnicians }[k])}
+              {p(labels[k])}
+              {badges[k] > 0 && (
+                <span
+                  className={`rounded-full px-2 py-px text-[11px] font-black ${
+                    tab === k ? "bg-paper text-navy" : k === "technicians" ? "bg-navy/10 text-navy" : "bg-flame-ink text-white"
+                  }`}
+                >
+                  {badges[k]}
+                </span>
+              )}
             </button>
           ))}
         </div>
 
+        {tab === "queue" && <QueueTab onGoToApplications={goToApplications} />}
         {tab === "applications" && <ApplicationsTab />}
-
-        {tab === "technicians" && (
-          <div className="mt-8 flex max-w-2xl flex-col gap-3">
-            {(techList.data ?? []).length === 0 && !techList.isLoading && (
-              <div className="card-br p-8 text-center font-semibold text-navy/70">
-                {p(t.dash2.noTechnicians)}
-              </div>
-            )}
-            {(techList.data ?? []).map((x) => (
-              <div key={x.id} className="card-br flex items-center gap-4 p-4">
-                <div className="min-w-0 flex-1">
-                  <p className="truncate font-display text-sm font-extrabold text-navy">
-                    {x.name ?? "—"}
-                  </p>
-                  <p className="truncate text-xs text-navy/70">{x.email}</p>
-                </div>
-                <button
-                  onClick={() => removeTech.mutate({ technicianId: x.id })}
-                  disabled={removeTech.isPending}
-                  className="min-h-9 rounded-full border-2 border-navy/25 px-4 text-xs font-bold text-navy/70 hover:border-navy hover:text-navy disabled:opacity-40"
-                >
-                  {p(t.dash2.remove)}
-                </button>
-              </div>
-            ))}
-            {removeTech.isError && (
-              <p className="text-sm font-semibold text-destructive">{removeTech.error.message}</p>
-            )}
-            <div className="card-br p-4">
-              <p className="text-xs text-navy/70">{p(t.dash2.addTechHint)}</p>
-              <div className="mt-2 flex flex-wrap gap-2">
-                <input
-                  value={techEmail}
-                  onChange={(e) => setTechEmail(e.target.value)}
-                  placeholder={p(t.dash2.techEmail)}
-                  type="email"
-                  className="min-h-11 flex-1 rounded-2xl border-2 border-navy/30 bg-white px-4 text-sm font-semibold text-navy focus:border-flame focus:outline-none"
-                />
-                <button
-                  onClick={() => addTech.mutate({ email: techEmail })}
-                  disabled={!techEmail || addTech.isPending}
-                  className="btn-pill-primary !min-h-11 !py-2 text-xs disabled:opacity-40"
-                >
-                  {p(t.dash2.addTech)}
-                </button>
-              </div>
-              {addTech.isError && (
-                <p className="mt-1 text-xs font-semibold text-destructive">{addTech.error.message}</p>
-              )}
-            </div>
-          </div>
-        )}
-
-        {tab === "queue" && rows.length === 0 && !queue.isLoading && (
-          <div className="card-br mt-10 p-10 text-center font-semibold text-navy/70">
-            {p(t.dash.empty)}
-          </div>
-        )}
-
-        <div className={`mt-8 grid gap-6 lg:grid-cols-[1fr_1.2fr] ${tab === "queue" ? "" : "hidden"}`}>
-          {/* queue */}
-          <div className="flex flex-col gap-3">
-            {rows.map(({ request: r, customerName, customerEmail }) => {
-              const level = (r.urgencyFinal ?? r.urgencySuggested) as UrgencyLevel;
-              return (
-                <button
-                  key={r.id}
-                  onClick={() => {
-                    setSelected(r.id);
-                    setUrgency(level);
-                    requestActions.forEach((m) => m.reset());
-                  }}
-                  className={`card-br flex min-h-16 items-center gap-3 p-4 text-start transition-all hover:-translate-y-0.5 ${
-                    selected === r.id ? "!border-flame !bg-flame/5" : ""
-                  }`}
-                >
-                  <span
-                    className={`h-3 w-3 shrink-0 rounded-full ${URGENCY_DOT[level]}`}
-                    title={p(URGENCY_META[level].label)}
-                  />
-                  <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl border-2 border-navy/15 bg-paper text-bird">
-                    <ServiceIcon id={r.category} className="h-5 w-5" />
-                  </span>
-                  <span className="min-w-0 flex-1">
-                    <span className="block truncate font-display text-sm font-extrabold text-navy">
-                      #{r.id} · {CATEGORY_MAP[r.category] ? p(CATEGORY_MAP[r.category].name) : r.category}
-                    </span>
-                    <span className="block truncate text-xs text-navy/70">
-                      {customerName ?? customerEmail ?? "—"} · {r.area} · {r.preferredDate}
-                    </span>
-                  </span>
-                  <span className="shrink-0 rounded-full border-2 border-navy/25 px-2.5 py-0.5 text-[11px] font-bold text-navy">
-                    {p(t.status[r.status as RequestStatus])}
-                  </span>
-                </button>
-              );
-            })}
-          </div>
-
-          {/* detail */}
-          {selected !== null && d && (
-            <div className="card-br h-fit p-5 sm:p-6 animate-rise-in">
-              <div className="flex items-center justify-between gap-3">
-                <h2 className="font-display text-xl font-black text-navy">
-                  #{d.request.id} ·{" "}
-                  {CATEGORY_MAP[d.request.category]
-                    ? p(CATEGORY_MAP[d.request.category].name)
-                    : d.request.category}
-                </h2>
-                <span className="rounded-full border-2 border-navy/25 px-3 py-1 text-xs font-bold text-navy">
-                  {p(t.status[d.request.status as RequestStatus])}
-                </span>
-              </div>
-
-              <div className="mt-4 rounded-2xl border-2 border-navy/15 bg-paper p-4 text-sm">
-                <p className="font-display text-xs font-bold uppercase tracking-[0.2em] text-navy/70">
-                  {p(t.dash.customer)}
-                </p>
-                <p className="mt-2 font-bold text-navy">
-                  {d.customer?.name ?? "—"}
-                </p>
-                <p className="text-navy/70">{d.customer?.email ?? ""}</p>
-                <p className="mt-1 text-navy/70" dir="ltr">{d.request.phone}</p>
-                <p className="mt-1 text-navy/70">
-                  {d.request.area} — {d.request.address}
-                </p>
-                <p className="mt-1 text-navy/70">
-                  {d.request.preferredDate} · {d.request.timeSlot}
-                </p>
-              </div>
-
-              {d.request.lat != null && d.request.lng != null ? (
-                <div className="mt-4">
-                  <JobMap
-                    key={d.request.id}
-                    home={{ lat: d.request.lat, lng: d.request.lng }}
-                    technician={
-                      d.location ? { lat: Number(d.location.lat), lng: Number(d.location.lng) } : null
-                    }
-                    technicianLabel="T"
-                  />
-                </div>
-              ) : (
-                <p className="mt-3 text-xs text-navy/70">{p(t.map.noPin)}</p>
-              )}
-
-              <div className="mt-4 text-sm">
-                <p className="font-display text-xs font-bold uppercase tracking-[0.2em] text-navy/70">
-                  {p(t.dash.answers)}
-                </p>
-                <AnswerList
-                  category={d.request.category}
-                  answersJson={d.request.answers}
-                  className="mt-2 flex flex-col gap-1.5"
-                />
-                {d.request.notes && (
-                  <p className="mt-3 rounded-xl bg-navy/5 p-3 text-navy/80">
-                    {d.request.notes}
-                  </p>
-                )}
-              </div>
-
-              {d.media.length > 0 && (
-                <div className="mt-4">
-                  <p className="font-display text-xs font-bold uppercase tracking-[0.2em] text-navy/70">
-                    {p(t.dash.media)}
-                  </p>
-                  <MediaGrid items={d.media} className="mt-2 grid grid-cols-4 gap-2" />
-                </div>
-              )}
-
-              <div className="mt-4 rounded-2xl border-2 border-navy/15 bg-paper p-4 text-sm">
-                <p className="font-display text-xs font-bold uppercase tracking-[0.2em] text-navy/70">
-                  {p(t.dash.suggested)}
-                </p>
-                <p className="mt-1 font-display text-base font-extrabold text-navy">
-                  {p(URGENCY_META[d.request.urgencySuggested as UrgencyLevel].label)}
-                </p>
-              </div>
-
-              {/* technician assignment — only after the customer approved */}
-              {!["completed", "cancelled"].includes(d.request.status) && (
-                <div className="mt-4 rounded-2xl border-2 border-navy/15 bg-paper p-4">
-                  <p className="font-display text-xs font-bold uppercase tracking-[0.2em] text-navy/70">
-                    {p(t.dash2.currentTech)}
-                  </p>
-                  <p className="mt-1 text-sm font-bold text-navy">
-                    {techList.data?.find((x) => x.id === d.request.technicianId)?.name ??
-                      (d.request.technicianId ? `#${d.request.technicianId}` : p(t.dash2.none))}
-                  </p>
-                  {ASSIGNABLE_STATUSES.includes(d.request.status) && techList.data?.length === 0 ? (
-                    <div className="mt-2 text-xs text-navy/70">
-                      <p>{p(t.dash2.noTechToAssign)}</p>
-                      <button
-                        type="button"
-                        onClick={() => setTab("applications")}
-                        className="mt-2 font-bold text-navy underline underline-offset-4"
-                      >
-                        {p(t.dash3.tabApplications)}
-                      </button>
-                    </div>
-                  ) : ASSIGNABLE_STATUSES.includes(d.request.status) ? (
-                    <div className="mt-3 flex flex-wrap items-center gap-2">
-                      <select
-                        value={chosenTech}
-                        onChange={(e) => setChosenTech(e.target.value)}
-                        className="min-h-12 rounded-2xl border-2 border-navy/30 bg-white px-4 text-sm font-semibold text-navy focus:border-flame focus:outline-none"
-                      >
-                        <option value="">{p(t.dash2.chooseTech)}</option>
-                        {techList.data?.map((x) => (
-                          <option key={x.id} value={x.id}>
-                            {x.name ?? x.email}
-                          </option>
-                        ))}
-                      </select>
-                      <button
-                        onClick={() =>
-                          assign.mutate({
-                            requestId: d.request.id,
-                            technicianId: Number(chosenTech),
-                          })
-                        }
-                        disabled={!chosenTech || assign.isPending}
-                        className="btn-pill-outline !min-h-12 !py-2 disabled:opacity-40"
-                      >
-                        {assign.isPending && <Loader2 className="h-4 w-4 animate-spin" />}
-                        {p(t.dash2.assignTech)}
-                      </button>
-                    </div>
-                  ) : (
-                    <p className="mt-2 text-xs text-navy/70">{p(t.dash2.assignAfterApproval)}</p>
-                  )}
-                </div>
-              )}
-
-              {/* actions per status */}
-              <div className="mt-5 border-t-2 border-navy/10 pt-5">
-                {d.request.status === "submitted" && (
-                  <div className="flex flex-col gap-3">
-                    <label className="font-display text-sm font-extrabold text-navy">
-                      {p(t.dash.setUrgency)}
-                    </label>
-                    <div className="flex flex-wrap gap-2">
-                      {(Object.keys(URGENCY_META) as UrgencyLevel[]).map((u) => (
-                        <button
-                          key={u}
-                          onClick={() => setUrgency(u)}
-                          className={`min-h-11 rounded-full border-2 px-4 text-sm font-bold ${
-                            urgency === u
-                              ? "border-navy bg-navy text-paper"
-                              : "border-navy/30 bg-white text-navy"
-                          }`}
-                        >
-                          {p(URGENCY_META[u].label)}
-                        </button>
-                      ))}
-                    </div>
-                    <button
-                      onClick={() =>
-                        startReview.mutate({ id: d.request.id, urgency })
-                      }
-                      disabled={startReview.isPending}
-                      className="btn-pill-primary mt-1"
-                    >
-                      {startReview.isPending && (
-                        <Loader2 className="h-4 w-4 animate-spin" />
-                      )}
-                      {p(t.dash.review)}
-                    </button>
-                  </div>
-                )}
-
-                {d.request.status === "in_review" && (
-                  <div className="flex flex-col gap-3">
-                    <label className="font-display text-sm font-extrabold text-navy">
-                      {p(t.dash.quoteAmount)}
-                    </label>
-                    <input
-                      value={amount}
-                      onChange={(e) => setAmount(e.target.value)}
-                      inputMode="decimal"
-                      placeholder="45"
-                      className="min-h-12 w-40 rounded-2xl border-2 border-navy/30 bg-white px-4 font-semibold text-navy focus:border-flame focus:outline-none"
-                    />
-                    <input
-                      value={quoteNote}
-                      onChange={(e) => setQuoteNote(e.target.value)}
-                      placeholder={p(t.dash.quoteNote)}
-                      className="min-h-12 rounded-2xl border-2 border-navy/30 bg-white px-4 font-semibold text-navy focus:border-flame focus:outline-none"
-                    />
-                    <button
-                      onClick={() =>
-                        sendQuote.mutate({
-                          id: d.request.id,
-                          amount,
-                          note: quoteNote || undefined,
-                        })
-                      }
-                      disabled={!QUOTE_AMOUNT_PATTERN.test(amount.trim()) || sendQuote.isPending}
-                      className="btn-pill-primary disabled:opacity-40"
-                    >
-                      {sendQuote.isPending && (
-                        <Loader2 className="h-4 w-4 animate-spin" />
-                      )}
-                      {p(t.dash.sendQuote)}
-                    </button>
-                  </div>
-                )}
-
-                {["approved", "scheduled", "in_progress"].includes(
-                  d.request.status,
-                ) && (
-                  <div className="flex flex-col gap-3">
-                    <input
-                      value={note}
-                      onChange={(e) => setNote(e.target.value)}
-                      placeholder={p(t.dash.note)}
-                      className="min-h-12 rounded-2xl border-2 border-navy/30 bg-white px-4 font-semibold text-navy focus:border-flame focus:outline-none"
-                    />
-                    <button
-                      onClick={() =>
-                        setStatus.mutate({
-                          id: d.request.id,
-                          status:
-                            d.request.status === "approved"
-                              ? "scheduled"
-                              : d.request.status === "scheduled"
-                                ? "in_progress"
-                                : "completed",
-                          note: note || undefined,
-                        })
-                      }
-                      disabled={
-                        setStatus.isPending ||
-                        (d.request.status === "approved" && !d.request.technicianId)
-                      }
-                      className="btn-pill-primary disabled:opacity-40"
-                    >
-                      {setStatus.isPending && (
-                        <Loader2 className="h-4 w-4 animate-spin" />
-                      )}
-                      {d.request.status === "approved"
-                        ? p(t.dash.schedule)
-                        : d.request.status === "scheduled"
-                          ? p(t.dash.startWork)
-                          : p(t.dash.complete)}
-                    </button>
-                    {d.request.status === "approved" && !d.request.technicianId && (
-                      <p className="text-xs text-navy/70">{p(t.dash2.needTechToSchedule)}</p>
-                    )}
-                  </div>
-                )}
-                {actionError && (
-                  <p role="alert" className="mt-3 text-sm font-semibold text-destructive">
-                    {actionError}
-                  </p>
-                )}
-              </div>
-
-              {/* event log */}
-              <ol className="mt-5 flex flex-col gap-2 border-t-2 border-navy/10 pt-4 text-xs text-navy/70">
-                {d.events.map((e) => (
-                  <li key={e.id} className="flex justify-between gap-3">
-                    <span className="font-bold text-navy">
-                      {p(
-                        (t.events as Record<string, { en: string; ar: string }>)[e.status] ??
-                          t.status[e.status as RequestStatus] ??
-                          { en: e.status, ar: e.status },
-                      )}
-                      {e.note ? ` — ${e.note}` : ""}
-                    </span>
-                    <span dir="ltr">
-                      {new Date(e.createdAt).toLocaleString()}
-                    </span>
-                  </li>
-                ))}
-              </ol>
-            </div>
-          )}
-        </div>
+        {tab === "technicians" && <TechniciansTab onGoToApplications={goToApplications} />}
       </main>
       <Footer />
     </div>

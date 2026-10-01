@@ -138,6 +138,32 @@ export default function Tech() {
                   {r.notes && <p className="mt-1 italic">{r.notes}</p>}
                 </div>
 
+                {(r.prepDiagnosis || r.prepTools || r.prepParts || r.prepInstructions) && (
+                  <div className="mt-4 rounded-2xl border-2 border-bird bg-bird/5 p-4 text-sm">
+                    <p className="font-display text-xs font-bold uppercase tracking-[0.2em] text-navy/70">
+                      {p(t.tech.fromSpecialist)}
+                    </p>
+                    <dl className="mt-2 flex flex-col gap-2">
+                      {(
+                        [
+                          [t.dash4.prepDiagnosis, r.prepDiagnosis],
+                          [t.dash4.prepTools, r.prepTools],
+                          [t.dash4.prepParts, r.prepParts],
+                          [t.dash4.prepInstructions, r.prepInstructions],
+                        ] as const
+                      ).map(
+                        ([label, value]) =>
+                          value && (
+                            <div key={label.en}>
+                              <dt className="text-xs font-bold text-navy/70">{p(label)}</dt>
+                              <dd className="whitespace-pre-line font-semibold text-navy">{value}</dd>
+                            </div>
+                          ),
+                      )}
+                    </dl>
+                  </div>
+                )}
+
                 {r.lat != null && r.lng != null && (
                   <div className="mt-4 flex flex-col gap-3">
                     <JobMap home={{ lat: r.lat, lng: r.lng }} />

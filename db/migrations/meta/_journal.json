@@ -50,6 +50,13 @@
       "when": 1790837470968,
       "tag": "0006_document_retention",
       "breakpoints": true
+    },
+    {
+      "idx": 7,
+      "version": "7",
+      "when": 1790837933569,
+      "tag": "0007_job_preparation",
+      "breakpoints": true
     }
   ]
 }

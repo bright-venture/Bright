@@ -1,6 +1,6 @@
 import { z } from "zod";
 import { TRPCError } from "@trpc/server";
-import { and, desc, eq, inArray } from "drizzle-orm";
+import { and, desc, eq, inArray, sql } from "drizzle-orm";
 import { createRouter, technicianQuery, specialistQuery } from "./middleware";
 import { getDb } from "./queries/connection";
 import {
@@ -12,34 +12,67 @@ import {
 } from "../db/schema";
 import { ACTIVE_JOB_STATUSES, ASSIGNABLE_STATUSES } from "@contracts/workflow";
 import { applyTransition, findRequest, logEvent } from "./lib/workflow";
+import { profilePhotoUrl } from "./lib/storage";
 
 export const techRouter = createRouter({
-  /** Admin: list technician accounts */
+  /**
+   * Specialist: technician profiles — contact, photo, trade/area from the
+   * application they were hired from, and their workload.
+   * (Technicians are only created by hiring an application, never added by email.)
+   */
   list: specialistQuery.query(async () => {
-    return getDb()
-      .select({ id: users.id, name: users.name, email: users.email })
+    const db = getDb();
+    const techs = await db
+      .select({ id: users.id, name: users.name, email: users.email, phone: users.phone, avatar: users.avatar })
       .from(users)
       .where(eq(users.role, "technician"));
+    if (!techs.length) return [];
+    const ids = techs.map((x) => x.id);
+    const [apps, counts] = await Promise.all([
+      db
+        .select({
+          id: technicianApplications.id,
+          hiredUserId: technicianApplications.hiredUserId,
+          trade: technicianApplications.trade,
+          area: technicianApplications.area,
+          experience: technicianApplications.experience,
+          availability: technicianApplications.availability,
+        })
+        .from(technicianApplications)
+        .where(inArray(technicianApplications.hiredUserId, ids)),
+      db
+        .select({
+          technicianId: serviceRequests.technicianId,
+          status: serviceRequests.status,
+          n: sql<number>`count(*)::int`,
+        })
+        .from(serviceRequests)
+        .where(inArray(serviceRequests.technicianId, ids))
+        .groupBy(serviceRequests.technicianId, serviceRequests.status),
+    ]);
+    return Promise.all(
+      techs.map(async (x) => {
+        const app = apps.find((a) => a.hiredUserId === x.id);
+        const mine = counts.filter((c) => c.technicianId === x.id);
+        const sum = (statuses: readonly string[]) =>
+          mine.filter((c) => statuses.includes(c.status)).reduce((total, c) => total + c.n, 0);
+        return {
+          id: x.id,
+          name: x.name,
+          email: x.email,
+          phone: x.phone,
+          photoUrl: await profilePhotoUrl(x.avatar),
+          applicationId: app?.id ?? null,
+          trade: app?.trade ?? null,
+          area: app?.area ?? null,
+          experience: app?.experience ?? null,
+          availability: app?.availability ?? null,
+          activeJobs: sum(ACTIVE_JOB_STATUSES),
+          completedJobs: sum(["completed"]),
+        };
+      }),
+    );
   }),
-
-  /** Admin: make a signed-in customer account a technician, by email */
-  addByEmail: specialistQuery
-    .input(z.object({ email: z.string().trim().toLowerCase().email() }))
-    .mutation(async ({ input }) => {
-      const db = getDb();
-      const user = await db.query.users.findFirst({ where: eq(users.email, input.email) });
-      if (!user) {
-        throw new TRPCError({
-          code: "NOT_FOUND",
-          message: "No account with this email — ask them to sign in once first",
-        });
-      }
-      if (user.role === "specialist") {
-        throw new TRPCError({ code: "BAD_REQUEST", message: "This account is a specialist" });
-      }
-      await db.update(users).set({ role: "technician" }).where(eq(users.id, user.id));
-      return { ok: true, name: user.name };
-    }),
 
   /** Admin: turn a technician back into a regular account (no active jobs allowed) */
   remove: specialistQuery

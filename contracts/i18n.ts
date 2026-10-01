@@ -380,6 +380,7 @@ export const t = {
   tech: {
     title: { en: "My jobs", ar: "مهامي" },
     problem: { en: "What the customer told us", ar: "شو خبّرنا العميل" },
+    fromSpecialist: { en: "From your specialist", ar: "من المختص" },
     photos: { en: "Customer photos", ar: "صور العميل" },
     urgency: { en: "Urgency", ar: "الاستعجال" },
     empty: { en: "No jobs assigned to you yet.", ar: "ما في مهام معيّنة إلك بعد." },
@@ -416,6 +417,7 @@ export const t = {
     arrived: { en: "Technician arrived", ar: "الفني وصل" },
     in_progress: { en: "Work started", ar: "الشغل بدأ" },
     completed: { en: "Job completed", ar: "الشغل خلص" },
+    prepared: { en: "Job preparation updated", ar: "تحدّث تحضير المهمة" },
   },
   join: {
     nav: { en: "For technicians", ar: "للفنيين" },
@@ -503,18 +505,8 @@ export const t = {
   dash2: {
     assignTech: { en: "Assign technician", ar: "عيّن فني" },
     chooseTech: { en: "Select…", ar: "اختار…" },
-    techEmail: { en: "Technician email", ar: "إيميل الفني" },
-    addTech: { en: "Add technician", ar: "أضف فني" },
-    addTechHint: {
-      en: "They must sign in once before you can add them.",
-      ar: "لازم يسجّل دخوله مرة قبل ما تضيفه.",
-    },
     currentTech: { en: "Assigned technician", ar: "الفني المعيّن" },
     none: { en: "Not assigned", ar: "غير معيّن" },
-    assignAfterApproval: {
-      en: "A technician can be assigned once the customer approves the quote.",
-      ar: "فيك تعيّن فني بس يوافق العميل على العرض.",
-    },
     needTechToSchedule: {
       en: "Assign a technician before scheduling.",
       ar: "عيّن فني قبل ما تحدد الموعد.",
@@ -524,10 +516,82 @@ export const t = {
       en: "No technicians yet. Hire one from Technician applications (open the application → Hire as technician).",
       ar: "ما في فنيين بعد. وظّف واحد من طلبات الفنيين (افتح الطلب ← وظّف كفني).",
     },
-    noTechnicians: {
-      en: "No technicians yet. Add one by email below.",
-      ar: "ما في فنيين بعد. زيد واحد بالإيميل تحت.",
+  },
+  dash4: {
+    // overview
+    needsAction: { en: "Needs you", ar: "بحاجتك" },
+    waitingCustomer: { en: "Waiting for customer", ar: "بانتظار العميل" },
+    inProgress: { en: "Scheduled & in progress", ar: "محدّدة وقيد التنفيذ" },
+    urgentOpen: { en: "Urgent & critical", ar: "مستعجلة وحرجة" },
+    doneToday: { en: "Completed today", ar: "خلصت اليوم" },
+    // filters
+    search: { en: "Search name, phone, area or #", ar: "فتّش بالاسم، الهاتف، المنطقة أو الرقم" },
+    viewOpen: { en: "All open", ar: "كل المفتوحة" },
+    viewAll: { en: "All", ar: "الكل" },
+    viewCompleted: { en: "Completed", ar: "مكتملة" },
+    viewCancelled: { en: "Cancelled", ar: "ملغاة" },
+    anyUrgency: { en: "Any urgency", ar: "أي استعجال" },
+    anyService: { en: "Any service", ar: "أي خدمة" },
+    noMatches: { en: "No requests match these filters.", ar: "ما في طلبات مطابقة لهالفلاتر." },
+    clearFilters: { en: "Clear filters", ar: "امسح الفلاتر" },
+    waiting: { en: "Waiting {time}", ar: "ناطر {time}" },
+    selectRequest: { en: "Select a request to see its details.", ar: "اختار طلب لتشوف تفاصيله." },
+    // detail
+    nextStep: { en: "Next step", ar: "الخطوة الجاية" },
+    stepReview: { en: "Confirm the urgency to start the review.", ar: "أكّد الاستعجال لتبلّش المراجعة." },
+    stepQuote: { en: "Send the customer a price to approve.", ar: "ابعت للعميل سعر ليوافق عليه." },
+    stepWaitQuote: {
+      en: "Waiting for the customer to approve the quote of ${amount}.",
+      ar: "بانتظار موافقة العميل على عرض ${amount}.",
     },
+    stepAssign: { en: "Assign a technician, then schedule the visit.", ar: "عيّن فني، بعدين حدّد موعد الزيارة." },
+    stepScheduled: {
+      en: "The visit is scheduled. The technician starts work from their app (or you can start it here).",
+      ar: "الزيارة محدّدة. الفني بيبلّش الشغل من تطبيقه (أو فيك تبلّشها من هون).",
+    },
+    stepInProgress: { en: "Work is in progress. Mark it completed when done.", ar: "الشغل ماشي. علّمه مكتمل لما يخلص." },
+    stepClosed: { en: "This request is closed.", ar: "هالطلب مسكّر." },
+    contactCustomer: { en: "Contact", ar: "تواصل" },
+    visit: { en: "Visit", ar: "الزيارة" },
+    created: { en: "Created", ar: "انعمل" },
+    quote: { en: "Quote", ar: "العرض" },
+    timeline: { en: "Timeline", ar: "المراحل" },
+    // preparation
+    prepTitle: { en: "Job preparation", ar: "تحضير المهمة" },
+    prepHint: {
+      en: "The technician sees this on their job card before driving out.",
+      ar: "الفني بيشوف هالشي على بطاقة المهمة قبل ما يتحرّك.",
+    },
+    prepDiagnosis: { en: "Likely problem", ar: "المشكلة المرجّحة" },
+    prepDiagnosisPh: { en: "e.g. Worn cartridge in the kitchen mixer tap", ar: "مثال: خرطوشة حنفية المطبخ مهترية" },
+    prepTools: { en: "Tools to bring", ar: "العدّة المطلوبة" },
+    prepToolsPh: { en: "e.g. Adjustable wrench, PTFE tape", ar: "مثال: مفتاح إنكليزي، شريط تفلون" },
+    prepParts: { en: "Parts to pick up", ar: "القطع يلي لازم يجيبها" },
+    prepPartsPh: { en: "e.g. 1/2 inch angle valve (from supplier X, Dora)", ar: "مثال: محبس زاوية ١/٢ إنش (من المورّد X، الدورة)" },
+    prepInstructions: { en: "Instructions", ar: "تعليمات" },
+    prepInstructionsPh: {
+      en: "e.g. Customer will shut the main valve; check under-sink cabinet for water damage",
+      ar: "مثال: العميل رح يسكّر المحبس الرئيسي؛ شيك الخزانة تحت المجلى إذا في ضرر مي",
+    },
+    prepSave: { en: "Save preparation", ar: "احفظ التحضير" },
+    prepSaved: { en: "Saved {time}", ar: "انحفظ {time}" },
+    // technicians
+    techTrade: { en: "Trade", ar: "المهنة" },
+    techArea: { en: "Area", ar: "المنطقة" },
+    techExperience: { en: "Experience", ar: "الخبرة" },
+    activeJobs: { en: "Active jobs", ar: "مهام شغّالة" },
+    completedJobs: { en: "Completed", ar: "مكتملة" },
+    documents: { en: "Documents", ar: "المستندات" },
+    hideDocuments: { en: "Hide documents", ar: "خبّي المستندات" },
+    removeConfirm: {
+      en: "Remove {name} as a technician? Their account becomes a customer account. You can hire them again later.",
+      ar: "تشيل {name} من الفنيين؟ حسابه بيرجع حساب عميل. فيك توظّفه مرة تانية بعدين.",
+    },
+    noTechnicians: {
+      en: "No technicians yet. Technicians join by applying, then you hire them.",
+      ar: "ما في فنيين بعد. الفنيين بينضمّوا بتقديم طلب، وإنت بتوظّفهم.",
+    },
+    goToApplications: { en: "Open technician applications", ar: "افتح طلبات الفنيين" },
   },
   map: {
     pickerLabel: { en: "Map: tap to place your address pin", ar: "خريطة: اضغط لتحط دبوس عنوانك" },

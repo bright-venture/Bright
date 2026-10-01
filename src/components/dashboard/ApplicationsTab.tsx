@@ -3,6 +3,7 @@ import { ChevronDown, FileText, Loader2, Mail, MessageCircle, Phone, UserCheck }
 import { ServiceIcon } from "@/components/ServiceIcon";
 import { useI18n } from "@/i18n";
 import { trpc } from "@/providers/trpc";
+import { telLink, whatsappLink } from "@/lib/contact";
 import { CATEGORY_MAP } from "@contracts/services";
 import {
   AVAILABILITY_LABELS,
@@ -15,15 +16,6 @@ import type { TechnicianApplication } from "@db/schema";
 import { REJECTED_APPLICATION_RETENTION_DAYS } from "@contracts/legal";
 
 const EMAIL_PATTERN = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-
-/** WhatsApp wants the number in international form, digits only (Lebanon: 961…). */
-function whatsappLink(phone: string) {
-  let digits = phone.replace(/\D/g, "");
-  if (digits.startsWith("00")) digits = digits.slice(2);
-  else if (digits.startsWith("0")) digits = `961${digits.slice(1)}`;
-  else if (digits.length <= 8) digits = `961${digits}`;
-  return `https://wa.me/${digits}`;
-}
 
 export function ApplicationsTab() {
   const { t, p } = useI18n();
@@ -148,7 +140,7 @@ function ApplicationCard({
         <div className="border-t-2 border-navy/10 p-4 sm:p-5">
           {/* one-tap contact */}
           <div className="flex flex-wrap gap-2">
-            <a href={`tel:${app.phone.replace(/[^\d+]/g, "")}`} className="btn-pill-outline !min-h-10 !px-4 !py-1.5 text-xs">
+            <a href={telLink(app.phone)} className="btn-pill-outline !min-h-10 !px-4 !py-1.5 text-xs">
               <Phone className="h-4 w-4" /> {p(t.dash3.call)} <span dir="ltr">{app.phone}</span>
             </a>
             <a href={whatsappLink(app.phone)} target="_blank" rel="noreferrer" className="btn-pill-outline !min-h-10 !px-4 !py-1.5 text-xs">

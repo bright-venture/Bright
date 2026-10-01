@@ -95,6 +95,12 @@ export const serviceRequests = pgTable(
     notes: text("notes"),
     quoteAmount: varchar("quote_amount", { length: 32 }),
     quoteNote: text("quote_note"),
+    /** Specialist's job preparation, shown on the technician's job card. */
+    prepDiagnosis: text("prep_diagnosis"),
+    prepTools: text("prep_tools"),
+    prepParts: text("prep_parts"),
+    prepInstructions: text("prep_instructions"),
+    preparedAt: timestamp("prepared_at", { withTimezone: true }),
     ...timestamps,
   },
   (t) => [

@@ -1,7 +1,7 @@
 // Business rules and input validation that the happy-path workflow test doesn't cover.
 import { beforeAll, describe, expect, it, vi } from "vitest";
 import type { User } from "@db/schema";
-import { ADMIN_EMAIL, BEIRUT_PIN, callerFor, createTestDb, futureDate, makeUser } from "./test/harness";
+import { ADMIN_EMAIL, BEIRUT_PIN, callerFor, createTestDb, futureDate, makeTechnician, makeUser } from "./test/harness";
 
 const state = vi.hoisted(() => ({ db: undefined as unknown }));
 vi.mock("./queries/connection", () => ({ getDb: () => state.db }));
@@ -37,9 +37,7 @@ beforeAll(async () => {
   state.db = await createTestDb();
   admin = await makeUser(ADMIN_EMAIL);
   customer = await makeUser("customer@example.com");
-  tech = await makeUser("tech@example.com");
-  await (await callerFor(admin)).tech.addByEmail({ email: "tech@example.com" });
-  tech = { ...tech, role: "technician" };
+  tech = await makeTechnician("tech@example.com");
 }, 60_000);
 
 /** Books a request and walks it to "approved" (quote accepted). */
@@ -117,8 +115,32 @@ describe("specialist rules", () => {
     await s.specialist.setStatus({ id, status: "scheduled" });
   });
 
-  it("cannot demote a specialist by adding them as a technician", async () => {
-    await rejected((await callerFor(admin)).tech.addByEmail({ email: ADMIN_EMAIL }));
+  it("prepares the job for the technician, until the request is closed", async () => {
+    const s = await callerFor(admin);
+    const id = await approvedRequest();
+    await s.tech.assign({ requestId: id, technicianId: tech.id });
+    await s.specialist.prepare({
+      id,
+      diagnosis: "Worn tap cartridge",
+      tools: "Adjustable wrench",
+      parts: "1/2 inch angle valve",
+      instructions: "Shut the main valve under the sink first",
+    });
+    const job = (await (await callerFor(tech)).tech.myJobs()).find((j) => j.id === id);
+    expect(job).toMatchObject({ prepParts: "1/2 inch angle valve", prepTools: "Adjustable wrench" });
+    expect(job?.preparedAt).toBeInstanceOf(Date);
+    await rejected((await callerFor(tech)).specialist.prepare({ id, diagnosis: "", tools: "", parts: "", instructions: "" }), "FORBIDDEN");
+
+    const c = await callerFor(customer);
+    const { id: cancelled } = await c.requests.create(base);
+    await c.requests.cancel({ id: cancelled });
+    await rejected(s.specialist.prepare({ id: cancelled, diagnosis: "x", tools: "", parts: "", instructions: "" }));
+  });
+
+  it("shows technician profiles with their workload", async () => {
+    const profile = (await (await callerFor(admin)).tech.list()).find((x) => x.id === tech.id);
+    expect(profile).toMatchObject({ email: "tech@example.com", activeJobs: expect.any(Number), completedJobs: expect.any(Number) });
+    expect(profile!.activeJobs).toBeGreaterThan(0);
   });
 });
 

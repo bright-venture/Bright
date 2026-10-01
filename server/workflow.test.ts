@@ -7,6 +7,7 @@ import {
   createTestDb,
   documentKeys,
   futureDate,
+  makeTechnician,
   makeUser,
   type TestDb,
 } from "./test/harness";
@@ -356,13 +357,9 @@ describe("full repair workflow", () => {
     });
   });
 
-  it("specialist adds and assigns a technician", async () => {
+  it("specialist assigns a technician", async () => {
     const s = await callerFor(admin);
-    await expect(s.tech.addByEmail({ email: "nobody@example.com" })).rejects.toMatchObject({
-      code: "NOT_FOUND",
-    });
-    await s.tech.addByEmail({ email: "tina@example.com" });
-    tina = { ...tina, role: "technician" };
+    tina = await makeTechnician("tina.tech@example.com", "Tina");
     expect((await s.tech.list()).map((x) => x.id)).toContain(tina.id);
     await expect(s.tech.assign({ requestId, technicianId: bob.id })).rejects.toMatchObject({
       code: "BAD_REQUEST",
