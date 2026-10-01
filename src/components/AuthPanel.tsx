@@ -1,4 +1,5 @@
 import { useState, type FormEvent, type ReactNode } from "react";
+import { Link } from "react-router";
 import { Eye, EyeOff, Loader2, Mail } from "lucide-react";
 import type { AuthError } from "@supabase/supabase-js";
 import { useI18n } from "@/i18n";
@@ -299,27 +300,7 @@ export function AuthPanel({
 
   return (
     <div>
-      {/* Sign in / Create account switch */}
-      {(view === "signin" || view === "signup") && (
-        <div className="grid grid-cols-2 rounded-full border-2 border-navy bg-white p-1" role="tablist">
-          {(["signin", "signup"] as const).map((m) => (
-            <button
-              key={m}
-              type="button"
-              role="tab"
-              aria-selected={view === m}
-              onClick={() => go(m)}
-              className={`min-h-10 rounded-full px-3 text-sm font-bold transition-colors ${
-                view === m ? "bg-navy text-paper" : "text-navy/70 hover:text-navy"
-              }`}
-            >
-              {m === "signin" ? p(t.auth.signInTab) : p(t.auth.signUpTab)}
-            </button>
-          ))}
-        </div>
-      )}
-
-      <div className="mt-5">
+      <div>
         <Heading className="font-display text-2xl font-black text-navy">
           {view === "signup"
             ? p(t.auth.signUpTitle)
@@ -391,6 +372,7 @@ export function AuthPanel({
               placeholder="+961 70 000 000"
               className={INPUT}
             />
+            <p className="mt-1 text-xs text-navy/70">{p(t.auth.phoneHint)}</p>
           </div>
           {passwordField("new-password", p(t.auth.password))}
           {submit(p(t.auth.signUp))}
@@ -424,6 +406,32 @@ export function AuthPanel({
       )}
 
       <Messages error={error} notice={notice} />
+
+      {/* Switch between signing in and creating a (customer) account */}
+      {view === "signin" && (
+        <p className="mt-6 border-t-2 border-navy/10 pt-5 text-center text-sm text-navy/70">
+          {p(t.auth.noAccount)}{" "}
+          <button type="button" onClick={() => go("signup")} className="font-bold text-navy underline underline-offset-4">
+            {p(t.auth.createCustomer)}
+          </button>
+        </p>
+      )}
+      {view === "signup" && (
+        <div className="mt-6 space-y-2 border-t-2 border-navy/10 pt-5 text-center text-sm text-navy/70">
+          <p>
+            {p(t.auth.haveAccount)}{" "}
+            <button type="button" onClick={() => go("signin")} className="font-bold text-navy underline underline-offset-4">
+              {p(t.auth.signIn)}
+            </button>
+          </p>
+          <p>
+            {p(t.auth.techApply)}{" "}
+            <Link to="/join" className="font-bold text-navy underline underline-offset-4">
+              {p(t.auth.applyLink)}
+            </Link>
+          </p>
+        </div>
+      )}
     </div>
   );
 }
