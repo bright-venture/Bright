@@ -52,7 +52,7 @@ export function RequestDetail({
   const status = r.status as RequestStatus;
   const level = (r.urgencyFinal ?? r.urgencySuggested) as UrgencyLevel;
   const cat = CATEGORY_MAP[r.category];
-  const tech = technicians.find((x) => x.id === r.technicianId);
+  const tech = d.technician;
   const dateTime = (v: Date | string) =>
     new Date(v).toLocaleString(lang === "ar" ? "ar-LB" : "en-GB", { dateStyle: "medium", timeStyle: "short" });
 
@@ -158,6 +158,7 @@ export function RequestDetail({
                 <Avatar name={tech.name} photoUrl={tech.photoUrl} />
                 <div className="min-w-0 flex-1">
                   <p className="truncate text-sm font-bold text-navy">{tech.name ?? tech.email}</p>
+                  {!tech.stillTechnician && <p className="text-xs text-navy/70">{p(t.dash4.formerTechnician)}</p>}
                   {tech.phone && (
                     <p className="text-xs text-navy/70" dir="ltr">
                       {tech.phone}
@@ -171,9 +172,7 @@ export function RequestDetail({
                 )}
               </div>
             ) : (
-              <p className="mt-1 text-sm font-bold text-navy">
-                {r.technicianId ? `#${r.technicianId}` : p(t.dash2.none)}
-              </p>
+              <p className="mt-1 text-sm font-bold text-navy">{p(t.dash2.none)}</p>
             )}
             {r.quoteAmount && (
               <p className="mt-3 text-xs text-navy/70">

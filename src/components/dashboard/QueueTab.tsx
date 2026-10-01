@@ -134,7 +134,8 @@ export function QueueTab({ onGoToApplications }: { onGoToApplications: () => voi
 
       <div className="mt-5 grid gap-6 lg:grid-cols-[minmax(0,360px)_minmax(0,1fr)]">
         {/* list */}
-        <div className="flex flex-col gap-2 lg:max-h-[calc(100vh-9rem)] lg:overflow-y-auto lg:pe-1">
+        {/* p-1: room for borders and focus outlines inside the scroll box */}
+        <div className="flex flex-col gap-2 p-1 lg:max-h-[calc(100vh-9rem)] lg:overflow-y-auto">
           {queue.isLoading && <Loader2 className="mx-auto mt-6 h-6 w-6 animate-spin text-navy" />}
           {!queue.isLoading && filtered.length === 0 && (
             <div className="card-br p-8 text-center text-sm font-semibold text-navy/70">
@@ -158,7 +159,7 @@ export function QueueTab({ onGoToApplications }: { onGoToApplications: () => voi
                   }
                 }}
                 aria-current={selected === r.id ? "true" : undefined}
-                className={`card-br flex items-center gap-3 p-3 text-start transition-all hover:-translate-y-0.5 ${
+                className={`card-br flex items-center gap-3 p-3 text-start transition-colors hover:bg-paper focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-flame ${
                   selected === r.id ? "!border-flame !bg-flame/5" : ""
                 }`}
               >

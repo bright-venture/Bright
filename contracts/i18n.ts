@@ -592,6 +592,7 @@ export const t = {
       ar: "ما في فنيين بعد. الفنيين بينضمّوا بتقديم طلب، وإنت بتوظّفهم.",
     },
     goToApplications: { en: "Open technician applications", ar: "افتح طلبات الفنيين" },
+    formerTechnician: { en: "No longer a technician", ar: "ما عاد فني" },
   },
   map: {
     pickerLabel: { en: "Map: tap to place your address pin", ar: "خريطة: اضغط لتحط دبوس عنوانك" },

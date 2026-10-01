@@ -7,6 +7,7 @@ import { ACTIVE_JOB_STATUSES } from "@contracts/workflow";
 import type { RequestStatus, UrgencyLevel } from "@contracts/services";
 import { QUOTE_AMOUNT_PATTERN, URGENCY_LEVELS } from "@contracts/workflow";
 import { applyTransition, findRequest, logEvent } from "./lib/workflow";
+import { profilePhotoUrl } from "./lib/storage";
 import { TRPCError } from "@trpc/server";
 
 const byId = z.object({ id: z.number().int() });
@@ -42,7 +43,7 @@ export const specialistRouter = createRouter({
     const db = getDb();
     const row = await findRequest(db, input.id, "any");
     const active = ACTIVE_JOB_STATUSES.includes(row.status);
-    const [customer, media, events, loc] = await Promise.all([
+    const [customer, media, events, loc, tech] = await Promise.all([
       db.query.users.findFirst({ where: eq(users.id, row.userId) }),
       db.select().from(requestMedia).where(eq(requestMedia.requestId, row.id)),
       db
@@ -53,9 +54,21 @@ export const specialistRouter = createRouter({
       active
         ? db.query.technicianLocations.findFirst({ where: eq(technicianLocations.requestId, row.id) })
         : undefined,
+      row.technicianId ? db.query.users.findFirst({ where: eq(users.id, row.technicianId) }) : undefined,
     ]);
     const location = loc ? { lat: loc.lat, lng: loc.lng, updatedAt: loc.updatedAt } : null;
-    return { request: row, customer, media, events, location };
+    // Whoever did the job, even if they're no longer a technician.
+    const technician = tech
+      ? {
+          id: tech.id,
+          name: tech.name,
+          email: tech.email,
+          phone: tech.phone,
+          photoUrl: await profilePhotoUrl(tech.avatar),
+          stillTechnician: tech.role === "technician",
+        }
+      : null;
+    return { request: row, customer, media, events, location, technician };
   }),
 
   startReview: specialistQuery
