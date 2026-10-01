@@ -47,6 +47,10 @@ export const ASSIGNABLE_STATUSES: readonly RequestStatus[] = ["approved", "sched
 /** Statuses in which the job is live for the technician (location sharing, field actions). */
 export const ACTIVE_JOB_STATUSES: readonly RequestStatus[] = ["scheduled", "in_progress"];
 
+/** Photos/videos per booking. Videos can't be shrunk in the browser, so they're capped. */
+export const MAX_BOOKING_FILES = 8;
+export const MAX_BOOKING_VIDEOS = 2;
+
 /** Quote amounts in USD: whole dollars or cents, up to 999,999.99. */
 export const QUOTE_AMOUNT_PATTERN = /^\d{1,6}(\.\d{1,2})?$/;
 

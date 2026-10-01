@@ -14,6 +14,8 @@ import { computeUrgency, CATEGORY_MAP } from "@contracts/services";
 import {
   ACTIVE_JOB_STATUSES,
   CANCEL_REQUESTABLE_STATUSES,
+  MAX_BOOKING_FILES,
+  MAX_BOOKING_VIDEOS,
   isValidVisitDate,
   TIME_SLOTS,
   todayInBeirut,
@@ -45,7 +47,7 @@ export const requestsRouter = createRouter({
         address: z.string().trim().min(1).max(1000),
         phone: z.string().trim().max(64).refine(isValidPhone, "Invalid phone number"),
         notes: z.string().max(4000).optional(),
-        media: z.array(mediaItem).max(8).default([]),
+        media: z.array(mediaItem).max(MAX_BOOKING_FILES).default([]),
         // Map pin for the visit address.
         lat: z.number().min(-90).max(90),
         lng: z.number().min(-180).max(180),
@@ -69,6 +71,9 @@ export const requestsRouter = createRouter({
       const prefix = userUploadPrefix(ctx.user.authId);
       if (input.media.some((m) => !m.key.startsWith(prefix))) {
         throw new TRPCError({ code: "BAD_REQUEST", message: "Invalid media" });
+      }
+      if (input.media.filter((m) => m.contentType?.startsWith("video/")).length > MAX_BOOKING_VIDEOS) {
+        throw new TRPCError({ code: "BAD_REQUEST", message: `Up to ${MAX_BOOKING_VIDEOS} videos per request` });
       }
 
       const urgency = computeUrgency(input.category, input.answers);

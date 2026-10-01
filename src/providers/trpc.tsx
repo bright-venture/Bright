@@ -4,6 +4,7 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import superjson from "superjson";
 import type { AppRouter } from "../../server/router";
 import { useEffect, type ReactNode } from "react";
+import { AUTH_CHANGED_EVENT, mightBeSignedIn } from "@/lib/session";
 
 const loadSupabase = () => import("@/lib/supabase");
 
@@ -16,6 +17,8 @@ const trpcClient = trpc.createClient({
       url: "/api/trpc",
       transformer: superjson,
       async headers() {
+        // Visitors who never signed in skip loading Supabase just to find no token.
+        if (!mightBeSignedIn()) return {};
         const token = await (await loadSupabase()).getAccessToken();
         return token ? { authorization: `Bearer ${token}` } : {};
       },
@@ -24,23 +27,13 @@ const trpcClient = trpc.createClient({
 });
 
 export function TRPCProvider({ children }: { children: ReactNode }) {
-  // Refetch everything when the signed-in identity changes.
   useEffect(() => {
-    let unsubscribe: (() => void) | undefined;
-    let cancelled = false;
-    void loadSupabase().then(({ supabase }) => {
-      if (cancelled) return;
-      const { data } = supabase.auth.onAuthStateChange((event) => {
-        if (event === "SIGNED_IN" || event === "SIGNED_OUT" || event === "USER_UPDATED") {
-          void queryClient.invalidateQueries();
-        }
-      });
-      unsubscribe = () => data.subscription.unsubscribe();
-    });
-    return () => {
-      cancelled = true;
-      unsubscribe?.();
-    };
+    // Refetch everything when the signed-in identity changes (see src/lib/supabase.ts).
+    const refetch = () => void queryClient.invalidateQueries();
+    window.addEventListener(AUTH_CHANGED_EVENT, refetch);
+    // A stored session may need refreshing, and an email link's tokens need reading.
+    if (mightBeSignedIn()) void loadSupabase();
+    return () => window.removeEventListener(AUTH_CHANGED_EVENT, refetch);
   }, []);
 
   return (

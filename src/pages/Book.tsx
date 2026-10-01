@@ -35,7 +35,15 @@ import {
   URGENCY_META,
   type UrgencyLevel,
 } from "@contracts/services";
-import { isValidVisitDate, TIME_SLOTS, todayInBeirut, type TimeSlot } from "@contracts/workflow";
+import {
+  isValidVisitDate,
+  MAX_BOOKING_FILES,
+  MAX_BOOKING_VIDEOS,
+  TIME_SLOTS,
+  todayInBeirut,
+  type TimeSlot,
+} from "@contracts/workflow";
+import { shrinkImage } from "@/lib/shrinkImage";
 
 /** A photo/video kept on the device until the request is submitted. */
 type MediaDraft = {
@@ -82,7 +90,8 @@ export default function Book() {
   );
   const [answers, setAnswers] = useState<Record<string, string>>(draft?.answers ?? {});
   const [media, setMedia] = useState<MediaDraft[]>([]);
-  const [uploadError, setUploadError] = useState(false);
+  const [uploadError, setUploadError] = useState<"file" | "videos" | null>(null);
+  const [preparingFiles, setPreparingFiles] = useState(false);
   const [date, setDate] = useState(draft?.date ?? "");
   const [slot, setSlot] = useState<TimeSlot | "">(
     TIME_SLOTS.includes(draft?.slot as TimeSlot) ? (draft!.slot as TimeSlot) : "",
@@ -158,19 +167,29 @@ export default function Book() {
     if (filesRestored.current && doneId === null) void saveDraftFiles(media.map((m) => m.file));
   }, [media, doneId]);
 
-  function onFiles(files: FileList | null) {
+  async function onFiles(files: FileList | null) {
     if (!files) return;
-    setUploadError(false);
+    const picked = Array.from(files).slice(0, MAX_BOOKING_FILES - media.length);
+    if (fileRef.current) fileRef.current.value = "";
+    setUploadError(null);
+    setPreparingFiles(true);
+    let videos = media.filter((m) => m.file.type.startsWith("video/")).length;
     const accepted: MediaDraft[] = [];
-    for (const file of Array.from(files).slice(0, 8 - media.length)) {
+    for (const original of picked) {
+      if (original.type.startsWith("video/") && ++videos > MAX_BOOKING_VIDEOS) {
+        setUploadError("videos");
+        continue;
+      }
+      // Photos are shrunk on the phone: faster uploads on mobile data, less storage.
+      const file = await shrinkImage(original);
       if (file.size > MAX_FILE_BYTES || !/^(image|video)\//.test(file.type)) {
-        setUploadError(true);
+        setUploadError("file");
         continue;
       }
       accepted.push(toMediaDraft(file));
     }
     setMedia((m) => [...m, ...accepted]);
-    if (fileRef.current) fileRef.current.value = "";
+    setPreparingFiles(false);
   }
 
   function questionsAnswered() {
@@ -408,15 +427,15 @@ export default function Book() {
                 />
                 <button
                   onClick={() => fileRef.current?.click()}
-                  disabled={media.length >= 8}
+                  disabled={media.length >= MAX_BOOKING_FILES || preparingFiles}
                   className="btn-pill-outline mt-4 w-full sm:w-auto"
                 >
-                  <ImagePlus className="h-5 w-5" />
+                  {preparingFiles ? <Loader2 className="h-5 w-5 animate-spin" /> : <ImagePlus className="h-5 w-5" />}
                   {p(t.book.addPhotos)}
                 </button>
                 {uploadError && (
                   <p className="mt-2 text-sm font-semibold text-destructive">
-                    {p(t.book.uploadFailed)}
+                    {p(uploadError === "videos" ? t.book.tooManyVideos : t.book.uploadFailed)}
                   </p>
                 )}
                 {media.length > 0 && (

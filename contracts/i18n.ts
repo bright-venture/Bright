@@ -325,6 +325,10 @@ export const t = {
       en: "That file can't be added. Photos and videos up to 20 MB only.",
       ar: "ما فينا نضيف هالملف. صور وفيديو لحد ٢٠ ميغا بس.",
     },
+    tooManyVideos: {
+      en: "Up to 2 videos per request. Add photos for the rest.",
+      ar: "لحد فيديوين بالطلب. زيد صور للباقي.",
+    },
     required: { en: "Required", ar: "مطلوب" },
     datePast: { en: "Pick a date from today onwards.", ar: "اختار تاريخ من اليوم ورايح." },
     fixDetails: { en: "Please check the highlighted details.", ar: "راجع التفاصيل المعلّمة." },

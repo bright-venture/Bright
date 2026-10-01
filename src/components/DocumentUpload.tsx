@@ -4,6 +4,7 @@ import { useI18n } from "@/i18n";
 import { trpc } from "@/providers/trpc";
 import { supabase } from "@/lib/supabase";
 import { isRateLimited } from "@/lib/errors";
+import { shrinkImage } from "@/lib/shrinkImage";
 import {
   DOCUMENT_TYPES,
   isAllowedDocumentType,
@@ -34,16 +35,23 @@ export function DocumentUpload({
   const createUpload = trpc.storage.createDocumentUpload.useMutation();
   const accept = DOCUMENT_TYPES[kind].map((t) => (t.endsWith("/") ? `${t}*` : t)).join(",");
 
-  async function onPick(file: File | undefined) {
-    if (!file) return;
+  async function onPick(picked: File | undefined) {
+    if (!picked) return;
     setError(null);
-    const contentType = file.type || "application/octet-stream";
-    if (file.size > MAX_DOCUMENT_BYTES || !isAllowedDocumentType(kind, contentType)) {
+    if (!isAllowedDocumentType(kind, picked.type || "application/octet-stream")) {
       setError(p(kind === "photo" ? t.docs.badPhoto : t.docs.badFile));
       return;
     }
     setBusy(true);
     onUploaded(null);
+    // Photos are shrunk first (an ID stays sharp enough to read); PDFs go as they are.
+    const file = await shrinkImage(picked, kind === "photo" ? { maxSide: 1024 } : { maxSide: 2000, quality: 0.85 });
+    const contentType = file.type || "application/octet-stream";
+    if (file.size > MAX_DOCUMENT_BYTES) {
+      setError(p(kind === "photo" ? t.docs.badPhoto : t.docs.badFile));
+      setBusy(false);
+      return;
+    }
     try {
       const target = await createUpload.mutateAsync({ kind, fileName: file.name, size: file.size, contentType });
       const { error: uploadError } = await supabase.storage

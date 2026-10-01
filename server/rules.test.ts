@@ -62,6 +62,20 @@ describe("booking validation", () => {
     await rejected(c.requests.create({ ...base, preferredDate: "2026-02-30" }));
   });
 
+  it("accepts at most two videos per booking", async () => {
+    const c = await callerFor(customer);
+    const file = (n: number, contentType: string) => ({
+      key: `requests/${customer.authId}/${n}-file`,
+      fileName: `file-${n}`,
+      size: 1000,
+      contentType,
+    });
+    await rejected(c.requests.create({ ...base, media: [1, 2, 3].map((n) => file(n, "video/mp4")) }));
+    await expect(
+      c.requests.create({ ...base, media: [file(4, "video/mp4"), file(5, "video/quicktime"), file(6, "image/jpeg")] }),
+    ).resolves.toMatchObject({ id: expect.any(Number) });
+  });
+
   it("requires a full phone number", async () => {
     const c = await callerFor(customer);
     await rejected(c.requests.create({ ...base, phone: "3432" }));
