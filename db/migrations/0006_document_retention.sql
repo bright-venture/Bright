@@ -1,0 +1,2 @@
+ALTER TABLE "technician_applications" ADD COLUMN "rejected_at" timestamp with time zone;--> statement-breakpoint
+ALTER TABLE "technician_applications" ADD COLUMN "documents_deleted_at" timestamp with time zone;

@@ -15,7 +15,8 @@
     "db:generate": "drizzle-kit generate",
     "db:migrate": "drizzle-kit migrate",
     "db:push": "drizzle-kit push",
-    "build:netlify": "vite build && node scripts/build-netlify.mjs"
+    "build:netlify": "vite build && node scripts/build-netlify.mjs",
+    "cleanup:documents": "esbuild server/jobs/cli.ts --bundle --platform=node --format=esm --outfile=dist/cleanup.mjs --log-level=warning --banner:js=\"import { createRequire } from 'module';const require = createRequire(import.meta.url);\" && node dist/cleanup.mjs"
   },
   "dependencies": {
     "@hono/node-server": "^1.14.3",

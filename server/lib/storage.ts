@@ -114,3 +114,12 @@ export async function profilePhotoUrl(avatarKey: string | null | undefined) {
   const urls = await signedUrls("docs", [avatarKey], SIGNED_URL_TTL_SECONDS);
   return urls[avatarKey] ?? null;
 }
+
+/** Permanently delete documents (batched; Supabase removes up to 1,000 paths per call). */
+export async function deleteDocuments(keys: string[]) {
+  const bucket = getSupabaseAdmin().storage.from(env.docsBucket);
+  for (let i = 0; i < keys.length; i += 500) {
+    const { error } = await bucket.remove(keys.slice(i, i + 500));
+    if (error) throw error;
+  }
+}

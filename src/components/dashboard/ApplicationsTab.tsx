@@ -12,6 +12,7 @@ import {
   type ExperienceLevel,
 } from "@contracts/applications";
 import type { TechnicianApplication } from "@db/schema";
+import { REJECTED_APPLICATION_RETENTION_DAYS } from "@contracts/legal";
 
 const EMAIL_PATTERN = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
@@ -90,6 +91,8 @@ function ApplicationCard({
   const canHire = !hired && hasDocuments && EMAIL_PATTERN.test(hireEmail);
   // Short-lived links, fetched only when the card is open.
   const docs = trpc.join.documents.useQuery({ id: app.id }, { enabled: open, staleTime: 60_000 });
+  const formatDate = (d: Date | string) =>
+    new Date(d).toLocaleDateString(lang === "ar" ? "ar-LB" : "en-GB", { day: "numeric", month: "long", year: "numeric" });
   const yesNo = (v: boolean | null) => (v === null ? p(t.dash3.notProvided) : v ? p(t.join.yes) : p(t.join.no));
   const detail = (label: string, value: string) => (
     <div className="flex justify-between gap-4">
@@ -209,8 +212,24 @@ function ApplicationCard({
                 );
               })}
             </div>
-            {!hasDocuments && !hired && (
-              <p className="mt-2 text-xs font-semibold text-destructive">{p(t.docs.missingAll)}</p>
+            {app.documentsDeletedAt ? (
+              <p className="mt-2 text-xs font-semibold text-navy/70">
+                {p(t.docs.deletedOn).replace("{date}", formatDate(app.documentsDeletedAt))}
+              </p>
+            ) : app.status === "rejected" && hasDocuments ? (
+              <p className="mt-2 text-xs text-navy/70">
+                {p(t.docs.deleteOn).replace(
+                  "{date}",
+                  formatDate(
+                    new Date(
+                      new Date(app.rejectedAt ?? app.createdAt).getTime() + REJECTED_APPLICATION_RETENTION_DAYS * 86_400_000,
+                    ),
+                  ),
+                )}
+              </p>
+            ) : (
+              !hasDocuments &&
+              !hired && <p className="mt-2 text-xs font-semibold text-destructive">{p(t.docs.missingAll)}</p>
             )}
           </div>
 

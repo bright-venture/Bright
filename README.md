@@ -67,6 +67,15 @@ Auth emails (confirm sign-up, password reset, sign-in code) are sent by Supabase
 Hiring an applicant (Dashboard → Technician applications → *Hire as technician*) promotes an
 existing account, or sends the *Invite user* email and creates the technician account at once.
 
+## Scheduled jobs
+
+| Job | When | What |
+| --- | --- | --- |
+| `cleanup-documents` (Netlify scheduled function) | daily | Deletes ID, criminal record and photo of applications rejected 90+ days ago (Privacy Policy). Period: `REJECTED_APPLICATION_RETENTION_DAYS` in `contracts/legal.ts`. |
+
+Run it by hand with `npm run cleanup:documents` (preview first with `npm run cleanup:documents -- --dry-run`).
+Netlify shows each run under **Logs → Functions → cleanup-documents**.
+
 ## Deploy
 
 ### Netlify

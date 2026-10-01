@@ -570,6 +570,14 @@ export const t = {
     uploadFailed: { en: "Upload failed. Please try again.", ar: "ما انرفع الملف. جرّب مرة تانية." },
     open: { en: "Open", ar: "افتح" },
     missing: { en: "Missing", ar: "ناقص" },
+    deleteOn: {
+      en: "Rejected: these documents will be deleted automatically on {date} (Privacy Policy).",
+      ar: "مرفوض: رح تنحذف هالمستندات تلقائياً بتاريخ {date} (سياسة الخصوصية).",
+    },
+    deletedOn: {
+      en: "Documents deleted on {date} under the Privacy Policy.",
+      ar: "انحذفت المستندات بتاريخ {date} حسب سياسة الخصوصية.",
+    },
     missingAll: {
       en: "Documents missing. Ask the applicant to apply again with ID, criminal record and photo.",
       ar: "المستندات ناقصة. اطلب من المتقدّم يقدّم من جديد مع الهوية والسجل العدلي والصورة.",

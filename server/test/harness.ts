@@ -72,8 +72,14 @@ export async function storageStub(importOriginal: () => Promise<unknown>) {
     documentsExist: async (keys: string[]) => keys.every((k) => !k.includes("missing")),
     createDocumentUrls: async (keys: string[]) => Object.fromEntries(keys.map((k) => [k, `https://signed/${k}`])),
     profilePhotoUrl: async (key: string | null | undefined) => (key ? `https://signed/${key}` : null),
+    deleteDocuments: async (keys: string[]) => {
+      deletedDocuments.push(...keys);
+    },
   };
 }
+
+/** Document keys "deleted" through the storage stub, for assertions. */
+export const deletedDocuments: string[] = [];
 
 /** A valid visit date: 30 days from now, as YYYY-MM-DD. */
 export function futureDate(days = 30) {

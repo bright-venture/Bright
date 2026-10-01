@@ -159,6 +159,9 @@ export const technicianApplications = pgTable("technician_applications", {
   /** Applicant consented to the Privacy Policy and document review (version accepted). */
   consentAt: timestamp("consent_at", { withTimezone: true }),
   consentVersion: varchar("consent_version", { length: 32 }),
+  /** Set when marked rejected; documents are deleted a fixed period after (Privacy Policy). */
+  rejectedAt: timestamp("rejected_at", { withTimezone: true }),
+  documentsDeletedAt: timestamp("documents_deleted_at", { withTimezone: true }),
   status: applicationStatus("status").default("new").notNull(),
   /** The technician account created or promoted when the applicant was hired. */
   hiredUserId: integer("hired_user_id").references(() => users.id),

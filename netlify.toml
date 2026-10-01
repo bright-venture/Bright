@@ -9,6 +9,10 @@
   directory = "netlify/functions"
   node_bundler = "esbuild"
 
+# Privacy Policy: delete rejected applicants' documents after the retention period.
+[functions."cleanup-documents"]
+  schedule = "@daily"
+
 # API → the single server function
 [[redirects]]
   from = "/api/*"

@@ -95,7 +95,8 @@ export const joinRouter = createRouter({
     .mutation(async ({ input }) => {
       await getDb()
         .update(technicianApplications)
-        .set({ status: input.status })
+        // Rejection starts the document-retention clock; un-rejecting stops it.
+        .set({ status: input.status, rejectedAt: input.status === "rejected" ? new Date() : null })
         .where(eq(technicianApplications.id, input.id));
       return { ok: true };
     }),
