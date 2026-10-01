@@ -5,6 +5,8 @@ import { Footer } from "@/components/Footer";
 import { ServiceIcon } from "@/components/ServiceIcon";
 import { AnswerList } from "@/components/AnswerList";
 import { MediaGrid } from "@/components/MediaGrid";
+import JobMap from "@/components/map/JobMap";
+import { DirectionsLinks } from "@/components/map/DirectionsLinks";
 import { useI18n } from "@/i18n";
 import { useRoleGate } from "@/hooks/useRoleGate";
 import { trpc } from "@/providers/trpc";
@@ -135,6 +137,13 @@ export default function Tech() {
                   <p dir="ltr" className="mt-1 text-start">{r.phone}</p>
                   {r.notes && <p className="mt-1 italic">{r.notes}</p>}
                 </div>
+
+                {r.lat != null && r.lng != null && (
+                  <div className="mt-4 flex flex-col gap-3">
+                    <JobMap home={{ lat: r.lat, lng: r.lng }} />
+                    <DirectionsLinks lat={r.lat} lng={r.lng} />
+                  </div>
+                )}
 
                 <div className="mt-4 rounded-2xl border-2 border-navy/15 p-4">
                   <div className="flex items-center justify-between gap-3">

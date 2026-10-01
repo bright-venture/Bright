@@ -1,6 +1,15 @@
 import { beforeAll, describe, expect, it, vi } from "vitest";
 import type { User } from "@db/schema";
-import { ADMIN_EMAIL, callerFor, createTestDb, futureDate, makeUser, type TestDb } from "./test/harness";
+import {
+  ADMIN_EMAIL,
+  BEIRUT_PIN,
+  callerFor,
+  createTestDb,
+  documentKeys,
+  futureDate,
+  makeUser,
+  type TestDb,
+} from "./test/harness";
 
 const state = vi.hoisted(() => ({ db: undefined as unknown, invites: [] as string[] }));
 
@@ -15,16 +24,9 @@ vi.mock("./lib/env", () => ({
     specialistEmails: ["specialist@example.com"],
   },
 }));
-vi.mock("./lib/storage", () => ({
-  MAX_UPLOAD_BYTES: 20 * 1024 * 1024,
-  userUploadPrefix: (authId: string) => `requests/${authId}/`,
-  createUploadUrl: async (authId: string, fileName: string) => ({
-    key: `requests/${authId}/x-${fileName}`,
-    token: "token",
-  }),
-  createSignedUrls: async (keys: string[]) =>
-    Object.fromEntries(keys.map((k) => [k, `https://signed/${k}`])),
-}));
+vi.mock("./lib/storage", async (importOriginal) =>
+  (await import("./test/harness")).storageStub(importOriginal),
+);
 
 vi.mock("./lib/supabase", () => ({
   getSupabaseAdmin: () => ({
@@ -49,6 +51,7 @@ const application = {
   availability: "full_time" as const,
   hasTools: true,
   hasTransport: false,
+  ...documentKeys(),
 };
 
 const leak = {
@@ -69,6 +72,7 @@ function booking(overrides: Record<string, unknown> = {}) {
     address: "Building 3, floor 2",
     phone: "+961 70 000 000",
     media: [],
+    ...BEIRUT_PIN,
     ...overrides,
   };
 }
@@ -133,6 +137,51 @@ describe("technician applications (public)", () => {
   });
 });
 
+describe("technician documents", () => {
+  it("requires all three documents, uploaded, with the right kind", async () => {
+    const c = await callerFor();
+    const docs = documentKeys();
+    await expect(c.join.submit({ ...application, ...docs, photoKey: docs.idDocumentKey })).rejects.toMatchObject({
+      code: "BAD_REQUEST",
+    });
+    await expect(
+      c.join.submit({ ...application, ...docs, criminalRecordKey: docs.criminalRecordKey.replace("file", "missing") }),
+    ).rejects.toMatchObject({ code: "BAD_REQUEST" });
+    await expect(c.join.submit({ ...application, ...docs, idDocumentKey: "requests/x/idDocument-a.jpg" })).rejects.toMatchObject({
+      code: "BAD_REQUEST",
+    });
+  });
+
+  it("checks document type and size before handing out an upload link", async () => {
+    const c = await callerFor();
+    await expect(
+      c.storage.createDocumentUpload({ kind: "photo", fileName: "me.pdf", size: 1000, contentType: "application/pdf" }),
+    ).rejects.toMatchObject({ code: "BAD_REQUEST" });
+    await expect(
+      c.storage.createDocumentUpload({ kind: "criminalRecord", fileName: "r.pdf", size: 50 * 1024 * 1024, contentType: "application/pdf" }),
+    ).rejects.toMatchObject({ code: "BAD_REQUEST" });
+    const ok = await c.storage.createDocumentUpload({ kind: "criminalRecord", fileName: "r.pdf", size: 1000, contentType: "application/pdf" });
+    expect(ok.key).toMatch(/^applications\/.+\/criminalRecord-r\.pdf$/);
+  });
+
+  it("lets only specialists open an applicant's documents", async () => {
+    const { id } = await (await callerFor()).join.submit({ ...application, email: "docs@example.com" });
+    await expect((await callerFor(alice)).join.documents({ id })).rejects.toMatchObject({ code: "FORBIDDEN" });
+    const docs = await (await callerFor(admin)).join.documents({ id });
+    expect(docs.idDocument?.url).toContain("idDocument");
+    expect(docs.photo?.url).toContain("photo");
+  });
+
+  it("refuses to hire an application without documents", async () => {
+    const { technicianApplications } = await import("@db/schema");
+    const [old] = await db
+      .insert(technicianApplications)
+      .values({ name: "No Docs", phone: "+961 1 111 111", trade: "plumbing", area: "Jbeil", email: "nodocs@example.com" })
+      .returning({ id: technicianApplications.id });
+    await expect((await callerFor(admin)).join.hire({ id: old.id })).rejects.toMatchObject({ code: "BAD_REQUEST" });
+  });
+});
+
 describe("hiring technicians from applications", () => {
   it("invites a new applicant and creates their technician account right away", async () => {
     const { id } = await (await callerFor()).join.submit({ ...application, email: "New.Tech@Example.com" });
@@ -165,7 +214,7 @@ describe("hiring technicians from applications", () => {
     const { technicianApplications } = await import("@db/schema");
     const [old] = await db
       .insert(technicianApplications)
-      .values({ name: "Old Applicant", phone: "+961 1 000 000", trade: "plumbing", area: "Saida" })
+      .values({ name: "Old Applicant", phone: "+961 1 000 000", trade: "plumbing", area: "Saida", ...documentKeys() })
       .returning({ id: technicianApplications.id });
     await expect(s.join.hire({ id: old.id })).rejects.toMatchObject({ code: "BAD_REQUEST" });
     const res = await s.join.hire({ id: old.id, email: "old.applicant@example.com" });
@@ -203,6 +252,12 @@ describe("full repair workflow", () => {
     await expect((await callerFor()).requests.create(booking())).rejects.toMatchObject({
       code: "UNAUTHORIZED",
     });
+  });
+
+  it("requires the map pin to be in Lebanon", async () => {
+    await expect(
+      (await callerFor(alice)).requests.create(booking({ lat: 48.85, lng: 2.35 })),
+    ).rejects.toMatchObject({ code: "BAD_REQUEST" });
   });
 
   it("rejects unknown categories and other users' uploads", async () => {
@@ -311,6 +366,7 @@ describe("full repair workflow", () => {
 
     const seen = await (await callerFor(alice)).requests.get({ id: requestId });
     expect(seen.technician?.name).toBe("Tina");
+    expect(seen.request.lat).toBeCloseTo(BEIRUT_PIN.lat);
     expect(Number(seen.location?.lat)).toBeCloseTo(33.889);
 
     expect((await t.storage.urls({ keys: [aliceKey()] })).urls[aliceKey()]).toBeTruthy();

@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { ChevronDown, Loader2, Mail, MessageCircle, Phone, UserCheck } from "lucide-react";
+import { ChevronDown, FileText, Loader2, Mail, MessageCircle, Phone, UserCheck } from "lucide-react";
 import { ServiceIcon } from "@/components/ServiceIcon";
 import { useI18n } from "@/i18n";
 import { trpc } from "@/providers/trpc";
@@ -86,7 +86,10 @@ function ApplicationCard({
   // "hired" by hand without an account ever being created.
   const hired = app.status === "hired" && app.hiredUserId != null;
   const hireEmail = app.email ?? email.trim();
-  const canHire = !hired && EMAIL_PATTERN.test(hireEmail);
+  const hasDocuments = !!(app.idDocumentKey && app.criminalRecordKey && app.photoKey);
+  const canHire = !hired && hasDocuments && EMAIL_PATTERN.test(hireEmail);
+  // Short-lived links, fetched only when the card is open.
+  const docs = trpc.join.documents.useQuery({ id: app.id }, { enabled: open, staleTime: 60_000 });
   const yesNo = (v: boolean | null) => (v === null ? p(t.dash3.notProvided) : v ? p(t.join.yes) : p(t.join.no));
   const detail = (label: string, value: string) => (
     <div className="flex justify-between gap-4">
@@ -170,6 +173,46 @@ function ApplicationCard({
             {detail(p(t.dash3.transport), yesNo(app.hasTransport))}
           </dl>
           {app.notes && <p className="mt-3 rounded-xl bg-navy/5 p-3 text-sm text-navy/80">{app.notes}</p>}
+
+          {/* identity documents (private, specialists only) */}
+          <div className="mt-4">
+            <p className="font-display text-xs font-bold uppercase tracking-[0.2em] text-navy/70">{p(t.docs.title)}</p>
+            <div className="mt-2 grid grid-cols-3 gap-2">
+              {(["photo", "idDocument", "criminalRecord"] as const).map((kind) => {
+                const doc = docs.data?.[kind];
+                return (
+                  <div key={kind} className="rounded-xl border-2 border-navy/15 bg-paper p-2 text-center">
+                    <p className="truncate text-[11px] font-bold text-navy">{p(t.docs[kind])}</p>
+                    {docs.isLoading ? (
+                      <Loader2 className="mx-auto mt-3 h-5 w-5 animate-spin text-navy" />
+                    ) : !doc ? (
+                      <p className="mt-3 text-xs font-bold text-destructive">{p(t.docs.missing)}</p>
+                    ) : doc.isPdf ? (
+                      <a
+                        href={doc.url}
+                        target="_blank"
+                        rel="noreferrer"
+                        className="mt-2 inline-flex items-center gap-1 text-xs font-bold text-navy underline underline-offset-4"
+                      >
+                        <FileText className="h-4 w-4" /> PDF · {p(t.docs.open)}
+                      </a>
+                    ) : (
+                      <a href={doc.url} target="_blank" rel="noreferrer" className="mt-1 block">
+                        <img
+                          src={doc.url}
+                          alt={p(t.docs[kind])}
+                          className={`mx-auto aspect-square w-full rounded-lg object-cover ${kind === "photo" ? "" : "object-top"}`}
+                        />
+                      </a>
+                    )}
+                  </div>
+                );
+              })}
+            </div>
+            {!hasDocuments && !hired && (
+              <p className="mt-2 text-xs font-semibold text-destructive">{p(t.docs.missingAll)}</p>
+            )}
+          </div>
 
           {/* status + hire */}
           <div className="mt-5 flex flex-wrap items-center gap-2 border-t-2 border-navy/10 pt-4">

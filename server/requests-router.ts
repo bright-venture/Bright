@@ -18,7 +18,8 @@ import {
   todayInBeirut,
   validateAnswers,
 } from "@contracts/workflow";
-import { userUploadPrefix } from "./lib/storage";
+import { profilePhotoUrl, userUploadPrefix } from "./lib/storage";
+import { isInLebanon } from "@contracts/geo";
 import { applyTransition, findRequest, logEvent, type RequestScope } from "./lib/workflow";
 
 const mediaItem = z.object({
@@ -43,6 +44,9 @@ export const requestsRouter = createRouter({
         phone: z.string().trim().min(6).max(64),
         notes: z.string().max(4000).optional(),
         media: z.array(mediaItem).max(8).default([]),
+        // Map pin for the visit address.
+        lat: z.number().min(-90).max(90),
+        lng: z.number().min(-180).max(180),
       }),
     )
     .mutation(async ({ ctx, input }) => {
@@ -53,6 +57,9 @@ export const requestsRouter = createRouter({
       if (answerError) throw new TRPCError({ code: "BAD_REQUEST", message: answerError });
       if (!isValidVisitDate(input.preferredDate, todayInBeirut())) {
         throw new TRPCError({ code: "BAD_REQUEST", message: "Choose a date from today onwards" });
+      }
+      if (!isInLebanon(input.lat, input.lng)) {
+        throw new TRPCError({ code: "BAD_REQUEST", message: "Place the pin on your address in Lebanon" });
       }
       const prefix = userUploadPrefix(ctx.user.authId);
       if (input.media.some((m) => !m.key.startsWith(prefix))) {
@@ -73,6 +80,8 @@ export const requestsRouter = createRouter({
             timeSlot: input.timeSlot,
             area: input.area,
             address: input.address,
+            lat: input.lat,
+            lng: input.lng,
             phone: input.phone,
             notes: input.notes ?? null,
           })
@@ -134,7 +143,9 @@ export const requestsRouter = createRouter({
       request: row,
       media,
       events,
-      technician: row.technicianId ? { name: tech?.name ?? null } : null,
+      technician: row.technicianId
+        ? { name: tech?.name ?? null, photoUrl: await profilePhotoUrl(tech?.avatar) }
+        : null,
       // Live location is only shared while the job is active.
       location: loc ? { lat: loc.lat, lng: loc.lng, updatedAt: loc.updatedAt } : null,
     };

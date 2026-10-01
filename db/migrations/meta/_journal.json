@@ -29,6 +29,13 @@
       "when": 1790769622865,
       "tag": "0003_application_details",
       "breakpoints": true
+    },
+    {
+      "idx": 4,
+      "version": "7",
+      "when": 1790836318853,
+      "tag": "0004_location_and_documents",
+      "breakpoints": true
     }
   ]
 }

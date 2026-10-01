@@ -21,5 +21,21 @@ export const AVAILABILITY_LABELS: Record<Availability, LocalText> = {
   weekends: { en: "Weekends only", ar: "بس ويك إند" },
 };
 
+/** Documents every technician applicant must upload. */
+export const APPLICATION_DOCUMENTS = ["idDocument", "criminalRecord", "photo"] as const;
+export type ApplicationDocument = (typeof APPLICATION_DOCUMENTS)[number];
+
+/** Photo must be an image; ID and criminal record may be a photo or a PDF scan. */
+export const DOCUMENT_TYPES: Record<ApplicationDocument, readonly string[]> = {
+  idDocument: ["image/", "application/pdf"],
+  criminalRecord: ["image/", "application/pdf"],
+  photo: ["image/"],
+};
+export const MAX_DOCUMENT_BYTES = 10 * 1024 * 1024;
+
+export function isAllowedDocumentType(kind: ApplicationDocument, contentType: string) {
+  return DOCUMENT_TYPES[kind].some((t) => (t.endsWith("/") ? contentType.startsWith(t) : contentType === t));
+}
+
 /** Statuses a specialist sets by hand; "hired" only comes from the Hire action. */
 export const MANUAL_APPLICATION_STATUSES = ["new", "contacted", "rejected"] as const;

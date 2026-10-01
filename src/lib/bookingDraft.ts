@@ -17,6 +17,8 @@ export type DraftFields = {
   address: string;
   phone: string;
   notes: string;
+  /** Map pin for the visit address. */
+  pin?: { lat: number; lng: number } | null;
 };
 
 export function loadDraftFields(): DraftFields | null {

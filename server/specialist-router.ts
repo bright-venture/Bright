@@ -2,7 +2,8 @@ import { z } from "zod";
 import { desc, eq } from "drizzle-orm";
 import { createRouter, specialistQuery } from "./middleware";
 import { getDb } from "./queries/connection";
-import { requestEvents, requestMedia, serviceRequests, users } from "../db/schema";
+import { requestEvents, requestMedia, serviceRequests, technicianLocations, users } from "../db/schema";
+import { ACTIVE_JOB_STATUSES } from "@contracts/workflow";
 import type { RequestStatus, UrgencyLevel } from "@contracts/services";
 import { QUOTE_AMOUNT_PATTERN, URGENCY_LEVELS } from "@contracts/workflow";
 import { applyTransition, findRequest } from "./lib/workflow";
@@ -39,7 +40,8 @@ export const specialistRouter = createRouter({
   detail: specialistQuery.input(byId).query(async ({ input }) => {
     const db = getDb();
     const row = await findRequest(db, input.id, "any");
-    const [customer, media, events] = await Promise.all([
+    const active = ACTIVE_JOB_STATUSES.includes(row.status);
+    const [customer, media, events, loc] = await Promise.all([
       db.query.users.findFirst({ where: eq(users.id, row.userId) }),
       db.select().from(requestMedia).where(eq(requestMedia.requestId, row.id)),
       db
@@ -47,8 +49,12 @@ export const specialistRouter = createRouter({
         .from(requestEvents)
         .where(eq(requestEvents.requestId, row.id))
         .orderBy(desc(requestEvents.createdAt)),
+      active
+        ? db.query.technicianLocations.findFirst({ where: eq(technicianLocations.requestId, row.id) })
+        : undefined,
     ]);
-    return { request: row, customer, media, events };
+    const location = loc ? { lat: loc.lat, lng: loc.lng, updatedAt: loc.updatedAt } : null;
+    return { request: row, customer, media, events, location };
   }),
 
   startReview: specialistQuery

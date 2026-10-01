@@ -4,6 +4,7 @@ import { ArrowRight, CheckCircle2 } from "lucide-react";
 import { Navbar } from "@/components/Navbar";
 import { Footer } from "@/components/Footer";
 import { ServiceIcon } from "@/components/ServiceIcon";
+import { DocumentUpload } from "@/components/DocumentUpload";
 import { useI18n } from "@/i18n";
 import { trpc } from "@/providers/trpc";
 import { CATEGORIES, type LocalText } from "@contracts/services";
@@ -67,6 +68,9 @@ export default function Join() {
   const [hasTools, setHasTools] = useState<"yes" | "no" | null>(null);
   const [hasTransport, setHasTransport] = useState<"yes" | "no" | null>(null);
   const [notes, setNotes] = useState("");
+  const [idDocumentKey, setIdDocumentKey] = useState<string | null>(null);
+  const [criminalRecordKey, setCriminalRecordKey] = useState<string | null>(null);
+  const [photoKey, setPhotoKey] = useState<string | null>(null);
   const [done, setDone] = useState(false);
   const [error, setError] = useState("");
 
@@ -87,7 +91,10 @@ export default function Join() {
     experience !== null &&
     availability !== null &&
     hasTools !== null &&
-    hasTransport !== null;
+    hasTransport !== null &&
+    !!idDocumentKey &&
+    !!criminalRecordKey &&
+    !!photoKey;
 
   async function submit() {
     if (!valid) return;
@@ -104,6 +111,9 @@ export default function Join() {
         hasTools: hasTools === "yes",
         hasTransport: hasTransport === "yes",
         notes: notes.trim() || undefined,
+        idDocumentKey: idDocumentKey!,
+        criminalRecordKey: criminalRecordKey!,
+        photoKey: photoKey!,
       });
       setDone(true);
     } catch {
@@ -256,6 +266,31 @@ export default function Join() {
                       options={yesNo}
                       value={hasTransport}
                       onChange={setHasTransport}
+                    />
+                  </div>
+                </div>
+
+                <div>
+                  <p className={LABEL}>{p(t.docs.title)}</p>
+                  <p className="mt-1 text-xs leading-relaxed text-navy/70">{p(t.docs.privacy)}</p>
+                  <div className="mt-3 flex flex-col gap-3">
+                    <DocumentUpload
+                      kind="idDocument"
+                      label={p(t.docs.idDocument)}
+                      hint={p(t.docs.idDocumentHint)}
+                      onUploaded={setIdDocumentKey}
+                    />
+                    <DocumentUpload
+                      kind="criminalRecord"
+                      label={p(t.docs.criminalRecord)}
+                      hint={p(t.docs.criminalRecordHint)}
+                      onUploaded={setCriminalRecordKey}
+                    />
+                    <DocumentUpload
+                      kind="photo"
+                      label={p(t.docs.photo)}
+                      hint={p(t.docs.photoHint)}
+                      onUploaded={setPhotoKey}
                     />
                   </div>
                 </div>

@@ -10,6 +10,7 @@ import {
   uuid,
   index,
   boolean,
+  doublePrecision,
 } from "drizzle-orm/pg-core";
 
 // Every table enables Row Level Security with no policies. The app server talks to
@@ -84,6 +85,9 @@ export const serviceRequests = pgTable(
     timeSlot: varchar("time_slot", { length: 32 }).notNull(),
     area: varchar("area", { length: 255 }).notNull(),
     address: text("address").notNull(),
+    /** Map pin dropped by the customer (required for new requests). */
+    lat: doublePrecision("lat"),
+    lng: doublePrecision("lng"),
     phone: varchar("phone", { length: 64 }).notNull(),
     notes: text("notes"),
     quoteAmount: varchar("quote_amount", { length: 32 }),
@@ -145,6 +149,10 @@ export const technicianApplications = pgTable("technician_applications", {
   availability: varchar("availability", { length: 16 }),
   hasTools: boolean("has_tools"),
   hasTransport: boolean("has_transport"),
+  /** Private storage keys (technician-docs bucket); required for new applications. */
+  idDocumentKey: varchar("id_document_key", { length: 512 }),
+  criminalRecordKey: varchar("criminal_record_key", { length: 512 }),
+  photoKey: varchar("photo_key", { length: 512 }),
   status: applicationStatus("status").default("new").notNull(),
   /** The technician account created or promoted when the applicant was hired. */
   hiredUserId: integer("hired_user_id").references(() => users.id),

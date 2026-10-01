@@ -5,6 +5,7 @@ import { Footer } from "@/components/Footer";
 import { ServiceIcon } from "@/components/ServiceIcon";
 import { MediaGrid } from "@/components/MediaGrid";
 import { AnswerList } from "@/components/AnswerList";
+import JobMap from "@/components/map/JobMap";
 import { ApplicationsTab } from "@/components/dashboard/ApplicationsTab";
 import { useI18n } from "@/i18n";
 import { useRoleGate } from "@/hooks/useRoleGate";
@@ -241,6 +242,21 @@ export default function Dashboard() {
                   {d.request.preferredDate} · {d.request.timeSlot}
                 </p>
               </div>
+
+              {d.request.lat != null && d.request.lng != null ? (
+                <div className="mt-4">
+                  <JobMap
+                    key={d.request.id}
+                    home={{ lat: d.request.lat, lng: d.request.lng }}
+                    technician={
+                      d.location ? { lat: Number(d.location.lat), lng: Number(d.location.lng) } : null
+                    }
+                    technicianLabel="T"
+                  />
+                </div>
+              ) : (
+                <p className="mt-3 text-xs text-navy/70">{p(t.map.noPin)}</p>
+              )}
 
               <div className="mt-4 text-sm">
                 <p className="font-display text-xs font-bold uppercase tracking-[0.2em] text-navy/70">

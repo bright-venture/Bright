@@ -1,8 +1,18 @@
 import { z } from "zod";
 import { TRPCError } from "@trpc/server";
 import { eq, inArray } from "drizzle-orm";
-import { createRouter, authedQuery, customerQuery } from "./middleware";
-import { createSignedUrls, createUploadUrl, MAX_UPLOAD_BYTES } from "./lib/storage";
+import { createRouter, authedQuery, customerQuery, publicQuery } from "./middleware";
+import {
+  createDocumentUploadUrl,
+  createSignedUrls,
+  createUploadUrl,
+  MAX_UPLOAD_BYTES,
+} from "./lib/storage";
+import {
+  APPLICATION_DOCUMENTS,
+  isAllowedDocumentType,
+  MAX_DOCUMENT_BYTES,
+} from "@contracts/applications";
 import { getDb } from "./queries/connection";
 import { requestMedia, serviceRequests } from "../db/schema";
 
@@ -26,7 +36,27 @@ export const storageRouter = createRouter({
       return createUploadUrl(ctx.user.authId, input.fileName);
     }),
 
-  // Batch signed URLs — only for media on requests the caller owns, is assigned to, or admin.
+  // Technician applicants (no account yet) upload their ID, criminal record and photo.
+  createDocumentUpload: publicQuery
+    .input(
+      z.object({
+        kind: z.enum(APPLICATION_DOCUMENTS),
+        fileName: z.string().min(1).max(512),
+        size: z.number().int().positive(),
+        contentType: z.string().max(128),
+      }),
+    )
+    .mutation(async ({ input }) => {
+      if (input.size > MAX_DOCUMENT_BYTES) {
+        throw new TRPCError({ code: "BAD_REQUEST", message: "File too large (max 10 MB)" });
+      }
+      if (!isAllowedDocumentType(input.kind, input.contentType)) {
+        throw new TRPCError({ code: "BAD_REQUEST", message: "This file type isn't accepted" });
+      }
+      return createDocumentUploadUrl(input.kind, input.fileName);
+    }),
+
+  // Batch signed URLs — only for media on requests the caller owns, is assigned to, or specialist.
   urls: authedQuery
     .input(z.object({ keys: z.array(z.string()).max(16) }))
     .query(async ({ ctx, input }) => {

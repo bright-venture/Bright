@@ -7,6 +7,7 @@ import { serviceRequests, technicianApplications, users } from "../db/schema";
 import { CATEGORIES } from "../contracts/services";
 import { AVAILABILITY, EXPERIENCE_LEVELS, MANUAL_APPLICATION_STATUSES } from "@contracts/applications";
 import { getSupabaseAdmin } from "./lib/supabase";
+import { createDocumentUrls, documentKeyMatches, documentsExist } from "./lib/storage";
 
 const TRADE_IDS = CATEGORIES.map((c) => c.id) as [string, ...string[]];
 const email = z.string().trim().toLowerCase().email().max(320);
@@ -34,9 +35,22 @@ export const joinRouter = createRouter({
         hasTools: z.boolean(),
         hasTransport: z.boolean(),
         notes: z.string().trim().max(2000).optional(),
+        // Mandatory documents, uploaded first via storage.createDocumentUpload.
+        idDocumentKey: z.string().max(512),
+        criminalRecordKey: z.string().max(512),
+        photoKey: z.string().max(512),
       }),
     )
     .mutation(async ({ input }) => {
+      const keys = [input.idDocumentKey, input.criminalRecordKey, input.photoKey];
+      if (
+        !documentKeyMatches(input.idDocumentKey, "idDocument") ||
+        !documentKeyMatches(input.criminalRecordKey, "criminalRecord") ||
+        !documentKeyMatches(input.photoKey, "photo") ||
+        !(await documentsExist(keys))
+      ) {
+        throw new TRPCError({ code: "BAD_REQUEST", message: "Please upload all three documents" });
+      }
       const [res] = await getDb()
         .insert(technicianApplications)
         .values({ ...input, notes: input.notes ?? null })
@@ -66,6 +80,23 @@ export const joinRouter = createRouter({
       return { ok: true };
     }),
 
+  /** Short-lived links to an applicant's documents (specialists only). */
+  documents: specialistQuery.input(z.object({ id: z.number().int().positive() })).query(async ({ input }) => {
+    const app = await getDb().query.technicianApplications.findFirst({
+      where: eq(technicianApplications.id, input.id),
+    });
+    if (!app) throw new TRPCError({ code: "NOT_FOUND" });
+    const keys = { idDocument: app.idDocumentKey, criminalRecord: app.criminalRecordKey, photo: app.photoKey };
+    const urls = await createDocumentUrls(Object.values(keys).filter((k): k is string => !!k));
+    const link = (key: string | null) =>
+      key && urls[key] ? { url: urls[key], isPdf: key.toLowerCase().endsWith(".pdf") } : null;
+    return {
+      idDocument: link(keys.idDocument),
+      criminalRecord: link(keys.criminalRecord),
+      photo: link(keys.photo),
+    };
+  }),
+
   /** Before hiring: does this email already belong to an account? (shown in the confirmation) */
   hireCheck: specialistQuery.input(z.object({ email })).query(async ({ input }) => {
     const db = getDb();
@@ -88,6 +119,12 @@ export const joinRouter = createRouter({
         where: eq(technicianApplications.id, input.id),
       });
       if (!app) throw new TRPCError({ code: "NOT_FOUND" });
+      if (!app.idDocumentKey || !app.criminalRecordKey || !app.photoKey) {
+        throw new TRPCError({
+          code: "BAD_REQUEST",
+          message: "ID, criminal record and photo are required. Ask the applicant to apply again with all three.",
+        });
+      }
       const address = input.email ?? app.email?.toLowerCase();
       if (!address) {
         throw new TRPCError({ code: "BAD_REQUEST", message: "Add the applicant's email to hire them" });
@@ -102,7 +139,12 @@ export const joinRouter = createRouter({
         }
         await db
           .update(users)
-          .set({ role: "technician", phone: existing.phone ?? app.phone, name: existing.name ?? app.name })
+          .set({
+            role: "technician",
+            phone: existing.phone ?? app.phone,
+            name: existing.name ?? app.name,
+            avatar: app.photoKey,
+          })
           .where(eq(users.id, existing.id));
         userId = existing.id;
       } else {
@@ -121,8 +163,15 @@ export const joinRouter = createRouter({
         }
         const [created] = await db
           .insert(users)
-          .values({ authId: data.user.id, email: address, name: app.name, phone: app.phone, role: "technician" })
-          .onConflictDoUpdate({ target: users.authId, set: { role: "technician" } })
+          .values({
+            authId: data.user.id,
+            email: address,
+            name: app.name,
+            phone: app.phone,
+            role: "technician",
+            avatar: app.photoKey,
+          })
+          .onConflictDoUpdate({ target: users.authId, set: { role: "technician", avatar: app.photoKey } })
           .returning({ id: users.id });
         userId = created.id;
         invited = true;

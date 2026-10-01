@@ -15,7 +15,9 @@ import { AuthPanel } from "@/components/AuthPanel";
 import { useI18n } from "@/i18n";
 import { useRoleGate } from "@/hooks/useRoleGate";
 import { trpc } from "@/providers/trpc";
-import { MEDIA_BUCKET, supabase } from "@/lib/supabase";
+import { supabase } from "@/lib/supabase";
+import LocationPicker, { type Pin } from "@/components/map/LocationPicker";
+import { isInLebanon } from "@contracts/geo";
 import {
   clearDraft,
   loadDraftFields,
@@ -86,6 +88,7 @@ export default function Book() {
   const [address, setAddress] = useState(draft?.address ?? "");
   const [phone, setPhone] = useState(draft?.phone ?? "");
   const [notes, setNotes] = useState(draft?.notes ?? "");
+  const [pin, setPin] = useState<Pin | null>(draft?.pin ?? null);
   const [submitting, setSubmitting] = useState(false);
   const [uploadProgress, setUploadProgress] = useState<{ done: number; total: number } | null>(
     null,
@@ -134,8 +137,8 @@ export default function Book() {
 
   useEffect(() => {
     if (doneId !== null || !category) return;
-    saveDraftFields({ step, category, answers, date, slot, area, address, phone, notes });
-  }, [doneId, step, category, answers, date, slot, area, address, phone, notes]);
+    saveDraftFields({ step, category, answers, date, slot, area, address, phone, notes, pin });
+  }, [doneId, step, category, answers, date, slot, area, address, phone, notes, pin]);
 
   useEffect(() => {
     if (filesRestored.current && doneId === null) void saveDraftFiles(media.map((m) => m.file));
@@ -175,7 +178,7 @@ export default function Book() {
           contentType,
         });
         const { error } = await supabase.storage
-          .from(MEDIA_BUCKET)
+          .from(target.bucket)
           .uploadToSignedUrl(target.key, target.token, m.file, { contentType });
         if (error) throw error;
         uploaded.push({ key: target.key, fileName: m.file.name, size: m.file.size, contentType });
@@ -188,6 +191,8 @@ export default function Book() {
         timeSlot: slot as TimeSlot, // the "Next" button requires a slot
         area,
         address,
+        lat: pin!.lat, // the "Next" button requires a pin
+        lng: pin!.lng,
         phone: contactPhone,
         notes: notes || undefined,
         media: uploaded,
@@ -446,6 +451,15 @@ export default function Book() {
                 </div>
               </div>
 
+              <div className="card-br p-5">
+                <p className="font-display text-base font-extrabold text-navy">
+                  {p(t.map.pinTitle)} <span className="text-flame-ink">*</span>
+                </p>
+                <div className="mt-3">
+                  <LocationPicker value={pin} onChange={setPin} />
+                </div>
+              </div>
+
               <div className="card-br flex flex-col gap-4 p-5">
                 {[
                   { l: t.book.area, v: area, set: setArea, ph: p(t.book.areaPh) },
@@ -591,7 +605,8 @@ export default function Book() {
               disabled={
                 (step === 0 && !category) ||
                 (step === 1 && !questionsAnswered()) ||
-                (step === 3 && (!date || !slot || !area || !address || !contactPhone))
+                (step === 3 &&
+                  (!date || !slot || !area || !address || !contactPhone || !pin || !isInLebanon(pin.lat, pin.lng)))
               }
               className="btn-pill-primary disabled:opacity-40"
             >

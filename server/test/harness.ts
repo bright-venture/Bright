@@ -34,6 +34,41 @@ export async function makeUser(email: string, name = email.split("@")[0]) {
   return findOrCreateUser({ authId: randomUUID(), email, name });
 }
 
+/** A pin in Achrafieh, Beirut. */
+export const BEIRUT_PIN = { lat: 33.8886, lng: 35.5195 };
+
+/** Keys shaped like real uploaded application documents. */
+export function documentKeys() {
+  const key = (kind: string) => `applications/${randomUUID()}/${kind}-file.jpg`;
+  return { idDocumentKey: key("idDocument"), criminalRecordKey: key("criminalRecord"), photoKey: key("photo") };
+}
+
+/**
+ * Storage stub for tests: keeps the real key rules (prefixes, kind tags) and
+ * replaces everything that would talk to Supabase.
+ */
+export async function storageStub(importOriginal: () => Promise<unknown>) {
+  const real = (await importOriginal()) as typeof import("../lib/storage");
+  return {
+    ...real,
+    createUploadUrl: async (authId: string, fileName: string) => ({
+      key: `requests/${authId}/x-${fileName}`,
+      token: "token",
+      bucket: "media",
+    }),
+    createSignedUrls: async (keys: string[]) => Object.fromEntries(keys.map((k) => [k, `https://signed/${k}`])),
+    createDocumentUploadUrl: async (kind: string, fileName: string) => ({
+      key: `applications/${randomUUID()}/${kind}-${fileName}`,
+      token: "token",
+      bucket: "docs",
+    }),
+    // A key containing "missing" stands for a file that was never uploaded.
+    documentsExist: async (keys: string[]) => keys.every((k) => !k.includes("missing")),
+    createDocumentUrls: async (keys: string[]) => Object.fromEntries(keys.map((k) => [k, `https://signed/${k}`])),
+    profilePhotoUrl: async (key: string | null | undefined) => (key ? `https://signed/${key}` : null),
+  };
+}
+
 /** A valid visit date: 30 days from now, as YYYY-MM-DD. */
 export function futureDate(days = 30) {
   return new Date(Date.now() + days * 86_400_000).toISOString().slice(0, 10);

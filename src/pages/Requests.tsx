@@ -5,6 +5,7 @@ import { Navbar } from "@/components/Navbar";
 import { Footer } from "@/components/Footer";
 import { ServiceIcon } from "@/components/ServiceIcon";
 import { MediaGrid } from "@/components/MediaGrid";
+import JobMap from "@/components/map/JobMap";
 import { AnswerList } from "@/components/AnswerList";
 import { useI18n } from "@/i18n";
 import { useRoleGate } from "@/hooks/useRoleGate";
@@ -40,32 +41,53 @@ function StatusBadge({ status }: { status: RequestStatus }) {
   );
 }
 
+function initials(name: string | null) {
+  return (name ?? "BR")
+    .split(/\s+/)
+    .map((w) => w[0])
+    .join("")
+    .slice(0, 2)
+    .toUpperCase();
+}
+
 function TechnicianCard({
   name,
+  photoUrl,
+  home,
   location,
 }: {
   name: string | null;
+  photoUrl: string | null;
+  home: { lat: number; lng: number } | null;
   location: { lat: string; lng: string; updatedAt: Date } | null;
 }) {
   const { t, p } = useI18n();
-  const lat = location ? Number(location.lat) : null;
-  const lng = location ? Number(location.lng) : null;
-  const hasFix = lat !== null && lng !== null && Number.isFinite(lat) && Number.isFinite(lng);
+  const lat = location ? Number(location.lat) : NaN;
+  const lng = location ? Number(location.lng) : NaN;
+  const live = Number.isFinite(lat) && Number.isFinite(lng) ? { lat, lng } : null;
   return (
     <div className="mt-5 rounded-2xl border-2 border-bird bg-white p-4">
       <div className="flex items-center gap-3">
-        <span className="flex h-11 w-11 items-center justify-center rounded-full border-2 border-bird bg-bird/10 text-bird">
-          <MapPin className="h-5 w-5" />
-        </span>
+        {photoUrl ? (
+          <img
+            src={photoUrl}
+            alt=""
+            width={44}
+            height={44}
+            className="h-11 w-11 shrink-0 rounded-full border-2 border-bird object-cover"
+          />
+        ) : (
+          <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full border-2 border-bird bg-bird/10 text-bird">
+            <MapPin className="h-5 w-5" />
+          </span>
+        )}
         <div>
           <p className="font-display text-xs font-bold uppercase tracking-[0.2em] text-navy/70">
             {p(t.tracking.techOnWay)}
           </p>
-          <p className="font-display text-base font-extrabold text-navy">
-            {name ?? "Be Right"}
-          </p>
+          <p className="font-display text-base font-extrabold text-navy">{name ?? "Be Right"}</p>
         </div>
-        {hasFix && (
+        {live && (
           <span className="ms-auto inline-flex items-center gap-1.5 rounded-full bg-bird px-3 py-1 text-xs font-bold text-white">
             <span className="relative flex h-2 w-2">
               <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-white opacity-70" />
@@ -75,19 +97,15 @@ function TechnicianCard({
           </span>
         )}
       </div>
-      {hasFix ? (
-        <>
-          <iframe
-            title="Technician location"
-            src={`https://www.openstreetmap.org/export/embed.html?bbox=${lng! - 0.006},${lat! - 0.004},${lng! + 0.006},${lat! + 0.004}&layer=mapnik&marker=${lat},${lng}`}
-            className="mt-3 h-56 w-full rounded-2xl border-2 border-navy/20"
-            loading="lazy"
-          />
-          <p className="mt-2 text-xs text-navy/70">
-            {p(t.tracking.lastUpdate)}:{" "}
-            {new Date(location!.updatedAt).toLocaleTimeString()}
-          </p>
-        </>
+      {(home || live) && (
+        <div className="mt-3">
+          <JobMap home={home} technician={live} technicianLabel={initials(name)} />
+        </div>
+      )}
+      {live ? (
+        <p className="mt-2 text-xs text-navy/70">
+          {p(t.tracking.lastUpdate)}: {new Date(location!.updatedAt).toLocaleTimeString()}
+        </p>
       ) : (
         <p className="mt-3 text-sm text-navy/70">{p(t.tracking.noLocationYet)}</p>
       )}
@@ -280,6 +298,12 @@ export default function Requests() {
                     {detail.data.technician && (
                       <TechnicianCard
                         name={detail.data.technician.name}
+                        photoUrl={detail.data.technician.photoUrl}
+                        home={
+                          detail.data.request.lat != null && detail.data.request.lng != null
+                            ? { lat: detail.data.request.lat, lng: detail.data.request.lng }
+                            : null
+                        }
                         location={detail.data.location}
                       />
                     )}

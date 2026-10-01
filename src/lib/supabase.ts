@@ -13,7 +13,6 @@ export const supabase = createClient(url ?? "http://localhost", publishableKey ?
   auth: { persistSession: true, autoRefreshToken: true, detectSessionInUrl: true },
 });
 
-export const MEDIA_BUCKET = import.meta.env.VITE_SUPABASE_STORAGE_BUCKET || "request-media";
 
 export async function getAccessToken() {
   const { data } = await supabase.auth.getSession();
