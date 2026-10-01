@@ -678,6 +678,10 @@ export const t = {
     langName: { en: "العربية", ar: "English" },
     loading: { en: "Loading…", ar: "عم نحمّل…" },
     error: { en: "Something went wrong.", ar: "صار خطأ." },
+    tooMany: {
+      en: "Too many attempts right now. Please try again in an hour.",
+      ar: "محاولات كتير هلّق. جرّب كمان ساعة.",
+    },
     phoneInvalid: {
       en: "Enter a full phone number, e.g. +961 70 123 456.",
       ar: "اكتب رقم هاتف كامل، مثلاً +961 70 123 456.",

@@ -1,7 +1,9 @@
 import { randomUUID } from "node:crypto";
+import { sql } from "drizzle-orm";
 import { MAX_DOCUMENT_BYTES, type ApplicationDocument } from "@contracts/applications";
 import { env } from "./env";
 import { getSupabaseAdmin } from "./supabase";
+import { getDb } from "../queries/connection";
 
 export const MAX_UPLOAD_BYTES = 20 * 1024 * 1024; // 20 MB per customer photo/video
 const SIGNED_URL_TTL_SECONDS = 60 * 30;
@@ -13,7 +15,7 @@ const BUCKETS = {
   media: { name: () => env.storageBucket, fileSizeLimit: MAX_UPLOAD_BYTES, mime: ["image/*", "video/*"] },
   docs: { name: () => env.docsBucket, fileSizeLimit: MAX_DOCUMENT_BYTES, mime: ["image/*", "application/pdf"] },
 } as const;
-type BucketId = keyof typeof BUCKETS;
+export type BucketId = keyof typeof BUCKETS;
 
 const bucketReady: Partial<Record<BucketId, Promise<void>>> = {};
 
@@ -71,9 +73,11 @@ async function signedUrls(id: BucketId, keys: string[], ttl: number) {
 
 /* ---------- customer request photos/videos ---------- */
 
+export const MEDIA_PREFIX = "requests/";
+
 /** Every customer upload lives under this prefix; used to verify ownership later. */
 export function userUploadPrefix(authId: string) {
-  return `requests/${authId}/`;
+  return `${MEDIA_PREFIX}${authId}/`;
 }
 
 export function createUploadUrl(authId: string, fileName: string) {
@@ -115,11 +119,32 @@ export async function profilePhotoUrl(avatarKey: string | null | undefined) {
   return urls[avatarKey] ?? null;
 }
 
-/** Permanently delete documents (batched; Supabase removes up to 1,000 paths per call). */
-export async function deleteDocuments(keys: string[]) {
-  const bucket = getSupabaseAdmin().storage.from(env.docsBucket);
+/* ---------- clean-up ---------- */
+
+/**
+ * Files under `prefix` uploaded before `before`, oldest first. Read from Supabase's
+ * storage catalogue in one query (the Storage API can only list one folder at a time).
+ */
+export async function listFilesCreatedBefore(id: BucketId, prefix: string, before: Date, limit = 1000) {
+  const rows = await getDb().execute<{ name: string }>(sql`
+    select name from storage.objects
+    where bucket_id = ${BUCKETS[id].name()}
+      and starts_with(name, ${prefix})
+      and created_at < ${before.toISOString()}::timestamptz
+    order by created_at
+    limit ${limit}`);
+  return [...rows].map((r) => r.name);
+}
+
+/** Permanently delete files (batched; Supabase removes up to 1,000 paths per call). */
+export async function deleteFiles(id: BucketId, keys: string[]) {
+  const bucket = getSupabaseAdmin().storage.from(BUCKETS[id].name());
   for (let i = 0; i < keys.length; i += 500) {
     const { error } = await bucket.remove(keys.slice(i, i + 500));
     if (error) throw error;
   }
+}
+
+export function deleteDocuments(keys: string[]) {
+  return deleteFiles("docs", keys);
 }

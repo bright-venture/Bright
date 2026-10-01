@@ -20,6 +20,7 @@ import { supabase } from "@/lib/supabase";
 import LocationPicker, { type Pin } from "@/components/map/LocationPicker";
 import { isInLebanon } from "@contracts/geo";
 import { isValidPhone } from "@contracts/phone";
+import { isRateLimited } from "@/lib/errors";
 import {
   clearDraft,
   loadDraftFields,
@@ -95,7 +96,7 @@ export default function Book() {
   const [uploadProgress, setUploadProgress] = useState<{ done: number; total: number } | null>(
     null,
   );
-  const [submitError, setSubmitError] = useState(false);
+  const [submitError, setSubmitError] = useState<"generic" | "tooMany" | null>(null);
   const [doneId, setDoneId] = useState<number | null>(null);
   const [doneUrgency, setDoneUrgency] = useState<UrgencyLevel | null>(null);
   const fileRef = useRef<HTMLInputElement>(null);
@@ -176,7 +177,7 @@ export default function Book() {
     // e.g. a short number saved at sign-up, or a draft from before phones were checked
     if (!isValidPhone(contactPhone)) return setStep(3);
     setSubmitting(true);
-    setSubmitError(false);
+    setSubmitError(null);
     try {
       if (needsTerms) await acceptTerms.mutateAsync();
       // Photos are uploaded only now that we know who the customer is.
@@ -212,8 +213,8 @@ export default function Book() {
       await clearDraft();
       setDoneId(res.id);
       setDoneUrgency(res.urgency as UrgencyLevel);
-    } catch {
-      setSubmitError(true);
+    } catch (err) {
+      setSubmitError(isRateLimited(err) ? "tooMany" : "generic");
     } finally {
       setSubmitting(false);
       setUploadProgress(null);
@@ -650,7 +651,7 @@ export default function Book() {
         </div>
         {submitError && (
           <p className="mt-3 text-end text-sm font-semibold text-destructive">
-            {p(t.misc.error)}
+            {p(submitError === "tooMany" ? t.misc.tooMany : t.misc.error)}
           </p>
         )}
       </main>

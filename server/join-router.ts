@@ -9,6 +9,7 @@ import { AVAILABILITY, EXPERIENCE_LEVELS, MANUAL_APPLICATION_STATUSES } from "@c
 import { getSupabaseAdmin } from "./lib/supabase";
 import { LEGAL_VERSION } from "@contracts/legal";
 import { isValidPhone } from "@contracts/phone";
+import { clientIp, LIMITS, rateLimit } from "./lib/rateLimit";
 import { createDocumentUrls, documentKeyMatches, documentsExist } from "./lib/storage";
 
 const TRADE_IDS = CATEGORIES.map((c) => c.id) as [string, ...string[]];
@@ -44,7 +45,8 @@ export const joinRouter = createRouter({
         consent: z.literal(true),
       }),
     )
-    .mutation(async ({ input }) => {
+    .mutation(async ({ ctx, input }) => {
+      await rateLimit(`apply:ip:${clientIp(ctx.req)}`, LIMITS.applicationPerIp);
       const keys = [input.idDocumentKey, input.photoKey];
       if (
         !documentKeyMatches(input.idDocumentKey, "idDocument") ||

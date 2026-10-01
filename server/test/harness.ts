@@ -20,10 +20,11 @@ export async function createTestDb() {
 
 export type TestDb = Awaited<ReturnType<typeof createTestDb>>;
 
-export async function callerFor(user?: User) {
+/** Each caller gets its own IP unless one is given, so per-IP rate limits don't leak between tests. */
+export async function callerFor(user?: User, { ip = randomUUID() as string } = {}) {
   const { appRouter } = await import("../router");
   return appRouter.createCaller({
-    req: new Request("http://test.local"),
+    req: new Request("http://test.local", { headers: { "x-nf-client-connection-ip": ip } }),
     resHeaders: new Headers(),
     user,
   });
@@ -85,11 +86,22 @@ export async function storageStub(importOriginal: () => Promise<unknown>) {
     deleteDocuments: async (keys: string[]) => {
       deletedDocuments.push(...keys);
     },
+    listFilesCreatedBefore: async (bucket: "docs" | "media", prefix: string, before: Date) =>
+      storedFiles
+        .filter((f) => f.bucket === bucket && f.key.startsWith(prefix) && f.createdAt < before)
+        .map((f) => f.key),
+    deleteFiles: async (bucket: "docs" | "media", keys: string[]) => {
+      (bucket === "docs" ? deletedDocuments : deletedMedia).push(...keys);
+    },
   };
 }
 
 /** Document keys "deleted" through the storage stub, for assertions. */
 export const deletedDocuments: string[] = [];
+/** Booking photo/video keys "deleted" through the storage stub. */
+export const deletedMedia: string[] = [];
+/** Files the storage stub pretends are in the buckets (for the orphan clean-up). */
+export const storedFiles: { bucket: "docs" | "media"; key: string; createdAt: Date }[] = [];
 
 /** A valid visit date: 30 days from now, as YYYY-MM-DD. */
 export function futureDate(days = 30) {

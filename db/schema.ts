@@ -177,6 +177,13 @@ export const technicianApplications = pgTable("technician_applications", {
 
 export type TechnicianApplication = typeof technicianApplications.$inferSelect;
 
+/** Request counters for abuse-prone endpoints, one row per key (see server/lib/rateLimit.ts). */
+export const rateLimits = pgTable("rate_limits", {
+  key: varchar("key", { length: 128 }).primaryKey(),
+  windowStart: timestamp("window_start", { withTimezone: true }).notNull(),
+  count: integer("count").notNull(),
+}).enableRLS();
+
 /** Latest known technician position per request (one row per request). */
 export const technicianLocations = pgTable("technician_locations", {
   id: serial("id").primaryKey(),

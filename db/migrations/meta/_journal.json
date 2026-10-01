@@ -57,6 +57,13 @@
       "when": 1790837933569,
       "tag": "0007_job_preparation",
       "breakpoints": true
+    },
+    {
+      "idx": 8,
+      "version": "7",
+      "when": 1790852883841,
+      "tag": "0008_rate_limits",
+      "breakpoints": true
     }
   ]
 }

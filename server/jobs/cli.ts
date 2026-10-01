@@ -1,9 +1,15 @@
-// Run the document clean-up by hand: `npm run cleanup:documents` (add `-- --dry-run` to preview).
+// Run the daily clean-up by hand: `npm run cleanup:documents` (add `-- --dry-run` to preview).
 import { purgeRejectedDocuments } from "./purgeRejectedDocuments";
+import { purgeOrphanUploads } from "./purgeOrphanUploads";
 
 const dryRun = process.argv.includes("--dry-run");
-const result = await purgeRejectedDocuments({ dryRun });
+const verb = dryRun ? "[dry run] Would delete" : "Deleted";
+const rejected = await purgeRejectedDocuments({ dryRun });
 console.log(
-  `${dryRun ? "[dry run] Would delete" : "Deleted"} ${result.files} file(s) from ${result.applications} rejected application(s) (rejected before ${result.cutoff}), plus ${result.criminalRecords} old criminal record file(s).`,
+  `${verb} ${rejected.files} file(s) from ${rejected.applications} rejected application(s) (rejected before ${rejected.cutoff}), plus ${rejected.criminalRecords} old criminal record file(s).`,
+);
+const orphans = await purgeOrphanUploads({ dryRun });
+console.log(
+  `${verb} ${orphans.documents} unsubmitted application document(s) and ${orphans.media} unsent booking photo(s)/video(s).`,
 );
 process.exit(0);

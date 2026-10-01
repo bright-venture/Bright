@@ -14,6 +14,7 @@ import {
   MAX_DOCUMENT_BYTES,
 } from "@contracts/applications";
 import { getDb } from "./queries/connection";
+import { clientIp, LIMITS, rateLimit } from "./lib/rateLimit";
 import { requestMedia, serviceRequests } from "../db/schema";
 
 export const storageRouter = createRouter({
@@ -33,6 +34,7 @@ export const storageRouter = createRouter({
       if (!/^(image|video)\//.test(input.contentType)) {
         throw new TRPCError({ code: "BAD_REQUEST", message: "Only photos and videos are allowed" });
       }
+      await rateLimit(`media-upload:user:${ctx.user.id}`, LIMITS.mediaUploadPerUser);
       return createUploadUrl(ctx.user.authId, input.fileName);
     }),
 
@@ -46,13 +48,16 @@ export const storageRouter = createRouter({
         contentType: z.string().max(128),
       }),
     )
-    .mutation(async ({ input }) => {
+    .mutation(async ({ ctx, input }) => {
       if (input.size > MAX_DOCUMENT_BYTES) {
         throw new TRPCError({ code: "BAD_REQUEST", message: "File too large (max 10 MB)" });
       }
       if (!isAllowedDocumentType(input.kind, input.contentType)) {
         throw new TRPCError({ code: "BAD_REQUEST", message: "This file type isn't accepted" });
       }
+      // No account here, so cap per IP and in total; unused uploads are deleted after a day.
+      await rateLimit(`doc-upload:ip:${clientIp(ctx.req)}`, LIMITS.documentUploadPerIp);
+      await rateLimit("doc-upload:all", LIMITS.documentUploadPerDay);
       return createDocumentUploadUrl(input.kind, input.fileName);
     }),
 

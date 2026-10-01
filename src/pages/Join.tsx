@@ -10,6 +10,7 @@ import { useI18n } from "@/i18n";
 import { trpc } from "@/providers/trpc";
 import { CATEGORIES, type LocalText } from "@contracts/services";
 import { isValidPhone } from "@contracts/phone";
+import { isRateLimited } from "@/lib/errors";
 import {
   AVAILABILITY,
   AVAILABILITY_LABELS,
@@ -118,8 +119,8 @@ export default function Join() {
         consent: true,
       });
       setDone(true);
-    } catch {
-      setError(p(t.misc.error));
+    } catch (err) {
+      setError(p(isRateLimited(err) ? t.misc.tooMany : t.misc.error));
     }
   }
 

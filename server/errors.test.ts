@@ -14,9 +14,9 @@ vi.mock("./lib/env", () => ({
     specialistEmails: [],
   },
 }));
-vi.mock("./lib/storage", async (importOriginal) => ({
-  ...(await importOriginal<typeof import("./lib/storage")>()),
-  documentsExist: async () => {
+// Every database call crashes with a message that must never reach visitors.
+vi.mock("./queries/connection", () => ({
+  getDb: () => {
     throw new Error('relation "secret_table" does not exist');
   },
 }));

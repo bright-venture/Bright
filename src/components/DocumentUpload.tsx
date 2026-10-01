@@ -3,6 +3,7 @@ import { CheckCircle2, FileUp, Loader2 } from "lucide-react";
 import { useI18n } from "@/i18n";
 import { trpc } from "@/providers/trpc";
 import { supabase } from "@/lib/supabase";
+import { isRateLimited } from "@/lib/errors";
 import {
   DOCUMENT_TYPES,
   isAllowedDocumentType,
@@ -51,9 +52,9 @@ export function DocumentUpload({
       if (uploadError) throw uploadError;
       setFileName(file.name);
       onUploaded(target.key);
-    } catch {
+    } catch (err) {
       setFileName(null);
-      setError(p(t.docs.uploadFailed));
+      setError(p(isRateLimited(err) ? t.misc.tooMany : t.docs.uploadFailed));
     } finally {
       setBusy(false);
       if (input.current) input.current.value = "";
