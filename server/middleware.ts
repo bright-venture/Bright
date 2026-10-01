@@ -4,8 +4,24 @@ import superjson from "superjson";
 import type { TrpcContext } from "./context";
 import type { Role } from "@contracts/roles";
 
+/**
+ * Stack traces only on a developer's machine. Opt-in rather than "not production":
+ * hosts like Netlify don't set NODE_ENV, and the default then leaked them publicly.
+ */
+const showInternals = process.env.NODE_ENV === "development" || process.env.NODE_ENV === "test";
+
 const t = initTRPC.context<TrpcContext>().create({
   transformer: superjson,
+  isDev: showInternals,
+  errorFormatter({ shape, error }) {
+    // An unexpected crash (database, storage, a bug) arrives wrapped with its cause; its
+    // message can expose SQL or provider details, so visitors get a generic one instead.
+    // Errors thrown on purpose (TRPCError without a cause) keep their readable message.
+    if (!showInternals && error.code === "INTERNAL_SERVER_ERROR" && error.cause) {
+      return { ...shape, message: "Something went wrong on our side. Please try again." };
+    }
+    return shape;
+  },
 });
 
 export const createRouter = t.router;
