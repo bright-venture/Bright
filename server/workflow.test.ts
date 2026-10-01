@@ -320,7 +320,7 @@ describe("full repair workflow", () => {
     const b = await callerFor(bob);
     await expect(b.requests.get({ id: requestId })).rejects.toMatchObject({ code: "FORBIDDEN" });
     await expect(b.requests.cancel({ id: requestId })).rejects.toMatchObject({ code: "NOT_FOUND" });
-    await expect(b.requests.approveQuote({ id: requestId })).rejects.toMatchObject({
+    await expect(b.requests.approveQuote({ id: requestId, amount: "45" })).rejects.toMatchObject({
       code: "NOT_FOUND",
     });
     expect((await b.storage.urls({ keys: [aliceKey()] })).urls).toEqual({});
@@ -351,8 +351,8 @@ describe("full repair workflow", () => {
 
   it("customer approves the quote once", async () => {
     const a = await callerFor(alice);
-    await a.requests.approveQuote({ id: requestId });
-    await expect(a.requests.approveQuote({ id: requestId })).rejects.toMatchObject({
+    await a.requests.approveQuote({ id: requestId, amount: "45" });
+    await expect(a.requests.approveQuote({ id: requestId, amount: "45" })).rejects.toMatchObject({
       code: "BAD_REQUEST",
     });
   });

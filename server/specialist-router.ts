@@ -105,6 +105,20 @@ export const specialistRouter = createRouter({
       return { ok: true };
     }),
 
+  /** Close an open request (spam, out of area, the customer asked to cancel). */
+  cancel: specialistQuery
+    .input(z.object({ id: z.number().int(), reason: z.string().trim().min(3).max(2000) }))
+    .mutation(async ({ ctx, input }) => {
+      await applyTransition({
+        id: input.id,
+        name: "close",
+        actorId: ctx.user.id,
+        scope: "any",
+        note: input.reason,
+      });
+      return { ok: true };
+    }),
+
   /** Specialist moves an approved job forward: schedule → start → complete. */
   setStatus: specialistQuery
     .input(

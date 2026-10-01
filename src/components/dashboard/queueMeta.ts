@@ -30,7 +30,16 @@ export type QueueView =
   | "cancelled"
   | "all";
 
-type Row = { status: string; urgencyFinal: string | null; urgencySuggested: string; updatedAt: Date };
+type Row = {
+  status: string;
+  urgencyFinal: string | null;
+  urgencySuggested: string;
+  updatedAt: Date;
+  cancelRequestedAt: Date | null;
+};
+
+/** The customer asked to cancel a scheduled visit and nobody has handled it yet. */
+export const cancelPending = (r: Row) => !!r.cancelRequestedAt && !OPEN_EXCLUDED.includes(r.status as RequestStatus);
 
 export const urgencyOf = (r: Row) => (r.urgencyFinal ?? r.urgencySuggested) as UrgencyLevel;
 
@@ -42,7 +51,7 @@ export function inView(view: QueueView, r: Row) {
     case "open":
       return !OPEN_EXCLUDED.includes(status);
     case "needsAction":
-      return NEEDS_SPECIALIST.includes(status);
+      return NEEDS_SPECIALIST.includes(status) || cancelPending(r);
     case "waitingCustomer":
       return status === "quote_ready";
     case "inProgress":

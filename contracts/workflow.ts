@@ -13,13 +13,20 @@ export type TimeSlot = (typeof TIME_SLOTS)[number];
  */
 export const TRANSITIONS = {
   startReview: { from: ["submitted"], to: "in_review", by: "specialist" },
-  sendQuote: { from: ["in_review"], to: "quote_ready", by: "specialist" },
+  // Sending again while the customer hasn't answered replaces the quote.
+  sendQuote: { from: ["in_review", "quote_ready"], to: "quote_ready", by: "specialist" },
   approveQuote: { from: ["quote_ready"], to: "approved", by: "customer" },
   schedule: { from: ["approved"], to: "scheduled", by: "specialist" },
   startWork: { from: ["scheduled"], to: "in_progress", by: "specialist|technician" },
   complete: { from: ["in_progress"], to: "completed", by: "specialist|technician" },
-  // Once a visit is scheduled the customer must go through the specialist.
+  // Once a visit is scheduled the customer asks to cancel (requestCancel) and a specialist confirms.
   cancel: { from: ["submitted", "in_review", "quote_ready", "approved"], to: "cancelled", by: "customer" },
+  // A specialist can close any open request (spam, out of area, customer asked), with a reason.
+  close: {
+    from: ["submitted", "in_review", "quote_ready", "approved", "scheduled", "in_progress"],
+    to: "cancelled",
+    by: "specialist",
+  },
 } as const satisfies Record<
   string,
   { from: readonly RequestStatus[]; to: RequestStatus; by: string }
@@ -30,6 +37,9 @@ export type TransitionName = keyof typeof TRANSITIONS;
 export function canTransition(name: TransitionName, status: RequestStatus) {
   return (TRANSITIONS[name].from as readonly RequestStatus[]).includes(status);
 }
+
+/** Statuses in which the customer can ask a specialist to cancel (they can't cancel directly). */
+export const CANCEL_REQUESTABLE_STATUSES: readonly RequestStatus[] = ["scheduled"];
 
 /** Statuses in which a technician may be (re)assigned: only after the customer approved. */
 export const ASSIGNABLE_STATUSES: readonly RequestStatus[] = ["approved", "scheduled", "in_progress"];

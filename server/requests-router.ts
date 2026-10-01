@@ -13,6 +13,7 @@ import {
 import { computeUrgency, CATEGORY_MAP } from "@contracts/services";
 import {
   ACTIVE_JOB_STATUSES,
+  CANCEL_REQUESTABLE_STATUSES,
   isValidVisitDate,
   TIME_SLOTS,
   todayInBeirut,
@@ -155,15 +156,41 @@ export const requestsRouter = createRouter({
     };
   }),
 
-  approveQuote: customerQuery.input(byId).mutation(async ({ ctx, input }) => {
-    await applyTransition({
-      id: input.id,
-      name: "approveQuote",
-      actorId: ctx.user.id,
-      scope: { customerId: ctx.user.id },
-    });
-    return { ok: true };
-  }),
+  /** `amount` is the price the customer saw: if the specialist changed it meanwhile, refuse. */
+  approveQuote: customerQuery
+    .input(z.object({ id: z.number().int(), amount: z.string().max(32) }))
+    .mutation(async ({ ctx, input }) => {
+      await applyTransition({
+        id: input.id,
+        name: "approveQuote",
+        actorId: ctx.user.id,
+        scope: { customerId: ctx.user.id },
+        guard: (row) =>
+          row.quoteAmount !== input.amount
+            ? `The price was just updated to $${row.quoteAmount}. Please check it before approving.`
+            : null,
+      });
+      return { ok: true };
+    }),
+
+  /** After scheduling the customer can't cancel directly; this flags it for a specialist. */
+  requestCancel: customerQuery
+    .input(z.object({ id: z.number().int(), reason: z.string().trim().max(500).optional() }))
+    .mutation(async ({ ctx, input }) => {
+      await getDb().transaction(async (tx) => {
+        const row = await findRequest(tx, input.id, { customerId: ctx.user.id }, true);
+        if (!CANCEL_REQUESTABLE_STATUSES.includes(row.status)) {
+          throw new TRPCError({ code: "BAD_REQUEST", message: "This request can't be cancelled this way" });
+        }
+        if (row.cancelRequestedAt) return; // already asked
+        await tx
+          .update(serviceRequests)
+          .set({ cancelRequestedAt: new Date(), cancelReason: input.reason || null })
+          .where(eq(serviceRequests.id, row.id));
+        await logEvent(tx, row.id, "cancel_requested", ctx.user.id, input.reason || null);
+      });
+      return { ok: true };
+    }),
 
   cancel: customerQuery.input(byId).mutation(async ({ ctx, input }) => {
     await applyTransition({

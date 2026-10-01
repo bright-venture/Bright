@@ -11,7 +11,7 @@ import { trpc } from "@/providers/trpc";
 import { telLink, whatsappLink } from "@/lib/contact";
 import { CATEGORY_MAP, URGENCY_META, type RequestStatus, type UrgencyLevel } from "@contracts/services";
 import { ASSIGNABLE_STATUSES, QUOTE_AMOUNT_PATTERN, URGENCY_LEVELS } from "@contracts/workflow";
-import { URGENCY_BADGE } from "./queueMeta";
+import { cancelPending, URGENCY_BADGE } from "./queueMeta";
 
 type Outputs = inferRouterOutputs<AppRouter>;
 type Technician = Outputs["tech"]["list"][number];
@@ -81,7 +81,8 @@ export function RequestDetail({
       </div>
 
       <NextStep
-        key={`${r.id}-${status}`}
+        // a new status or cancellation request resets the forms
+        key={`${r.id}-${status}-${r.cancelRequestedAt ?? ""}`}
         request={r}
         technicians={technicians}
         onDone={invalidate}
@@ -247,13 +248,26 @@ function NextStep({
   const [quoteNote, setQuoteNote] = useState("");
   const [note, setNote] = useState("");
   const [chosenTech, setChosenTech] = useState(r.technicianId ? String(r.technicianId) : "");
+  const [changingQuote, setChangingQuote] = useState(false);
+  const askedToCancel = cancelPending(r);
+  // A customer's cancellation request opens the cancel form, ready to confirm.
+  const [closing, setClosing] = useState(askedToCancel);
+  const [closeReason, setCloseReason] = useState(
+    askedToCancel ? `${p(t.events.cancel_requested)}${r.cancelReason ? `: ${r.cancelReason}` : ""}` : "",
+  );
 
   const startReview = trpc.specialist.startReview.useMutation({ onSuccess: onDone });
-  const sendQuote = trpc.specialist.sendQuote.useMutation({ onSuccess: onDone });
+  const sendQuote = trpc.specialist.sendQuote.useMutation({
+    onSuccess: () => {
+      setChangingQuote(false);
+      onDone();
+    },
+  });
   const setStatus = trpc.specialist.setStatus.useMutation({ onSuccess: onDone });
   const assign = trpc.tech.assign.useMutation({ onSuccess: onDone });
-  const error = [startReview, sendQuote, setStatus, assign].find((m) => m.isError)?.error?.message;
-  const busy = startReview.isPending || sendQuote.isPending || setStatus.isPending || assign.isPending;
+  const cancel = trpc.specialist.cancel.useMutation({ onSuccess: onDone });
+  const error = [startReview, sendQuote, setStatus, assign, cancel].find((m) => m.isError)?.error?.message;
+  const busy = startReview.isPending || sendQuote.isPending || setStatus.isPending || assign.isPending || cancel.isPending;
   const spinner = busy && <Loader2 className="h-4 w-4 animate-spin" />;
 
   const message = {
@@ -272,6 +286,13 @@ function NextStep({
     <section className={`mt-5 rounded-2xl border-2 p-4 ${closed ? "border-navy/15 bg-paper" : "border-flame bg-flame/5"}`}>
       <p className="font-display text-xs font-bold uppercase tracking-[0.2em] text-flame-ink">{p(t.dash4.nextStep)}</p>
       <p className="mt-1 text-sm font-semibold text-navy">{p(message)}</p>
+
+      {askedToCancel && (
+        <div role="alert" className="mt-3 rounded-xl border-2 border-red-700 bg-red-700/5 p-3 text-sm text-navy">
+          <p className="font-bold">{p(t.dash4.cancelAskedNote)}</p>
+          {r.cancelReason && <p className="mt-1">{p(t.dash4.cancelAskedReason).replace("{reason}", r.cancelReason)}</p>}
+        </div>
+      )}
 
       {status === "submitted" && (
         <div className="mt-3 flex flex-col gap-3">
@@ -295,7 +316,20 @@ function NextStep({
         </div>
       )}
 
-      {status === "in_review" && (
+      {status === "quote_ready" && !changingQuote && (
+        <button
+          onClick={() => {
+            setAmount(r.quoteAmount ?? "");
+            setQuoteNote(r.quoteNote ?? "");
+            setChangingQuote(true);
+          }}
+          className="mt-3 text-sm font-bold text-navy underline underline-offset-4"
+        >
+          {p(t.dash4.changeQuote)}
+        </button>
+      )}
+
+      {(status === "in_review" || changingQuote) && (
         <div className="mt-3 grid gap-2 sm:grid-cols-[160px_1fr_auto]">
           <input value={amount} onChange={(e) => setAmount(e.target.value)} inputMode="decimal" placeholder={`${p(t.dash.quoteAmount)}`} className={INPUT} aria-label={p(t.dash.quoteAmount)} />
           <input value={quoteNote} onChange={(e) => setQuoteNote(e.target.value)} placeholder={p(t.dash.quoteNote)} className={INPUT} aria-label={p(t.dash.quoteNote)} />
@@ -305,7 +339,7 @@ function NextStep({
             className="btn-pill-primary !min-h-11 disabled:opacity-40"
           >
             {spinner}
-            {p(t.dash.sendQuote)}
+            {status === "quote_ready" ? p(t.dash4.updateQuote) : p(t.dash.sendQuote)}
           </button>
         </div>
       )}
@@ -367,6 +401,44 @@ function NextStep({
         </div>
       )}
       {status === "approved" && !r.technicianId && <p className="mt-2 text-xs text-navy/70">{p(t.dash2.needTechToSchedule)}</p>}
+
+      {!closed &&
+        (closing ? (
+          <div className="mt-4 flex flex-col gap-2 border-t-2 border-navy/10 pt-3">
+            <textarea
+              value={closeReason}
+              onChange={(e) => setCloseReason(e.target.value)}
+              placeholder={p(t.dash4.closeReasonPh)}
+              aria-label={p(t.dash4.closeReasonPh)}
+              rows={2}
+              className="w-full rounded-2xl border-2 border-navy/30 bg-white px-4 py-2 text-sm font-semibold text-navy placeholder:font-normal placeholder:text-navy/40 focus:border-flame focus:outline-none"
+            />
+            <div className="flex flex-wrap gap-2">
+              <button
+                onClick={() => {
+                  if (window.confirm(p(t.dash4.closeAsk).replace("{id}", String(r.id)))) {
+                    cancel.mutate({ id: r.id, reason: closeReason.trim() });
+                  }
+                }}
+                disabled={busy || closeReason.trim().length < 3}
+                className="btn-pill-outline !min-h-10 !border-red-700 !py-1.5 text-sm !text-red-700 disabled:opacity-40"
+              >
+                {cancel.isPending && <Loader2 className="h-4 w-4 animate-spin" />}
+                {p(t.dash4.closeConfirm)}
+              </button>
+              <button onClick={() => setClosing(false)} className="text-sm font-bold text-navy underline underline-offset-4">
+                {p(t.dash4.closeKeep)}
+              </button>
+            </div>
+          </div>
+        ) : (
+          <button
+            onClick={() => setClosing(true)}
+            className="mt-4 block text-xs font-bold text-navy/70 underline underline-offset-4 hover:text-red-700"
+          >
+            {p(t.dash4.closeOpen)}
+          </button>
+        ))}
 
       {error && (
         <p role="alert" className="mt-3 text-sm font-semibold text-destructive">

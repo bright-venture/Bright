@@ -47,7 +47,7 @@ async function approvedRequest() {
   const { id } = await c.requests.create(base);
   await s.specialist.startReview({ id, urgency: "normal" });
   await s.specialist.sendQuote({ id, amount: "30" });
-  await c.requests.approveQuote({ id });
+  await c.requests.approveQuote({ id, amount: "30" });
   return id;
 }
 
@@ -162,6 +162,69 @@ describe("customer rules", () => {
 
     const early = await approvedRequest();
     await c.requests.cancel({ id: early });
+  });
+
+  it("asks a specialist to cancel a scheduled visit", async () => {
+    const s = await callerFor(admin);
+    const c = await callerFor(customer);
+    const notYet = await approvedRequest();
+    await rejected(c.requests.requestCancel({ id: notYet })); // can still cancel directly
+
+    const id = await scheduledRequest();
+    await rejected((await callerFor(await makeUser("other@example.com"))).requests.requestCancel({ id }), "NOT_FOUND");
+    await c.requests.requestCancel({ id, reason: "Fixed it myself" });
+    await c.requests.requestCancel({ id, reason: "again" }); // asking twice changes nothing
+
+    const { request, events } = await s.specialist.detail({ id });
+    expect(request).toMatchObject({ status: "scheduled", cancelReason: "Fixed it myself" });
+    expect(request.cancelRequestedAt).toBeInstanceOf(Date);
+    expect(events.filter((e) => e.status === "cancel_requested")).toHaveLength(1);
+
+    await s.specialist.cancel({ id, reason: "Customer asked to cancel: Fixed it myself" });
+    expect((await c.requests.get({ id })).request.status).toBe("cancelled");
+  });
+});
+
+/** Books, approves, assigns and schedules a request. */
+async function scheduledRequest() {
+  const s = await callerFor(admin);
+  const id = await approvedRequest();
+  await s.tech.assign({ requestId: id, technicianId: tech.id });
+  await s.specialist.setStatus({ id, status: "scheduled" });
+  return id;
+}
+
+describe("specialist corrections", () => {
+  it("closes any open request with a reason, but not a closed one", async () => {
+    const s = await callerFor(admin);
+    const { id: fresh } = await (await callerFor(customer)).requests.create(base);
+    await rejected(s.specialist.cancel({ id: fresh, reason: "" }));
+    await s.specialist.cancel({ id: fresh, reason: "Outside our service area" });
+    const { events } = await s.specialist.detail({ id: fresh });
+    expect(events[0]).toMatchObject({ status: "cancelled", note: "Outside our service area" });
+    await rejected(s.specialist.cancel({ id: fresh, reason: "Again" }));
+
+    const inProgress = await scheduledRequest();
+    await s.specialist.setStatus({ id: inProgress, status: "in_progress" });
+    await s.specialist.cancel({ id: inProgress, reason: "Customer not home" });
+
+    await rejected((await callerFor(customer)).specialist.cancel({ id: await approvedRequest(), reason: "Mine" }), "FORBIDDEN");
+  });
+
+  it("changes a quote until the customer approves, and never approves a price they didn't see", async () => {
+    const s = await callerFor(admin);
+    const c = await callerFor(customer);
+    const { id } = await c.requests.create(base);
+    await s.specialist.startReview({ id, urgency: "normal" });
+    await s.specialist.sendQuote({ id, amount: "30" });
+    await s.specialist.sendQuote({ id, amount: "55", note: "Needs a new valve" });
+    expect((await c.requests.get({ id })).request).toMatchObject({ quoteAmount: "55", quoteNote: "Needs a new valve" });
+
+    await expect(c.requests.approveQuote({ id, amount: "30" })).rejects.toMatchObject({
+      message: expect.stringContaining("$55"),
+    });
+    await c.requests.approveQuote({ id, amount: "55" });
+    await rejected(s.specialist.sendQuote({ id, amount: "60" })); // too late once approved
   });
 });
 

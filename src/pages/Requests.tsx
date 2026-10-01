@@ -17,7 +17,7 @@ import {
   type RequestStatus,
   type UrgencyLevel,
 } from "@contracts/services";
-import { canTransition } from "@contracts/workflow";
+import { CANCEL_REQUESTABLE_STATUSES, canTransition } from "@contracts/workflow";
 
 const STATUS_STYLE: Record<RequestStatus, string> = {
   submitted: "border-navy/40 bg-white text-navy",
@@ -114,10 +114,12 @@ function TechnicianCard({
 }
 
 export default function Requests() {
-  const { t, p } = useI18n();
+  const { t, p, lang } = useI18n();
   const { role, isLoading: authLoading } = useRoleGate(["customer"], { requireSignIn: true });
   const isAuthenticated = role === "customer";
   const [openId, setOpenId] = useState<number | null>(null);
+  const [askingCancel, setAskingCancel] = useState<number | null>(null);
+  const [cancelReason, setCancelReason] = useState("");
   const utils = trpc.useUtils();
 
   const list = trpc.requests.mine.useQuery(undefined, {
@@ -137,10 +139,19 @@ export default function Requests() {
       utils.requests.mine.invalidate();
       utils.requests.get.invalidate();
     },
+    // e.g. the price changed: show the new one next to the message
+    onError: () => utils.requests.get.invalidate(),
   });
   const cancel = trpc.requests.cancel.useMutation({
     onSuccess: () => {
       utils.requests.mine.invalidate();
+      utils.requests.get.invalidate();
+    },
+  });
+  const requestCancel = trpc.requests.requestCancel.useMutation({
+    onSuccess: () => {
+      setAskingCancel(null);
+      setCancelReason("");
       utils.requests.get.invalidate();
     },
   });
@@ -275,7 +286,8 @@ export default function Requests() {
                     {detail.data.request.status === "quote_ready" && (
                       <div className="mt-4 flex flex-wrap gap-3">
                         <button
-                          onClick={() => approve.mutate({ id: r.id })}
+                          // the price shown here: the server refuses if it changed meanwhile
+                          onClick={() => approve.mutate({ id: r.id, amount: detail.data!.request.quoteAmount ?? "" })}
                           disabled={approve.isPending}
                           className="btn-pill-primary"
                         >
@@ -340,9 +352,51 @@ export default function Requests() {
                         {p(t.requests.cancel)}
                       </button>
                     )}
-                    {(cancel.isError || approve.isError) && (
+                    {/* after scheduling: ask a specialist to cancel */}
+                    {CANCEL_REQUESTABLE_STATUSES.includes(detail.data.request.status as RequestStatus) &&
+                      (detail.data.request.cancelRequestedAt ? (
+                        <p className="mt-6 rounded-xl bg-navy/5 p-3 text-sm font-semibold text-navy">
+                          {p(t.requests.cancelAsked).replace(
+                            "{date}",
+                            new Date(detail.data.request.cancelRequestedAt).toLocaleDateString(lang === "ar" ? "ar-LB" : "en-GB", {
+                              day: "numeric",
+                              month: "long",
+                            }),
+                          )}
+                        </p>
+                      ) : askingCancel === r.id ? (
+                        <div className="mt-6 flex flex-col gap-2">
+                          <p className="text-sm text-navy/70">{p(t.requests.askCancelHint)}</p>
+                          <textarea
+                            value={cancelReason}
+                            onChange={(e) => setCancelReason(e.target.value)}
+                            placeholder={p(t.requests.askCancelPh)}
+                            aria-label={p(t.requests.askCancelPh)}
+                            maxLength={500}
+                            rows={2}
+                            className="w-full rounded-2xl border-2 border-navy/30 bg-white px-4 py-2 text-sm font-semibold text-navy placeholder:font-normal placeholder:text-navy/40 focus:border-flame focus:outline-none"
+                          />
+                          <button
+                            onClick={() => requestCancel.mutate({ id: r.id, reason: cancelReason.trim() || undefined })}
+                            disabled={requestCancel.isPending}
+                            className="btn-pill-outline self-start"
+                          >
+                            {requestCancel.isPending && <Loader2 className="h-4 w-4 animate-spin" />}
+                            {p(t.requests.askCancelSend)}
+                          </button>
+                        </div>
+                      ) : (
+                        <button
+                          onClick={() => setAskingCancel(r.id)}
+                          className="mt-6 text-sm font-bold text-destructive underline underline-offset-4"
+                        >
+                          {p(t.requests.askCancel)}
+                        </button>
+                      ))}
+
+                    {(cancel.isError || approve.isError || requestCancel.isError) && (
                       <p role="alert" className="mt-3 text-sm font-semibold text-destructive">
-                        {(cancel.error ?? approve.error)?.message}
+                        {(cancel.error ?? approve.error ?? requestCancel.error)?.message}
                       </p>
                     )}
                   </div>

@@ -6,7 +6,7 @@ import { trpc } from "@/providers/trpc";
 import { CATEGORIES, CATEGORY_MAP, URGENCY_META, type RequestStatus, type UrgencyLevel } from "@contracts/services";
 import { URGENCY_LEVELS } from "@contracts/workflow";
 import { RequestDetail } from "./RequestDetail";
-import { inView, NEEDS_SPECIALIST, URGENCY_DOT, urgencyOf, waitingFor, type QueueView } from "./queueMeta";
+import { cancelPending, inView, NEEDS_SPECIALIST, URGENCY_DOT, urgencyOf, waitingFor, type QueueView } from "./queueMeta";
 
 const SELECT =
   "min-h-11 rounded-2xl border-2 border-navy/30 bg-white px-3 text-sm font-semibold text-navy focus:border-flame focus:outline-none";
@@ -178,6 +178,11 @@ export function QueueTab({ onGoToApplications }: { onGoToApplications: () => voi
                     <span className="rounded-full border border-navy/25 px-2 py-px text-[10px] font-bold text-navy">
                       {p(t.status[status])}
                     </span>
+                    {cancelPending(r) && (
+                      <span className="rounded-full bg-red-700 px-2 py-px text-[10px] font-bold text-white">
+                        {p(t.dash4.cancelAsked)}
+                      </span>
+                    )}
                     {wait && (
                       <span
                         className={`inline-flex items-center gap-1 rounded-full px-2 py-px text-[10px] font-bold ${

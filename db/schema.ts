@@ -101,6 +101,9 @@ export const serviceRequests = pgTable(
     prepParts: text("prep_parts"),
     prepInstructions: text("prep_instructions"),
     preparedAt: timestamp("prepared_at", { withTimezone: true }),
+    /** The customer asked to cancel a scheduled visit; a specialist confirms it. */
+    cancelRequestedAt: timestamp("cancel_requested_at", { withTimezone: true }),
+    cancelReason: text("cancel_reason"),
     ...timestamps,
   },
   (t) => [
