@@ -22,13 +22,12 @@ export const AVAILABILITY_LABELS: Record<Availability, LocalText> = {
 };
 
 /** Documents every technician applicant must upload. */
-export const APPLICATION_DOCUMENTS = ["idDocument", "criminalRecord", "photo"] as const;
+export const APPLICATION_DOCUMENTS = ["idDocument", "photo"] as const;
 export type ApplicationDocument = (typeof APPLICATION_DOCUMENTS)[number];
 
-/** Photo must be an image; ID and criminal record may be a photo or a PDF scan. */
+/** Photo must be an image; the ID may be a photo or a PDF scan. */
 export const DOCUMENT_TYPES: Record<ApplicationDocument, readonly string[]> = {
   idDocument: ["image/", "application/pdf"],
-  criminalRecord: ["image/", "application/pdf"],
   photo: ["image/"],
 };
 export const MAX_DOCUMENT_BYTES = 10 * 1024 * 1024;

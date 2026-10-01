@@ -71,7 +71,7 @@ existing account, or sends the *Invite user* email and creates the technician ac
 
 | Job | When | What |
 | --- | --- | --- |
-| `cleanup-documents` (Netlify scheduled function) | daily | Deletes ID, criminal record and photo of applications rejected 90+ days ago (Privacy Policy). Period: `REJECTED_APPLICATION_RETENTION_DAYS` in `contracts/legal.ts`. |
+| `cleanup-documents` (Netlify scheduled function) | daily | Deletes ID and photo of applications rejected 90+ days ago (Privacy Policy), plus any criminal record files left from before they stopped being collected. Period: `REJECTED_APPLICATION_RETENTION_DAYS` in `contracts/legal.ts`. |
 
 Run it by hand with `npm run cleanup:documents` (preview first with `npm run cleanup:documents -- --dry-run`).
 Netlify shows each run under **Logs → Functions → cleanup-documents**.

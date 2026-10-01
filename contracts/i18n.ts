@@ -624,8 +624,6 @@ export const t = {
     },
     idDocument: { en: "ID card or passport", ar: "هوية أو باسبور" },
     idDocumentHint: { en: "Photo or PDF, both sides if ID card", ar: "صورة أو PDF، الوجهين إذا هوية" },
-    criminalRecord: { en: "Criminal record (السجل العدلي)", ar: "السجل العدلي" },
-    criminalRecordHint: { en: "Recent copy, photo or PDF", ar: "نسخة حديثة، صورة أو PDF" },
     photo: { en: "Profile photo", ar: "صورة شخصية" },
     photoHint: { en: "Clear photo of your face; customers will see it", ar: "صورة واضحة لوجهك؛ العملاء رح يشوفوها" },
     choose: { en: "Upload", ar: "حمّل" },
@@ -644,8 +642,8 @@ export const t = {
       ar: "انحذفت المستندات بتاريخ {date} حسب سياسة الخصوصية.",
     },
     missingAll: {
-      en: "Documents missing. Ask the applicant to apply again with ID, criminal record and photo.",
-      ar: "المستندات ناقصة. اطلب من المتقدّم يقدّم من جديد مع الهوية والسجل العدلي والصورة.",
+      en: "Documents missing. Ask the applicant to apply again with their ID and photo.",
+      ar: "المستندات ناقصة. اطلب من المتقدّم يقدّم من جديد مع الهوية والصورة.",
     },
   },
   legal: {
@@ -664,8 +662,8 @@ export const t = {
       ar: "أوافق على {terms} و{privacy}.",
     },
     agreeApplication: {
-      en: "I agree to the {privacy} and allow Be Right to review my ID and criminal record for hiring.",
-      ar: "أوافق على {privacy} وأسمح لبي رايت بمراجعة هويتي وسجلي العدلي لغرض التوظيف.",
+      en: "I agree to the {privacy} and allow Be Right to review my ID for hiring.",
+      ar: "أوافق على {privacy} وأسمح لبي رايت بمراجعة هويتي لغرض التوظيف.",
     },
     mustAgree: { en: "Please accept to continue.", ar: "لازم توافق لتكمّل." },
   },

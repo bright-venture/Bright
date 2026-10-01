@@ -44,5 +44,26 @@ export async function purgeRejectedDocuments({ now = new Date(), dryRun = false 
       .set({ idDocumentKey: null, criminalRecordKey: null, photoKey: null, documentsDeletedAt: now })
       .where(inArray(technicianApplications.id, due.map((a) => a.id)));
   }
-  return { applications: due.length, files: keys.length, dryRun, cutoff: cutoff.toISOString() };
+  const legacy = await purgeCriminalRecords({ dryRun });
+  return { applications: due.length, files: keys.length, criminalRecords: legacy, dryRun, cutoff: cutoff.toISOString() };
+}
+
+/**
+ * Criminal records are no longer collected (or mentioned in the Privacy Policy),
+ * so any uploaded before that are deleted whatever the application's status.
+ */
+async function purgeCriminalRecords({ dryRun }: { dryRun: boolean }) {
+  const db = getDb();
+  const rows = await db
+    .select({ id: technicianApplications.id, key: technicianApplications.criminalRecordKey })
+    .from(technicianApplications)
+    .where(isNotNull(technicianApplications.criminalRecordKey));
+  if (!dryRun && rows.length) {
+    await deleteDocuments(rows.map((r) => r.key!));
+    await db
+      .update(technicianApplications)
+      .set({ criminalRecordKey: null })
+      .where(inArray(technicianApplications.id, rows.map((r) => r.id)));
+  }
+  return rows.length;
 }

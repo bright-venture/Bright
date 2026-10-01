@@ -165,14 +165,14 @@ describe("terms and consent", () => {
 });
 
 describe("technician documents", () => {
-  it("requires all three documents, uploaded, with the right kind", async () => {
+  it("requires the ID and photo, uploaded, with the right kind", async () => {
     const c = await callerFor();
     const docs = documentKeys();
     await expect(c.join.submit({ ...application, ...docs, photoKey: docs.idDocumentKey })).rejects.toMatchObject({
       code: "BAD_REQUEST",
     });
     await expect(
-      c.join.submit({ ...application, ...docs, criminalRecordKey: docs.criminalRecordKey.replace("file", "missing") }),
+      c.join.submit({ ...application, ...docs, idDocumentKey: docs.idDocumentKey.replace("file", "missing") }),
     ).rejects.toMatchObject({ code: "BAD_REQUEST" });
     await expect(c.join.submit({ ...application, ...docs, idDocumentKey: "requests/x/idDocument-a.jpg" })).rejects.toMatchObject({
       code: "BAD_REQUEST",
@@ -185,10 +185,10 @@ describe("technician documents", () => {
       c.storage.createDocumentUpload({ kind: "photo", fileName: "me.pdf", size: 1000, contentType: "application/pdf" }),
     ).rejects.toMatchObject({ code: "BAD_REQUEST" });
     await expect(
-      c.storage.createDocumentUpload({ kind: "criminalRecord", fileName: "r.pdf", size: 50 * 1024 * 1024, contentType: "application/pdf" }),
+      c.storage.createDocumentUpload({ kind: "idDocument", fileName: "id.pdf", size: 50 * 1024 * 1024, contentType: "application/pdf" }),
     ).rejects.toMatchObject({ code: "BAD_REQUEST" });
-    const ok = await c.storage.createDocumentUpload({ kind: "criminalRecord", fileName: "r.pdf", size: 1000, contentType: "application/pdf" });
-    expect(ok.key).toMatch(/^applications\/.+\/criminalRecord-r\.pdf$/);
+    const ok = await c.storage.createDocumentUpload({ kind: "idDocument", fileName: "id.pdf", size: 1000, contentType: "application/pdf" });
+    expect(ok.key).toMatch(/^applications\/.+\/idDocument-id\.pdf$/);
   });
 
   it("lets only specialists open an applicant's documents", async () => {

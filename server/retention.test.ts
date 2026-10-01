@@ -41,9 +41,13 @@ beforeAll(async () => {
 }, 60_000);
 
 /** Inserts an application with documents, in a given status, rejected/created `daysAgo`. */
-async function application(status: "new" | "contacted" | "rejected" | "hired", daysAgo: number, opts: { recordRejection?: boolean } = {}) {
+async function application(
+  status: "new" | "contacted" | "rejected" | "hired",
+  daysAgo: number,
+  opts: { recordRejection?: boolean; criminalRecordKey?: string } = {},
+) {
   const when = new Date(Date.now() - daysAgo * DAY);
-  const docs = documentKeys();
+  const docs = { ...documentKeys(), ...(opts.criminalRecordKey && { criminalRecordKey: opts.criminalRecordKey }) };
   const [row] = await db
     .insert(technicianApplications)
     .values({
@@ -75,12 +79,12 @@ describe("rejected-applicant document clean-up", () => {
     const hired = await application("hired", DAYS + 30);
 
     const preview = await purgeRejectedDocuments({ dryRun: true });
-    expect(preview).toMatchObject({ applications: 2, files: 6, dryRun: true });
+    expect(preview).toMatchObject({ applications: 2, files: 4, criminalRecords: 0, dryRun: true });
     expect(deletedDocuments).toHaveLength(0);
     expect((await load(due.id)).idDocumentKey).not.toBeNull();
 
     const result = await purgeRejectedDocuments();
-    expect(result).toMatchObject({ applications: 2, files: 6 });
+    expect(result).toMatchObject({ applications: 2, files: 4 });
     expect(deletedDocuments).toEqual(expect.arrayContaining([...due.keys, ...legacy.keys]));
 
     for (const id of [due.id, legacy.id]) {
@@ -94,6 +98,22 @@ describe("rejected-applicant document clean-up", () => {
 
     // Running again finds nothing new.
     expect(await purgeRejectedDocuments()).toMatchObject({ applications: 0, files: 0 });
+  });
+
+  it("deletes criminal records uploaded before they stopped being collected, whatever the status", async () => {
+    const { purgeRejectedDocuments } = await import("./jobs/purgeRejectedDocuments");
+    const old = "applications/legacy/criminalRecord-file.jpg";
+    const hired = await application("hired", 5, { criminalRecordKey: old });
+
+    expect(await purgeRejectedDocuments({ dryRun: true })).toMatchObject({ criminalRecords: 1 });
+    expect(deletedDocuments).not.toContain(old);
+
+    expect(await purgeRejectedDocuments()).toMatchObject({ criminalRecords: 1 });
+    expect(deletedDocuments).toContain(old);
+    const row = await load(hired.id);
+    expect(row.criminalRecordKey).toBeNull();
+    expect(row.photoKey).not.toBeNull(); // the hired technician keeps their ID and photo
+    expect(await purgeRejectedDocuments()).toMatchObject({ criminalRecords: 0 });
   });
 
   it("starts the clock when a specialist rejects, and stops it if they change their mind", async () => {

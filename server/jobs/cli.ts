@@ -4,6 +4,6 @@ import { purgeRejectedDocuments } from "./purgeRejectedDocuments";
 const dryRun = process.argv.includes("--dry-run");
 const result = await purgeRejectedDocuments({ dryRun });
 console.log(
-  `${dryRun ? "[dry run] Would delete" : "Deleted"} ${result.files} file(s) from ${result.applications} rejected application(s) (rejected before ${result.cutoff}).`,
+  `${dryRun ? "[dry run] Would delete" : "Deleted"} ${result.files} file(s) from ${result.applications} rejected application(s) (rejected before ${result.cutoff}), plus ${result.criminalRecords} old criminal record file(s).`,
 );
 process.exit(0);

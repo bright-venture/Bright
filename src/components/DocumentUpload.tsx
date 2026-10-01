@@ -11,7 +11,7 @@ import {
 } from "@contracts/applications";
 
 /**
- * One required applicant document (ID, criminal record or photo). Uploads straight
+ * One required applicant document (ID or photo). Uploads straight
  * to private storage when picked and reports the stored key to the form.
  */
 export function DocumentUpload({

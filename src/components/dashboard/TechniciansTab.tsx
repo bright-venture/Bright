@@ -123,7 +123,7 @@ function TechnicianCard({ tech: x }: { tech: Technician }) {
       {showDocs && (
         <ul className="mt-3 flex flex-col gap-1 rounded-xl bg-paper p-3 text-xs">
           {docs.isLoading && <Loader2 className="h-4 w-4 animate-spin text-navy" />}
-          {(["idDocument", "criminalRecord", "photo"] as const).map((kind) => {
+          {(["idDocument", "photo"] as const).map((kind) => {
             const doc = docs.data?.[kind];
             return (
               !docs.isLoading && (

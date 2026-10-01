@@ -70,7 +70,6 @@ export default function Join() {
   const [hasTransport, setHasTransport] = useState<"yes" | "no" | null>(null);
   const [notes, setNotes] = useState("");
   const [idDocumentKey, setIdDocumentKey] = useState<string | null>(null);
-  const [criminalRecordKey, setCriminalRecordKey] = useState<string | null>(null);
   const [photoKey, setPhotoKey] = useState<string | null>(null);
   const [consent, setConsent] = useState(false);
   const [done, setDone] = useState(false);
@@ -95,7 +94,6 @@ export default function Join() {
     hasTools !== null &&
     hasTransport !== null &&
     !!idDocumentKey &&
-    !!criminalRecordKey &&
     !!photoKey &&
     consent;
 
@@ -115,7 +113,6 @@ export default function Join() {
         hasTransport: hasTransport === "yes",
         notes: notes.trim() || undefined,
         idDocumentKey: idDocumentKey!,
-        criminalRecordKey: criminalRecordKey!,
         photoKey: photoKey!,
         consent: true,
       });
@@ -283,12 +280,6 @@ export default function Join() {
                       label={p(t.docs.idDocument)}
                       hint={p(t.docs.idDocumentHint)}
                       onUploaded={setIdDocumentKey}
-                    />
-                    <DocumentUpload
-                      kind="criminalRecord"
-                      label={p(t.docs.criminalRecord)}
-                      hint={p(t.docs.criminalRecordHint)}
-                      onUploaded={setCriminalRecordKey}
                     />
                     <DocumentUpload
                       kind="photo"

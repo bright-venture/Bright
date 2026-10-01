@@ -38,21 +38,19 @@ export const joinRouter = createRouter({
         notes: z.string().trim().max(2000).optional(),
         // Mandatory documents, uploaded first via storage.createDocumentUpload.
         idDocumentKey: z.string().max(512),
-        criminalRecordKey: z.string().max(512),
         photoKey: z.string().max(512),
-        // Privacy Policy + consent to review ID and criminal record.
+        // Privacy Policy + consent to review the ID.
         consent: z.literal(true),
       }),
     )
     .mutation(async ({ input }) => {
-      const keys = [input.idDocumentKey, input.criminalRecordKey, input.photoKey];
+      const keys = [input.idDocumentKey, input.photoKey];
       if (
         !documentKeyMatches(input.idDocumentKey, "idDocument") ||
-        !documentKeyMatches(input.criminalRecordKey, "criminalRecord") ||
         !documentKeyMatches(input.photoKey, "photo") ||
         !(await documentsExist(keys))
       ) {
-        throw new TRPCError({ code: "BAD_REQUEST", message: "Please upload all three documents" });
+        throw new TRPCError({ code: "BAD_REQUEST", message: "Please upload your ID and photo" });
       }
       // \`consent\` is validated above (must be true); what's stored is when and which version.
       const [res] = await getDb()
@@ -69,7 +67,6 @@ export const joinRouter = createRouter({
           hasTransport: input.hasTransport,
           notes: input.notes ?? null,
           idDocumentKey: input.idDocumentKey,
-          criminalRecordKey: input.criminalRecordKey,
           photoKey: input.photoKey,
           consentAt: new Date(),
           consentVersion: LEGAL_VERSION,
@@ -107,13 +104,12 @@ export const joinRouter = createRouter({
       where: eq(technicianApplications.id, input.id),
     });
     if (!app) throw new TRPCError({ code: "NOT_FOUND" });
-    const keys = { idDocument: app.idDocumentKey, criminalRecord: app.criminalRecordKey, photo: app.photoKey };
+    const keys = { idDocument: app.idDocumentKey, photo: app.photoKey };
     const urls = await createDocumentUrls(Object.values(keys).filter((k): k is string => !!k));
     const link = (key: string | null) =>
       key && urls[key] ? { url: urls[key], isPdf: key.toLowerCase().endsWith(".pdf") } : null;
     return {
       idDocument: link(keys.idDocument),
-      criminalRecord: link(keys.criminalRecord),
       photo: link(keys.photo),
     };
   }),
@@ -140,10 +136,10 @@ export const joinRouter = createRouter({
         where: eq(technicianApplications.id, input.id),
       });
       if (!app) throw new TRPCError({ code: "NOT_FOUND" });
-      if (!app.idDocumentKey || !app.criminalRecordKey || !app.photoKey) {
+      if (!app.idDocumentKey || !app.photoKey) {
         throw new TRPCError({
           code: "BAD_REQUEST",
-          message: "ID, criminal record and photo are required. Ask the applicant to apply again with all three.",
+          message: "ID and photo are required. Ask the applicant to apply again with both.",
         });
       }
       const address = input.email ?? app.email?.toLowerCase();

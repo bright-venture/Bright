@@ -79,7 +79,7 @@ function ApplicationCard({
   // "hired" by hand without an account ever being created.
   const hired = app.status === "hired" && app.hiredUserId != null;
   const hireEmail = app.email ?? email.trim();
-  const hasDocuments = !!(app.idDocumentKey && app.criminalRecordKey && app.photoKey);
+  const hasDocuments = !!(app.idDocumentKey && app.photoKey);
   const canHire = !hired && hasDocuments && EMAIL_PATTERN.test(hireEmail);
   // Short-lived links, fetched only when the card is open.
   const docs = trpc.join.documents.useQuery({ id: app.id }, { enabled: open, staleTime: 60_000 });
@@ -172,8 +172,8 @@ function ApplicationCard({
           {/* identity documents (private, specialists only) */}
           <div className="mt-4">
             <p className="font-display text-xs font-bold uppercase tracking-[0.2em] text-navy/70">{p(t.docs.title)}</p>
-            <div className="mt-2 grid grid-cols-3 gap-2">
-              {(["photo", "idDocument", "criminalRecord"] as const).map((kind) => {
+            <div className="mt-2 grid grid-cols-2 gap-2">
+              {(["photo", "idDocument"] as const).map((kind) => {
                 const doc = docs.data?.[kind];
                 return (
                   <div key={kind} className="rounded-xl border-2 border-navy/15 bg-paper p-2 text-center">
