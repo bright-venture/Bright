@@ -25,5 +25,8 @@ export default defineConfig({
   build: {
     outDir: path.resolve(__dirname, "dist/public"),
     emptyOutDir: true,
+    // Built files have content hashes in their names, so netlify.toml caches /_app/ for a
+    // year. Kept apart from public/assets/, whose images keep their names when replaced.
+    assetsDir: "_app",
   },
 });
