@@ -25,6 +25,7 @@ import { profilePhotoUrl, userUploadPrefix } from "./lib/storage";
 import { isInLebanon } from "@contracts/geo";
 import { isValidPhone } from "@contracts/phone";
 import { applyTransition, findRequest, logEvent, type RequestScope } from "./lib/workflow";
+import { notify } from "./notify";
 
 const mediaItem = z.object({
   key: z.string().max(512),
@@ -110,6 +111,7 @@ export const requestsRouter = createRouter({
         await logEvent(tx, created.id, "submitted", ctx.user.id);
         return created.id;
       });
+      await notify.requestSubmitted(id);
       return { id, urgency: urgency.level };
     }),
 
@@ -175,6 +177,7 @@ export const requestsRouter = createRouter({
             ? `The price was just updated to $${row.quoteAmount}. Please check it before approving.`
             : null,
       });
+      await notify.quoteApproved(input.id);
       return { ok: true };
     }),
 
@@ -182,18 +185,20 @@ export const requestsRouter = createRouter({
   requestCancel: customerQuery
     .input(z.object({ id: z.number().int(), reason: z.string().trim().max(500).optional() }))
     .mutation(async ({ ctx, input }) => {
-      await getDb().transaction(async (tx) => {
+      const flagged = await getDb().transaction(async (tx) => {
         const row = await findRequest(tx, input.id, { customerId: ctx.user.id }, true);
         if (!CANCEL_REQUESTABLE_STATUSES.includes(row.status)) {
           throw new TRPCError({ code: "BAD_REQUEST", message: "This request can't be cancelled this way" });
         }
-        if (row.cancelRequestedAt) return; // already asked
+        if (row.cancelRequestedAt) return false; // already asked
         await tx
           .update(serviceRequests)
           .set({ cancelRequestedAt: new Date(), cancelReason: input.reason || null })
           .where(eq(serviceRequests.id, row.id));
         await logEvent(tx, row.id, "cancel_requested", ctx.user.id, input.reason || null);
+        return true;
       });
+      if (flagged) await notify.cancelRequested(input.id);
       return { ok: true };
     }),
 
@@ -204,6 +209,7 @@ export const requestsRouter = createRouter({
       actorId: ctx.user.id,
       scope: { customerId: ctx.user.id },
     });
+    await notify.customerCancelled(input.id);
     return { ok: true };
   }),
 });

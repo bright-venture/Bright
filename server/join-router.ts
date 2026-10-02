@@ -10,6 +10,7 @@ import { getSupabaseAdmin } from "./lib/supabase";
 import { LEGAL_VERSION } from "@contracts/legal";
 import { isValidPhone } from "@contracts/phone";
 import { clientIp, LIMITS, rateLimit } from "./lib/rateLimit";
+import { notify } from "./notify";
 import { createDocumentUrls, documentKeyMatches, documentsExist } from "./lib/storage";
 
 const TRADE_IDS = CATEGORIES.map((c) => c.id) as [string, ...string[]];
@@ -75,6 +76,7 @@ export const joinRouter = createRouter({
           consentVersion: LEGAL_VERSION,
         })
         .returning({ id: technicianApplications.id });
+      await notify.applicationSubmitted(res.id);
       return { id: res.id };
     }),
 

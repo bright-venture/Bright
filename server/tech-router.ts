@@ -13,6 +13,7 @@ import {
 import { ACTIVE_JOB_STATUSES, ASSIGNABLE_STATUSES } from "@contracts/workflow";
 import { applyTransition, findRequest, logEvent } from "./lib/workflow";
 import { profilePhotoUrl } from "./lib/storage";
+import { notify } from "./notify";
 
 export const techRouter = createRouter({
   /**
@@ -132,7 +133,7 @@ export const techRouter = createRouter({
       if (!tech || tech.role !== "technician") {
         throw new TRPCError({ code: "BAD_REQUEST", message: "Not a technician" });
       }
-      await db.transaction(async (tx) => {
+      const previousTechnicianId = await db.transaction(async (tx) => {
         const job = await findRequest(tx, input.requestId, "any", true);
         if (!ASSIGNABLE_STATUSES.includes(job.status)) {
           throw new TRPCError({
@@ -144,8 +145,14 @@ export const techRouter = createRouter({
           .update(serviceRequests)
           .set({ technicianId: tech.id })
           .where(eq(serviceRequests.id, job.id));
+        // The last position belongs to whoever shared it: don't show it under the new name.
+        if (job.technicianId !== tech.id) {
+          await tx.delete(technicianLocations).where(eq(technicianLocations.requestId, job.id));
+        }
         await logEvent(tx, job.id, "assigned", ctx.user.id, `Technician: ${tech.name ?? tech.email ?? tech.id}`);
+        return job.technicianId;
       });
+      await notify.assigned(input.requestId, previousTechnicianId);
       return { ok: true };
     }),
 
@@ -191,6 +198,7 @@ export const techRouter = createRouter({
           scope,
           note: input.note,
         });
+        if (input.action === "complete") await notify.completed(input.requestId);
       }
       return { ok: true };
     }),

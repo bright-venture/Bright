@@ -9,6 +9,7 @@ import { QUOTE_AMOUNT_PATTERN, URGENCY_LEVELS } from "@contracts/workflow";
 import { applyTransition, findRequest, logEvent } from "./lib/workflow";
 import { profilePhotoUrl } from "./lib/storage";
 import { TRPCError } from "@trpc/server";
+import { notify } from "./notify";
 
 const byId = z.object({ id: z.number().int() });
 
@@ -102,6 +103,7 @@ export const specialistRouter = createRouter({
         patch: { quoteAmount: input.amount, quoteNote: input.note ?? null },
         note: `Quote: $${input.amount}${input.note ? ` — ${input.note}` : ""}`,
       });
+      await notify.quoteSent(input.id);
       return { ok: true };
     }),
 
@@ -116,6 +118,7 @@ export const specialistRouter = createRouter({
         scope: "any",
         note: input.reason,
       });
+      await notify.closedByUs(input.id);
       return { ok: true };
     }),
 
@@ -141,6 +144,8 @@ export const specialistRouter = createRouter({
         guard: (row) =>
           name === "schedule" && !row.technicianId ? "Assign a technician before scheduling" : null,
       });
+      if (name === "schedule") await notify.scheduled(input.id);
+      if (name === "complete") await notify.completed(input.id);
       return { ok: true };
     }),
 

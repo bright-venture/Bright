@@ -16,6 +16,13 @@ export const env = {
   storageBucket: process.env.SUPABASE_STORAGE_BUCKET || "request-media",
   /** Private bucket for technician ID and profile photo. */
   docsBucket: process.env.SUPABASE_DOCS_BUCKET || "technician-docs",
+  /** Public address of the site, used in links inside emails. */
+  siteUrl: (process.env.SITE_URL || "https://be-rightbright.com").replace(/\/+$/, ""),
+  /** Resend API key for notification emails; without it, notifications are skipped. */
+  resendApiKey: process.env.RESEND_API_KEY || "",
+  emailFrom: process.env.EMAIL_FROM || "Be Right <noreply@be-rightbright.com>",
+  /** Where replies to notifications go (customers reply to report a problem). */
+  emailReplyTo: process.env.EMAIL_REPLY_TO || "hello@be-rightbright.com",
   /** Comma-separated emails that get the specialist role on sign-in (ADMIN_EMAILS is the old name). */
   specialistEmails: (process.env.SPECIALIST_EMAILS || process.env.ADMIN_EMAILS || "")
     .split(",")

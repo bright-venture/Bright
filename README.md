@@ -67,6 +67,20 @@ Auth emails (confirm sign-up, password reset, sign-in code) are sent by Supabase
 Hiring an applicant (Dashboard → Technician applications → *Hire as technician*) promotes an
 existing account, or sends the *Invite user* email and creates the technician account at once.
 
+## Notification emails
+
+Sent through Resend's API (`RESEND_API_KEY`), in English and Arabic, from `server/notify.ts`:
+
+| When | Who |
+| --- | --- |
+| A customer books, approves a price, cancels or asks to cancel | Specialists |
+| Someone applies as a technician | Specialists |
+| A price is sent or changed, the visit is scheduled, the job is done, or our team cancels | Customer |
+| A job is assigned, reassigned away, scheduled or cancelled | Technician |
+
+Specialists are every account with the specialist role plus `SPECIALIST_EMAILS`. A failed email is logged
+(**Netlify → Logs → Functions → api**, "[notify]") and never blocks the action. Replies go to `EMAIL_REPLY_TO`.
+
 ## Scheduled jobs
 
 | Job | When | What |
