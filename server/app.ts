@@ -2,6 +2,8 @@ import { Hono } from "hono";
 import { bodyLimit } from "hono/body-limit";
 import { secureHeaders } from "hono/secure-headers";
 import { fetchRequestHandler } from "@trpc/server/adapters/fetch";
+import { TRPCError } from "@trpc/server";
+import { clientIp, LIMITS, rateLimit } from "./lib/rateLimit";
 import { appRouter } from "./router";
 import { createContext } from "./context";
 
@@ -19,6 +21,32 @@ app.use(
   }),
 );
 app.get("/api/health", (c) => c.json({ ok: true }));
+
+// Crash reports from browsers (src/lib/reportError.ts), so front-end errors land in the
+// function logs next to server errors: Netlify → Logs → Functions → api, "[client-error]".
+app.post("/api/client-error", bodyLimit({ maxSize: 8 * 1024 }), async (c) => {
+  try {
+    await rateLimit(`client-error:ip:${clientIp(c.req.raw)}`, LIMITS.clientErrorPerIp);
+  } catch (error) {
+    if (error instanceof TRPCError) return c.body(null, 429);
+    // Counter unavailable (database down): still log, the body limit keeps it small.
+  }
+  const report = (await c.req.json().catch(() => null)) as Record<string, unknown> | null;
+  const clip = (v: unknown, max: number) => (typeof v === "string" ? v.slice(0, max) : undefined);
+  if (report && typeof report.message === "string") {
+    console.error(
+      "[client-error]",
+      JSON.stringify({
+        message: clip(report.message, 500),
+        stack: clip(report.stack, 3000),
+        page: clip(report.page, 200),
+        release: clip(report.release, 40),
+        browser: clip(c.req.header("user-agent"), 200),
+      }),
+    );
+  }
+  return c.body(null, 204);
+});
 app.use("/api/trpc/*", async (c) => {
   return fetchRequestHandler({
     endpoint: "/api/trpc",

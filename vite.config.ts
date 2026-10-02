@@ -22,6 +22,10 @@ export default defineConfig({
     },
   },
   envDir: path.resolve(__dirname),
+  define: {
+    // Netlify sets COMMIT_REF while building: crash reports say which version broke.
+    "import.meta.env.VITE_RELEASE": JSON.stringify((process.env.COMMIT_REF ?? "local").slice(0, 7)),
+  },
   build: {
     outDir: path.resolve(__dirname, "dist/public"),
     emptyOutDir: true,

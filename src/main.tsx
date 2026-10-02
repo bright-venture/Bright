@@ -5,7 +5,17 @@ import './index.css'
 import { TRPCProvider } from "@/providers/trpc"
 import { I18nProvider } from "./i18n"
 import { Preloader } from "./components/Preloader"
+import { ErrorBoundary } from "./components/ErrorBoundary"
+import { installErrorReporting, reloadForNewBuild } from "./lib/reportError"
+import { startAnalytics } from "./lib/analytics"
 import App from './App.tsx'
+
+installErrorReporting()
+startAnalytics()
+// A tab opened before a deploy asks for page files that are gone: load the new version.
+window.addEventListener("vite:preloadError", (event) => {
+  if (reloadForNewBuild()) event.preventDefault()
+})
 
 /**
  * Invitation and password-reset emails sign the person in via a link whose URL
@@ -48,7 +58,9 @@ createRoot(document.getElementById('root')!).render(
     <BrowserRouter>
       <TRPCProvider>
         <I18nProvider>
-          <Root />
+          <ErrorBoundary>
+            <Root />
+          </ErrorBoundary>
         </I18nProvider>
       </TRPCProvider>
     </BrowserRouter>

@@ -14,7 +14,7 @@ export const COMPANY = {
  * Bump when the Terms or Privacy Policy change materially; accounts record the
  * version they accepted, so you can ask for re-acceptance later.
  */
-export const LEGAL_VERSION = "2026-10-01";
+export const LEGAL_VERSION = "2026-10-02";
 
 /** Days a customer has to report a problem with completed work ("we come back"). */
 export const WORKMANSHIP_GUARANTEE_DAYS = 30;
