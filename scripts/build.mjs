@@ -2,7 +2,7 @@
 // index.html (en), ar/index.html, el/index.html, optimized images, fonts, robots.txt and sitemap.xml.
 // Run: npm run build
 import { createHash } from 'node:crypto';
-import { mkdir, readFile, rm, stat, writeFile } from 'node:fs/promises';
+import { copyFile, mkdir, readdir, readFile, rm, stat, writeFile } from 'node:fs/promises';
 import { dirname, join, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import sharp from 'sharp';
@@ -20,7 +20,7 @@ const LANGS = {
 };
 const LOGOS = [['spinneys', 'Spinneys'], ['happy', 'Happy'], ['skygate', 'Sky Gate'], ['noknok', 'Noknok'], ['grabngo', 'Grab’n Go'], ['maliks', 'Maliks'], ['tawfeer', 'Tawfeer'], ['beirut-duty-free', 'Beirut Duty Free'], ['teska', 'Teska']];
 const PHOTO_WIDTHS = [480, 640, 800, 1200, 1800];
-const GALLERY_SIZES = '(max-width: 380px) 88vw, (max-width: 760px) 44vw, 28vw';
+const GALLERY_SIZES = '(max-width: 380px) 88vw, (max-width: 760px) 44vw, 22vw';
 // [family, fontsource package, files] — only the subsets the site's three languages need.
 const FONTS = [
   ['DM Sans', 'dm-sans', ['dm-sans-latin', 'dm-sans-latin-ext']],
@@ -48,6 +48,11 @@ async function render(source, output, pipeline) {
 
 async function buildPhotos(names) {
   const photos = {};
+  // Drop sizes of photos that are no longer on the site.
+  await mkdir(at('assets/img'), { recursive: true });
+  for (const file of await readdir(at('assets/img'))) {
+    if (!names.includes(file.replace(/-d+.webp$/, ''))) await rm(at('assets/img', file));
+  }
   for (const name of names) {
     const source = `source/photos/${name}.webp`;
     const { width, height } = await sharp(at(source)).metadata();
@@ -83,6 +88,13 @@ async function buildBrand() {
 
 // Fonts are cut down to the characters the site actually uses (all languages); shaping features
 // such as Arabic joining forms are kept. File names carry a content hash so they can be cached forever.
+// The video is served as-is (H.264, index at the start so it streams); the poster becomes WebP.
+async function buildVideo() {
+  await mkdir(at('assets/video'), { recursive: true });
+  if (!(await isFresh(at('source/video/bright-video.mp4'), at('assets/video/bright-video.mp4')))) await copyFile(at('source/video/bright-video.mp4'), at('assets/video/bright-video.mp4'));
+  await render('source/video/bright-video-poster.jpg', 'assets/video/bright-video-poster.webp', img => img.webp({ quality: 70, effort: 6 }));
+}
+
 async function buildFonts(text) {
   let css = '';
   const files = {};
@@ -203,6 +215,7 @@ function renderPage(template, lang, content, assets) {
     .replace('{{dir}}', LANGS[lang].dir)
     .replace('{{head}}', () => head(lang, c, assets))
     .replace('{{script}}', () => `<script>${assets.js}</script>`)
+    .replace('{{galleryCount}}', c.photos.length)
     .replace('{{brandWidth}}', assets.brand.width)
     .replace('{{brandHeight}}', assets.brand.height)
     .replace('<!--languages-->', languages)
@@ -234,7 +247,7 @@ async function build() {
   const ascii = Array.from({ length: 95 }, (_, i) => String.fromCharCode(32 + i)).join('');
   const text = [...new Set(ascii + template + strings.join('') + LOGOS.flat().join('') + Object.values(LANGS).map(l => l.label).join(''))].join('');
 
-  const [photos, logos, brand, fonts] = await Promise.all([buildPhotos([...photoNames]), buildLogos(), buildBrand(), buildFonts(text)]);
+  const [photos, logos, brand, fonts] = await Promise.all([buildPhotos([...photoNames]), buildLogos(), buildBrand(), buildFonts(text), buildVideo()]);
   const css = (await transform(fonts.css + await readFile(at('src/style.css'), 'utf8'), { loader: 'css', minify: true })).code.trim();
   const js = (await transform(await readFile(at('src/app.js'), 'utf8'), { loader: 'js', minify: true, target: 'es2020' })).code.trim();
   const assets = { photos, logos, brand, css, js, fonts: fonts.files };

@@ -13,9 +13,10 @@ Static marketing site for Bright Service Company SARL (facility and support serv
 - `src/index.html`: page template. `data-t="key"` replaces an element's text, `data-alt` an image alt, `data-aria` adds an `aria-label`, `data-photo="real-70"` expands to responsive `src`/`srcset`/`width`/`height`. `<!--languages-->`, `<!--logos-->`, `<!--services-->`, `<!--filters-->`, `<!--gallery-->` and `{{head}}`/`{{script}}` are filled by the build. The English placeholder text in the template is not used; all copy comes from `content.js`.
 - `src/content.js`: global `CONTENT` with `en`, `ar`, `el` locales (all text, `services`, `categories`, `photos`). The build fails if a key is missing in any locale.
 - `src/style.css`: all styles, inlined into each page at build time. Brand tokens on `:root` (`--navy #071b33`, `--cyan #00b2d2`). RTL and Greek overrides at the end. Small teal labels use `#00758e` for contrast.
-- `src/app.js`: gallery filters, lightbox and remembering the chosen language (inlined, minified). Everything else is prerendered.
+- `src/app.js`: gallery filters, lightbox, the video poster (set only when the video nears the viewport, since browsers fetch posters eagerly) and remembering the chosen language (inlined, minified). Everything else is prerendered.
+- Gallery: 4 columns on desktop, 2 when a filter leaves two photos (`data-count`), so rows are always complete. Keep photo counts per category even.
 - `scripts/build.mjs`: writes `index.html` (en), `ar/index.html`, `el/index.html`, `sitemap.xml`, `robots.txt` and `assets/` (photo sizes 480 to 1800 px, logos, favicons, OG image, fonts subset to the characters the site uses with hashed names). SEO head (canonical, hreflang, Open Graph, JSON-LD) is generated here; `SITE`, `LANGS`, `LOGOS` live at the top.
-- `source/photos`, `source/logos`: original images. `source/unused`: photos not on the site yet.
+- `source/photos`, `source/logos`: original images. `source/video`: the company video (served as-is from `assets/video/`, already web-encoded H.264) and its poster. `source/unused`: photos not on the site.
 - `netlify.toml`: cache and security headers, and 301s from the old `/?lang=ar|el` URLs.
 
 ## Conventions

@@ -18,7 +18,20 @@ document.getElementById('filters').addEventListener('click', event => {
   visiblePhotos = items.filter(item => category === 'all' || item.dataset.category === category);
   items.forEach(item => { item.hidden = !visiblePhotos.includes(item) });
   visiblePhotos.forEach((item, index) => { item.querySelector('small').textContent = String(index + 1).padStart(2, '0') });
+  // Two photos sit in two wider columns on desktop (even rows), so ask for larger image files.
+  gallery.dataset.count = visiblePhotos.length;
+  const sizes = visiblePhotos.length === 2 ? '(max-width: 380px) 88vw, 44vw' : '(max-width: 380px) 88vw, (max-width: 760px) 44vw, 22vw';
+  visiblePhotos.forEach(item => { item.querySelector('img').sizes = sizes });
 });
+
+// Browsers fetch a poster immediately, even far below the fold; set it only as the video comes near.
+const video = document.getElementById('bright-video');
+if ('IntersectionObserver' in window) {
+  const observer = new IntersectionObserver(entries => {
+    if (entries.some(entry => entry.isIntersecting)) { video.poster = video.dataset.poster; observer.disconnect() }
+  }, { rootMargin: '600px' });
+  observer.observe(video);
+} else video.poster = video.dataset.poster;
 
 function showPhoto(index) {
   activeIndex = (index + visiblePhotos.length) % visiblePhotos.length;

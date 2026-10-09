@@ -12,7 +12,7 @@ const CONTENT = {
     "heroAccent": "Support for business.",
     "heroDescription": "Professional people behind the places you depend on. Bright keeps your facilities welcoming and your daily operations running smoothly.",
     "explore": "Explore our services",
-    "heroFoot": "Established in 2005. Built on everyday trust.",
+    "heroFoot": "Glad to help you",
     "heroCaption": "Real people. Real care.",
     "heroAlt": "Bright professional operating a floor cleaning machine inside a supermarket",
     "clientsTitle": "Some of the names we’ve supported",
@@ -28,7 +28,6 @@ const CONTENT = {
     "aboutCaptionSmall": "A Bright team member at work",
     "aboutAlt": "Bright porter smiling while holding shopping bags at a supermarket checkout",
     "numbersLabel": "BRIGHT IN NUMBERS",
-    "numbersDate": "From our 2026 company profile",
     "employees": "Employees",
     "sites": "Active sites",
     "activeClients": "Active clients",
@@ -36,7 +35,7 @@ const CONTENT = {
     "servicesTitle": "One team. Everyday support.",
     "servicesIntro": "Services shaped around the way your business works, from the first arrival to the last inspection.",
     "serviceCaption": "Care in the details. Consistency in the delivery.",
-    "serviceAlt": "Bright professional mopping the floor of a retail store",
+    "serviceAlt": "Bright team member replenishing supermarket shelves",
     "workLabel": "BRIGHT AT WORK",
     "workTitle": "Our people, in their element.",
     "workIntro": "A closer look at the teams supporting real facilities and everyday operations.",
@@ -52,7 +51,7 @@ const CONTENT = {
     "isoTitle": "Quality management",
     "isoBody": "Bright held ISO 9001:2015 certification from 2017 to 2019. Recertification is currently in progress, with an ongoing focus on continuous improvement.",
     "closingLabel": "BRIGHT",
-    "closingTitle": "A brighter standard for every space.",
+    "closingTitle": "Glad to help you",
     "closingBody": "Thoughtful service. Dependable people. Room for what comes next.",
     "closingAction": "Find your service",
     "footerDescriptor": "Facility & support services",
@@ -134,10 +133,22 @@ const CONTENT = {
         "alt": "Bright team member mopping a supermarket aisle"
       },
       {
-        "src": "real-91.webp",
+        "src": "real-79.webp",
+        "category": "cleaning",
+        "title": "Machine floor cleaning",
+        "alt": "Bright team member operating a floor cleaning machine inside a supermarket"
+      },
+      {
+        "src": "real-89.webp",
         "category": "retail",
-        "title": "Retail, ready for the day",
-        "alt": "Bright team member arranging products on supermarket shelves"
+        "title": "Shelves ready for customers",
+        "alt": "Bright team member replenishing products on supermarket shelves"
+      },
+      {
+        "src": "real-92.webp",
+        "category": "retail",
+        "title": "Careful product placement",
+        "alt": "Bright team member arranging products neatly on a supermarket shelf"
       },
       {
         "src": "real-0.webp",
@@ -163,7 +174,12 @@ const CONTENT = {
         "title": "Support beyond the checkout",
         "alt": "Bright porter loading shopping bags into a customer’s car"
       }
-    ]
+    ],
+    "filmLabel": "BRIGHT IN MOTION",
+    "filmTitle": "See our people at work.",
+    "filmBody": "A closer look at the care, skill and teamwork behind Bright’s everyday services.",
+    "filmFallback": "Your browser does not support video playback.",
+    "filmAria": "Bright company video"
   },
   "ar": {
     "title": "برايت | خدمات المرافق والدعم",
@@ -178,7 +194,7 @@ const CONTENT = {
     "heroAccent": "دعم لأعمالكم.",
     "heroDescription": "خلف كل مكان تعتمدون عليه، أشخاص يهتمّون بالتفاصيل. تحافظ برايت على مرافقكم لتبقى مريحة ومهيّأة لاستقبال زوّاركم، وتدعم سير أعمالكم اليومية بسلاسة.",
     "explore": "اكتشف خدماتنا",
-    "heroFoot": "منذ عام 2005، نبني الثقة كل يوم.",
+    "heroFoot": "يسعدنا مساعدتكم",
     "heroCaption": "أشخاص حقيقيون. عناية حقيقية.",
     "heroAlt": "موظف من برايت يستخدم آلة لتنظيف الأرضيات داخل سوبرماركت",
     "clientsTitle": "بعض الشركات التي دعمنا أعمالها",
@@ -194,7 +210,6 @@ const CONTENT = {
     "aboutCaptionSmall": "أحد أفراد فريق برايت أثناء العمل",
     "aboutAlt": "مساعد تسوّق من برايت يبتسم وهو يحمل أكياس المشتريات عند صندوق الدفع",
     "numbersLabel": "برايت بالأرقام",
-    "numbersDate": "وفق الملف التعريفي للشركة لعام 2026",
     "employees": "موظفًا",
     "sites": "موقعًا نشطًا",
     "activeClients": "عملاء حاليون",
@@ -202,7 +217,7 @@ const CONTENT = {
     "servicesTitle": "فريق واحد لدعم أعمالكم اليومية.",
     "servicesIntro": "خدمات تتناسب مع طبيعة عملكم، من بداية اليوم وحتى آخر جولة تفقدية.",
     "serviceCaption": "عناية بالتفاصيل وثبات في مستوى الخدمة.",
-    "serviceAlt": "موظف من برايت يمسح أرضية متجر",
+    "serviceAlt": "موظف من برايت يعيد تعبئة رفوف السوبرماركت",
     "workLabel": "برايت أثناء العمل",
     "workTitle": "فرقنا في مواقع العمل.",
     "workIntro": "نظرة أقرب إلى الأشخاص الذين يعتنون بالمرافق ويدعمون العمليات اليومية على أرض الواقع.",
@@ -218,7 +233,7 @@ const CONTENT = {
     "isoTitle": "إدارة الجودة",
     "isoBody": "كانت برايت حاصلة على شهادة ISO 9001:2015 من عام 2017 حتى عام 2019. تجري حاليًا عملية إعادة الاعتماد، مع مواصلة العمل على التحسين المستمر.",
     "closingLabel": "برايت",
-    "closingTitle": "معيار أكثر إشراقًا لكل مساحة.",
+    "closingTitle": "يسعدنا مساعدتكم",
     "closingBody": "خدمة مدروسة. أشخاص يمكن الاعتماد عليهم. واستعداد لما يحمله الغد.",
     "closingAction": "تعرّف إلى خدماتنا",
     "footerDescriptor": "خدمات المرافق والدعم",
@@ -300,10 +315,22 @@ const CONTENT = {
         "alt": "موظف من برايت يمسح أرضية ممر في سوبرماركت"
       },
       {
-        "src": "real-91.webp",
+        "src": "real-79.webp",
+        "category": "cleaning",
+        "title": "تنظيف الأرضيات بالآلات",
+        "alt": "موظف من برايت يستخدم آلة لتنظيف الأرضيات داخل سوبرماركت"
+      },
+      {
+        "src": "real-89.webp",
         "category": "retail",
-        "title": "متاجر جاهزة ليوم جديد",
-        "alt": "موظف من برايت يرتّب المنتجات على رفوف سوبرماركت"
+        "title": "رفوف جاهزة للعملاء",
+        "alt": "موظف من برايت يعيد تعبئة المنتجات على رفوف سوبرماركت"
+      },
+      {
+        "src": "real-92.webp",
+        "category": "retail",
+        "title": "ترتيب المنتجات بعناية",
+        "alt": "موظف من برايت يرتّب المنتجات بعناية على أحد رفوف سوبرماركت"
       },
       {
         "src": "real-0.webp",
@@ -329,7 +356,12 @@ const CONTENT = {
         "title": "دعم يتجاوز صندوق الدفع",
         "alt": "مساعد تسوّق من برايت يحمّل أكياس المشتريات في سيارة عميل"
       }
-    ]
+    ],
+    "filmLabel": "برايت في الميدان",
+    "filmTitle": "شاهد فرقنا أثناء العمل.",
+    "filmBody": "نظرة أقرب إلى العناية والخبرة والعمل الجماعي وراء خدمات برايت اليومية.",
+    "filmFallback": "متصفحك لا يدعم تشغيل الفيديو.",
+    "filmAria": "فيديو تعريفي عن برايت"
   },
   "el": {
     "title": "Bright | Υπηρεσίες εγκαταστάσεων και υποστήριξης",
@@ -344,7 +376,7 @@ const CONTENT = {
     "heroAccent": "Στήριξη για την επιχείρησή σας.",
     "heroDescription": "Πίσω από τους χώρους στους οποίους βασίζεστε, βρίσκονται άνθρωποι που φροντίζουν κάθε λεπτομέρεια. Η Bright διατηρεί τις εγκαταστάσεις σας φιλόξενες και την καθημερινή λειτουργία σας ομαλή.",
     "explore": "Δείτε τις υπηρεσίες μας",
-    "heroFoot": "Από το 2005, χτίζουμε εμπιστοσύνη κάθε μέρα.",
+    "heroFoot": "Χαρά μας να σας βοηθάμε",
     "heroCaption": "Πραγματικοί άνθρωποι. Ουσιαστική φροντίδα.",
     "heroAlt": "Επαγγελματίας της Bright χειρίζεται μηχάνημα καθαρισμού δαπέδου μέσα σε σουπερμάρκετ",
     "clientsTitle": "Ορισμένες από τις επιχειρήσεις που έχουμε υποστηρίξει",
@@ -360,7 +392,6 @@ const CONTENT = {
     "aboutCaptionSmall": "Μέλος της ομάδας Bright εν ώρα εργασίας",
     "aboutAlt": "Βοηθός αγορών της Bright χαμογελά κρατώντας σακούλες με αγορές στο ταμείο σουπερμάρκετ",
     "numbersLabel": "Η BRIGHT ΣΕ ΑΡΙΘΜΟΥΣ",
-    "numbersDate": "Από το εταιρικό προφίλ μας του 2026",
     "employees": "Εργαζόμενοι",
     "sites": "Ενεργές εγκαταστάσεις",
     "activeClients": "Ενεργοί πελάτες",
@@ -368,7 +399,7 @@ const CONTENT = {
     "servicesTitle": "Μία ομάδα. Καθημερινή υποστήριξη.",
     "servicesIntro": "Υπηρεσίες προσαρμοσμένες στον τρόπο λειτουργίας της επιχείρησής σας, από την πρώτη άφιξη μέχρι τον τελευταίο έλεγχο.",
     "serviceCaption": "Προσοχή στη λεπτομέρεια. Συνέπεια στην εξυπηρέτηση.",
-    "serviceAlt": "Επαγγελματίας της Bright σφουγγαρίζει το δάπεδο καταστήματος",
+    "serviceAlt": "Μέλος της ομάδας Bright αναπληρώνει προϊόντα στα ράφια σουπερμάρκετ",
     "workLabel": "Η BRIGHT ΣΤΗΝ ΠΡΑΞΗ",
     "workTitle": "Οι άνθρωποί μας στον χώρο εργασίας.",
     "workIntro": "Μια πιο κοντινή ματιά στις ομάδες που φροντίζουν πραγματικές εγκαταστάσεις και στηρίζουν την καθημερινή λειτουργία τους.",
@@ -384,7 +415,7 @@ const CONTENT = {
     "isoTitle": "Διαχείριση ποιότητας",
     "isoBody": "Η Bright διέθετε πιστοποίηση ISO 9001:2015 από το 2017 έως το 2019. Η διαδικασία επαναπιστοποίησης βρίσκεται σε εξέλιξη, με σταθερή προσήλωση στη συνεχή βελτίωση.",
     "closingLabel": "BRIGHT",
-    "closingTitle": "Ένα πιο λαμπερό πρότυπο για κάθε χώρο.",
+    "closingTitle": "Χαρά μας να σας βοηθάμε",
     "closingBody": "Φροντίδα στην εξυπηρέτηση. Άνθρωποι που μπορείτε να εμπιστευτείτε. Χώρος για το επόμενο βήμα.",
     "closingAction": "Βρείτε την υπηρεσία σας",
     "footerDescriptor": "Υπηρεσίες εγκαταστάσεων και υποστήριξης",
@@ -466,10 +497,22 @@ const CONTENT = {
         "alt": "Μέλος της ομάδας Bright σφουγγαρίζει διάδρομο σουπερμάρκετ"
       },
       {
-        "src": "real-91.webp",
+        "src": "real-79.webp",
+        "category": "cleaning",
+        "title": "Καθαρισμός δαπέδων με μηχανήματα",
+        "alt": "Μέλος της ομάδας Bright χειρίζεται μηχάνημα καθαρισμού δαπέδου μέσα σε σουπερμάρκετ"
+      },
+      {
+        "src": "real-89.webp",
         "category": "retail",
-        "title": "Ράφια έτοιμα για τη νέα μέρα",
-        "alt": "Μέλος της ομάδας Bright τακτοποιεί προϊόντα στα ράφια σουπερμάρκετ"
+        "title": "Ράφια έτοιμα για τους πελάτες",
+        "alt": "Μέλος της ομάδας Bright αναπληρώνει προϊόντα στα ράφια σουπερμάρκετ"
+      },
+      {
+        "src": "real-92.webp",
+        "category": "retail",
+        "title": "Προσεκτική τοποθέτηση προϊόντων",
+        "alt": "Μέλος της ομάδας Bright τοποθετεί προσεκτικά προϊόντα σε ράφι σουπερμάρκετ"
       },
       {
         "src": "real-0.webp",
@@ -495,6 +538,11 @@ const CONTENT = {
         "title": "Υποστήριξη και μετά το ταμείο",
         "alt": "Βοηθός αγορών της Bright φορτώνει σακούλες με αγορές στο αυτοκίνητο πελάτη"
       }
-    ]
+    ],
+    "filmLabel": "Η BRIGHT ΣΕ ΚΙΝΗΣΗ",
+    "filmTitle": "Δείτε τους ανθρώπους μας εν ώρα εργασίας.",
+    "filmBody": "Μια πιο κοντινή ματιά στη φροντίδα, την τεχνογνωσία και την ομαδική δουλειά πίσω από τις καθημερινές υπηρεσίες της Bright.",
+    "filmFallback": "Το πρόγραμμα περιήγησής σας δεν υποστηρίζει αναπαραγωγή βίντεο.",
+    "filmAria": "Εταιρικό βίντεο της Bright"
   }
 };
