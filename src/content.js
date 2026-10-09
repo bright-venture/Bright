@@ -179,7 +179,8 @@ const CONTENT = {
     "filmTitle": "See our people at work.",
     "filmBody": "A closer look at the care, skill and teamwork behind Bright’s everyday services.",
     "filmFallback": "Your browser does not support video playback.",
-    "filmAria": "Bright company video"
+    "filmAria": "Bright company video",
+    "menuLabel": "Menu"
   },
   "ar": {
     "title": "برايت | خدمات المرافق والدعم",
@@ -361,7 +362,8 @@ const CONTENT = {
     "filmTitle": "شاهد فرقنا أثناء العمل.",
     "filmBody": "نظرة أقرب إلى العناية والخبرة والعمل الجماعي وراء خدمات برايت اليومية.",
     "filmFallback": "متصفحك لا يدعم تشغيل الفيديو.",
-    "filmAria": "فيديو تعريفي عن برايت"
+    "filmAria": "فيديو تعريفي عن برايت",
+    "menuLabel": "القائمة"
   },
   "el": {
     "title": "Bright | Υπηρεσίες εγκαταστάσεων και υποστήριξης",
@@ -543,6 +545,7 @@ const CONTENT = {
     "filmTitle": "Δείτε τους ανθρώπους μας εν ώρα εργασίας.",
     "filmBody": "Μια πιο κοντινή ματιά στη φροντίδα, την τεχνογνωσία και την ομαδική δουλειά πίσω από τις καθημερινές υπηρεσίες της Bright.",
     "filmFallback": "Το πρόγραμμα περιήγησής σας δεν υποστηρίζει αναπαραγωγή βίντεο.",
-    "filmAria": "Εταιρικό βίντεο της Bright"
+    "filmAria": "Εταιρικό βίντεο της Bright",
+    "menuLabel": "Μενού"
   }
 };

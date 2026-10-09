@@ -6,6 +6,17 @@ const dialog = document.getElementById('lightbox');
 const lightboxImage = document.getElementById('lightbox-image');
 let visiblePhotos = items, activeIndex = 0;
 
+// Phone menu: the toggle only shows below 760px; links, Escape or a tap outside close it.
+const header = document.querySelector('.header');
+const menuButton = header.querySelector('.menu-toggle');
+const setMenu = open => { header.classList.toggle('menu-open', open); menuButton.setAttribute('aria-expanded', String(open)) };
+menuButton.addEventListener('click', () => setMenu(menuButton.getAttribute('aria-expanded') !== 'true'));
+document.getElementById('site-nav').addEventListener('click', event => { if (event.target.closest('a')) setMenu(false) });
+document.addEventListener('click', event => { if (!header.contains(event.target)) setMenu(false) });
+document.addEventListener('keydown', event => {
+  if (event.key === 'Escape' && header.classList.contains('menu-open')) { setMenu(false); menuButton.focus() }
+});
+
 document.querySelectorAll('.languages a').forEach(link => link.addEventListener('click', () => {
   try { localStorage.setItem('bright-language', link.hreflang) } catch {}
 }));

@@ -165,7 +165,8 @@ function head(lang, c, assets) {
   const otherLocales = Object.entries(LANGS).filter(([code]) => code !== lang).map(([, { locale }]) => `<meta property="og:locale:alternate" content="${locale}">`).join('');
   const preloads = page.preload.map(file => `<link rel="preload" href="${assets.fonts[file]}" as="font" type="font/woff2" crossorigin>`).join('');
   // Visitors who picked Arabic or Greek before land on their language; crawlers have no stored choice.
-  const remember = lang === 'en' ? `<script>try{var l=localStorage.getItem('bright-language');if(l==='ar'||l==='el')location.replace('/'+l+'/'+location.hash)}catch(e){}</script>` : '';
+  // The js class switches phones to the menu button before first paint; without JS the links stay visible.
+  const remember = `<script>document.documentElement.classList.add('js')${lang === 'en' ? ";try{var l=localStorage.getItem('bright-language');if(l==='ar'||l==='el')location.replace('/'+l+'/'+location.hash)}catch(e){}" : ''}</script>`;
   return [
     `<title>${esc(c.title)}</title>`,
     `<meta name="description" content="${esc(c.description)}">`,
