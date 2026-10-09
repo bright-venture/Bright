@@ -61,6 +61,9 @@ const CONTENT = {
     "close": "Close",
     "previous": "Previous",
     "next": "Next",
+    "navLabel": "Main navigation",
+    "languageLabel": "Language",
+    "filtersLabel": "Photo categories",
     "categories": {
       "all": "All work",
       "cleaning": "Cleaning",
@@ -224,6 +227,9 @@ const CONTENT = {
     "close": "إغلاق",
     "previous": "السابق",
     "next": "التالي",
+    "navLabel": "التنقل الرئيسي",
+    "languageLabel": "اللغة",
+    "filtersLabel": "فئات الصور",
     "categories": {
       "all": "جميع الأعمال",
       "cleaning": "التنظيف",
@@ -387,6 +393,9 @@ const CONTENT = {
     "close": "Κλείσιμο",
     "previous": "Προηγούμενη",
     "next": "Επόμενη",
+    "navLabel": "Κύρια πλοήγηση",
+    "languageLabel": "Γλώσσα",
+    "filtersLabel": "Κατηγορίες φωτογραφιών",
     "categories": {
       "all": "Όλα",
       "cleaning": "Καθαρισμός",

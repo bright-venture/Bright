@@ -3,6 +3,7 @@ import { createServer } from 'node:http';
 import { readFile, stat } from 'node:fs/promises';
 import { extname, join, normalize, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
+import { gzipSync } from 'node:zlib';
 
 const root = resolve(fileURLToPath(new URL('..', import.meta.url)));
 const requested = process.argv[2] || process.env.PORT;
@@ -19,6 +20,8 @@ const TYPES = {
   '.webp': 'image/webp',
   '.svg': 'image/svg+xml',
   '.ico': 'image/x-icon',
+  '.woff2': 'font/woff2',
+  '.xml': 'application/xml; charset=utf-8',
   '.txt': 'text/plain; charset=utf-8',
 };
 
@@ -31,9 +34,22 @@ const server = createServer(async (req, res) => {
       res.writeHead(403).end('Forbidden');
       return;
     }
-    if (!(await stat(file)).isFile()) throw new Error('not a file');
-    const body = await readFile(file);
-    res.writeHead(200, { 'Content-Type': TYPES[extname(file).toLowerCase()] || 'application/octet-stream', 'Cache-Control': 'no-store' });
+    const info = await stat(file);
+    // Folder URLs without a trailing slash redirect, as on Netlify: /ar -> /ar/
+    if (info.isDirectory()) {
+      res.writeHead(301, { Location: path + '/' }).end();
+      return;
+    }
+    let body = await readFile(file);
+    const type = TYPES[extname(file).toLowerCase()] || 'application/octet-stream';
+    const headers = { 'Content-Type': type, 'Cache-Control': 'no-cache' };
+    // Compress text like the production host does, so local audits are representative.
+    if (/text|json|xml|javascript/.test(type) && /\bgzip\b/.test(req.headers['accept-encoding'] || '')) {
+      body = gzipSync(body);
+      headers['Content-Encoding'] = 'gzip';
+      headers.Vary = 'Accept-Encoding';
+    }
+    res.writeHead(200, headers);
     res.end(body);
   } catch {
     res.writeHead(404, { 'Content-Type': 'text/plain' }).end('Not found');
