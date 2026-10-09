@@ -1,0 +1,11 @@
+{
+  "name": "bright-website",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Bright Service Company website: facility and support services (EN, AR, EL).",
+  "type": "module",
+  "scripts": {
+    "dev": "node scripts/serve.mjs",
+    "start": "node scripts/serve.mjs"
+  }
+}
