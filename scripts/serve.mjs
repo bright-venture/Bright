@@ -10,16 +10,20 @@ import { gzipSync } from 'node:zlib';
 const root = resolve(fileURLToPath(new URL('../site', import.meta.url)));
 const realRoot = await realpath(root);
 const HOST = '127.0.0.1';
-// Netlify's _headers format; only the site-wide "/*" block is used here.
-const siteHeaders = {};
-try {
-  const lines = (await readFile(resolve(root, '_headers'), 'utf8')).split(/\r?\n/);
-  let global = false;
-  for (const line of lines) {
-    if (/^\S/.test(line)) global = line.trim() === '/*';
-    else if (global && line.includes(':')) siteHeaders[line.slice(0, line.indexOf(':')).trim()] = line.slice(line.indexOf(':') + 1).trim();
-  }
-} catch {}
+// Netlify's _headers format; only the site-wide "/*" block is used here. Read on every request,
+// because each build changes the CSP hashes and a stale policy would block the new inline code.
+async function siteHeaders() {
+  const headers = {};
+  try {
+    const lines = (await readFile(resolve(root, '_headers'), 'utf8')).split(/\r?\n/);
+    let global = false;
+    for (const line of lines) {
+      if (/^\S/.test(line)) global = line.trim() === '/*';
+      else if (global && line.includes(':')) headers[line.slice(0, line.indexOf(':')).trim()] = line.slice(line.indexOf(':') + 1).trim();
+    }
+  } catch {}
+  return headers;
+}
 const requested = process.argv[2] || process.env.PORT;
 let port = Number(requested || 4321);
 
@@ -80,7 +84,7 @@ const server = createServer(async (req, res) => {
     }
     let body = await readFile(file);
     const type = TYPES[extname(file).toLowerCase()] || 'application/octet-stream';
-    const headers = { ...siteHeaders, 'Content-Type': type, 'Cache-Control': 'no-cache' };
+    const headers = { ...(await siteHeaders()), 'Content-Type': type, 'Cache-Control': 'no-cache' };
     // Compress text like the production host does, so local audits are representative.
     if (/text|json|xml|javascript/.test(type) && /\bgzip\b/.test(req.headers['accept-encoding'] || '')) {
       body = gzipSync(body);

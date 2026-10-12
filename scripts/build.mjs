@@ -29,9 +29,23 @@ const HOME_HERO = 'cleaning-mall';
 // Phones in international format (Lebanese landlines drop the leading 0 after +961).
 const CONTACT = {
   email: 'contact@brightlb.com',
-  phones: ['+961 79 300 350', '+961 79 300 359', '+961 1 488 450'],
+  // kind picks the label shown next to each number (content key contactMobile / contactOffice)
+  phones: [['+961 79 300 350', 'contactMobile'], ['+961 79 300 359', 'contactMobile'], ['+961 1 488 450', 'contactOffice']],
+  // Q Business Center, Daoud Ammoun Street, Forn El Chebbak (address lines per language live in content.js)
+  geo: { latitude: 33.8747365, longitude: 35.5317194 },
+  maps: 'https://maps.app.goo.gl/adi1JCmDrdpHmcHU8',
+  waze: 'https://waze.com/ul?ll=33.8747365%2C35.5317194&navigate=yes',
 };
 const tel = phone => 'tel:' + phone.replace(/[^\d+]/g, '');
+// Simple line icons (Feather, MIT), drawn with currentColor.
+const ICON_PATHS = {
+  phone: '<path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72c.13.96.36 1.9.7 2.81a2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45c.91.34 1.85.57 2.81.7A2 2 0 0 1 22 16.92z"/>',
+  mail: '<path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/>',
+  pin: '<path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/>',
+  copy: '<rect x="9" y="9" width="13" height="13" rx="2" ry="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/>',
+  check: '<polyline points="20 6 9 17 4 12"/>',
+};
+const icon = (name, className = '') => `<svg${className ? ` class="${className}"` : ''} viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false">${ICON_PATHS[name]}</svg>`;
 const PHOTO_WIDTHS = [480, 640, 800, 1200];
 // Rendered widths of each photo slot (layout widths come from style.css: 18px phone gutters, 1200px max content).
 const SIZES = {
@@ -181,8 +195,13 @@ function structuredData(lang, page, c, shareImage) {
     areaServed: { '@type': 'Country', name: 'Lebanon' },
     knowsAbout: c.services.map(service => service.title),
     email: CONTACT.email,
-    telephone: CONTACT.phones[0],
-    contactPoint: CONTACT.phones.map(phone => ({
+    telephone: CONTACT.phones[0][0],
+    address: {
+      '@type': 'PostalAddress', streetAddress: 'Q Business Center, Daoud Ammoun Street',
+      addressLocality: 'Forn El Chebbak', addressCountry: 'LB',
+    },
+    location: { '@type': 'Place', name: 'Q Business Center', geo: { '@type': 'GeoCoordinates', ...CONTACT.geo }, hasMap: CONTACT.maps },
+    contactPoint: CONTACT.phones.map(([phone]) => ({
       '@type': 'ContactPoint', telephone: phone, email: CONTACT.email, contactType: 'customer service',
       areaServed: 'LB', availableLanguage: ['English', 'Arabic', 'Greek'],
     })),
@@ -308,13 +327,24 @@ function serviceMain(lang, s, c, services, assets) {
     + `<section class="closing"><p class="eyebrow">${esc(c.sloganLabel)}</p><h2>${esc(c.serviceMotto)}</h2><p>${esc(c.closingBody)}</p><div class="hero-actions"><a class="button light" href="${home}#services">${esc(c.backServices)}</a><a class="button outline" href="${pagePath(lang, 'contact')}">${esc(c.contactAction)}</a></div></section>`;
 }
 
+// Contact page: three cards (call, email, visit). Copy buttons only appear when JS runs (they need it).
 function contactMain(lang, c) {
-  const phones = CONTACT.phones.map(phone => `<li><a href="${tel(phone)}" dir="ltr">${esc(phone)}</a></li>`).join('');
-  return `<section class="service-hero contact-hero"><div><p class="eyebrow">${esc(c.contactLabel)}</p><h1>${esc(c.contactTitle)}</h1><p class="service-slogan">${esc(c.serviceMotto)}</p><p class="service-intro">${esc(c.contactIntro)}</p></div></section>`
+  const copyButton = value => `<button class="copy-button" type="button" data-copy="${esc(value)}" data-copied="${esc(c.contactCopied)}" aria-label="${esc(`${c.contactCopy} ${value}`)}" title="${esc(c.contactCopy)}">${icon('copy', 'icon-copy')}${icon('check', 'icon-check')}</button>`;
+  const phones = CONTACT.phones.map(([phone, kind]) =>
+    `<li><span class="contact-tag">${esc(c[kind])}</span><a href="${tel(phone)}" dir="ltr">${esc(phone)}</a>${copyButton(phone)}</li>`).join('');
+  const card = (iconName, title, note, body, actions = '') =>
+    `<article class="contact-card"><span class="contact-icon">${icon(iconName)}</span><h2>${esc(title)}</h2><p>${esc(note)}</p>${body}${actions ? `<div class="contact-actions">${actions}</div>` : ''}</article>`;
+  return `<section class="service-hero contact-hero"><div><p class="eyebrow">${esc(c.contactLabel)}</p><h1>${esc(c.contactTitle)}</h1><p class="service-slogan">${esc(c.serviceMotto)}</p><p class="service-intro">${esc(c.contactIntro)}</p>`
+    + `<div class="hero-actions"><a class="button light" href="${tel(CONTACT.phones[0][0])}">${icon('phone')}<span>${esc(c.contactCallAction)}</span></a><a class="button outline" href="mailto:${CONTACT.email}">${icon('mail')}<span>${esc(c.contactEmailAction)}</span></a></div></div></section>`
     + `<section class="section contact-details"><div class="contact-grid">`
-    + `<article class="contact-card"><h2>${esc(c.contactPhoneTitle)}</h2><p>${esc(c.contactPhoneNote)}</p><ul class="contact-list">${phones}</ul></article>`
-    + `<article class="contact-card"><h2>${esc(c.contactEmailTitle)}</h2><p>${esc(c.contactEmailNote)}</p><ul class="contact-list"><li><a href="mailto:${CONTACT.email}" dir="ltr">${CONTACT.email}</a></li></ul></article>`
-    + `</div></section>`
+    + card('phone', c.contactPhoneTitle, c.contactPhoneNote, `<ul class="contact-list">${phones}</ul>`)
+    + card('mail', c.contactEmailTitle, c.contactEmailNote,
+      `<ul class="contact-list"><li><a href="mailto:${CONTACT.email}" dir="ltr">${CONTACT.email}</a>${copyButton(CONTACT.email)}</li></ul>`,
+      `<a class="button" href="mailto:${CONTACT.email}">${esc(c.contactEmailAction)}</a>`)
+    + card('pin', c.contactVisitTitle, c.contactVisitNote,
+      `<address>${c.contactAddress.map(esc).join('<br>')}</address>`,
+      `<a class="button" href="${esc(CONTACT.maps)}" rel="noopener">${esc(c.contactMaps)}</a><a class="button outline" href="${esc(CONTACT.waze)}" rel="noopener">${esc(c.contactWaze)}</a>`)
+    + `</div><p class="sr-only" id="copy-status" aria-live="polite"></p></section>`
     + `<section class="closing"><p class="eyebrow">${esc(c.sloganLabel)}</p><h2>${esc(c.serviceMotto)}</h2><p>${esc(c.closingBody)}</p><a class="button light" href="${pagePath(lang)}#services">${esc(c.backServices)}</a></section>`;
 }
 
@@ -334,7 +364,7 @@ function renderPage(layout, lang, page, c, main, assets) {
     .replace(/\{\{homePath\}\}/g, pagePath(lang))
     .replace(/\{\{contactPath\}\}/g, pagePath(lang, 'contact'))
     .replace('{{contactCurrent}}', page.key === 'contact' ? ' aria-current="page"' : '')
-    .replace('<!--footerContact-->', `<a href="mailto:${CONTACT.email}" dir="ltr">${CONTACT.email}</a><a href="${tel(CONTACT.phones[0])}" dir="ltr">${esc(CONTACT.phones[0])}</a>`)
+    .replace('<!--footerContact-->', `<a href="mailto:${CONTACT.email}" dir="ltr">${CONTACT.email}</a><a href="${tel(CONTACT.phones[0][0])}" dir="ltr">${esc(CONTACT.phones[0][0])}</a>`)
     // Section links stay on the page at home, and point back to the homepage from service pages.
     .replace(/\{\{anchorBase\}\}/g, page.slug ? pagePath(lang) : '')
     .replace('{{brandWidth}}', assets.brand.width)

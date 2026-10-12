@@ -205,7 +205,22 @@ const CONTENT = {
     "contactEmailTitle": "Email us",
     "contactEmailNote": "Send us your request and your site details.",
     "contactPageTitle": "Contact us | Bright Service Company SARL",
-    "contactDescription": "Contact Bright Service Company SARL in Lebanon by phone or email for facility management and operational support services."
+    "contactDescription": "Contact Bright Service Company SARL in Lebanon by phone or email for facility management and operational support services.",
+    "contactMobile": "Mobile",
+    "contactOffice": "Office",
+    "contactCopy": "Copy",
+    "contactCopied": "Copied",
+    "contactCallAction": "Call us",
+    "contactEmailAction": "Send an email",
+    "contactVisitTitle": "Visit us",
+    "contactVisitNote": "Our office is at Q Business Center.",
+    "contactAddress": [
+      "Q Business Center",
+      "Daoud Ammoun Street",
+      "Forn El Chebbak, Lebanon"
+    ],
+    "contactMaps": "Google Maps",
+    "contactWaze": "Waze"
   },
   "ar": {
     "title": "برايت | خدمات المرافق والدعم",
@@ -413,7 +428,22 @@ const CONTENT = {
     "contactEmailTitle": "راسلونا عبر البريد الإلكتروني",
     "contactEmailNote": "أرسلوا إلينا طلبكم وتفاصيل موقعكم.",
     "contactPageTitle": "اتصل بنا | Bright Service Company SARL",
-    "contactDescription": "تواصلوا مع شركة برايت للخدمات ش.م.م. في لبنان عبر الهاتف أو البريد الإلكتروني للاستفسار عن خدمات إدارة المرافق والدعم التشغيلي."
+    "contactDescription": "تواصلوا مع شركة برايت للخدمات ش.م.م. في لبنان عبر الهاتف أو البريد الإلكتروني للاستفسار عن خدمات إدارة المرافق والدعم التشغيلي.",
+    "contactMobile": "خلوي",
+    "contactOffice": "المكتب",
+    "contactCopy": "نسخ",
+    "contactCopied": "تم النسخ",
+    "contactCallAction": "اتصلوا بنا",
+    "contactEmailAction": "أرسلوا رسالة",
+    "contactVisitTitle": "زورونا",
+    "contactVisitNote": "يقع مكتبنا في مركز Q للأعمال.",
+    "contactAddress": [
+      "مركز Q للأعمال",
+      "شارع داود عمّون",
+      "فرن الشباك، لبنان"
+    ],
+    "contactMaps": "خرائط Google",
+    "contactWaze": "Waze"
   },
   "el": {
     "title": "Bright | Υπηρεσίες εγκαταστάσεων και υποστήριξης",
@@ -621,6 +651,21 @@ const CONTENT = {
     "contactEmailTitle": "Στείλτε μας email",
     "contactEmailNote": "Στείλτε μας το αίτημά σας και τα στοιχεία του χώρου σας.",
     "contactPageTitle": "Επικοινωνία | Bright Service Company SARL",
-    "contactDescription": "Επικοινωνήστε με την Bright Service Company SARL στον Λίβανο τηλεφωνικά ή μέσω email για υπηρεσίες διαχείρισης εγκαταστάσεων και λειτουργικής υποστήριξης."
+    "contactDescription": "Επικοινωνήστε με την Bright Service Company SARL στον Λίβανο τηλεφωνικά ή μέσω email για υπηρεσίες διαχείρισης εγκαταστάσεων και λειτουργικής υποστήριξης.",
+    "contactMobile": "Κινητό",
+    "contactOffice": "Γραφείο",
+    "contactCopy": "Αντιγραφή",
+    "contactCopied": "Αντιγράφηκε",
+    "contactCallAction": "Καλέστε μας",
+    "contactEmailAction": "Στείλτε email",
+    "contactVisitTitle": "Επισκεφθείτε μας",
+    "contactVisitNote": "Το γραφείο μας βρίσκεται στο Q Business Center.",
+    "contactAddress": [
+      "Q Business Center",
+      "Οδός Daoud Ammoun",
+      "Forn El Chebbak, Λίβανος"
+    ],
+    "contactMaps": "Χάρτες Google",
+    "contactWaze": "Waze"
   }
 };
