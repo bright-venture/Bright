@@ -1,16 +1,25 @@
 // Zero-dependency static server for local development: node scripts/serve.mjs [port]
-// It only listens on this computer (127.0.0.1) and only serves the built site inside the project folder.
+// It only listens on this computer (127.0.0.1) and only serves the built site in site/,
+// with the same headers Netlify applies from site/_headers.
 import { createServer } from 'node:http';
 import { readFile, realpath, stat } from 'node:fs/promises';
 import { extname, isAbsolute, relative, resolve, sep } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { gzipSync } from 'node:zlib';
 
-const root = resolve(fileURLToPath(new URL('..', import.meta.url)));
+const root = resolve(fileURLToPath(new URL('../site', import.meta.url)));
 const realRoot = await realpath(root);
 const HOST = '127.0.0.1';
-// Project sources and tooling are never served, only the generated pages and assets.
-const PRIVATE = new Set(['src', 'source', 'scripts', 'node_modules']);
+// Netlify's _headers format; only the site-wide "/*" block is used here.
+const siteHeaders = {};
+try {
+  const lines = (await readFile(resolve(root, '_headers'), 'utf8')).split(/\r?\n/);
+  let global = false;
+  for (const line of lines) {
+    if (/^\S/.test(line)) global = line.trim() === '/*';
+    else if (global && line.includes(':')) siteHeaders[line.slice(0, line.indexOf(':')).trim()] = line.slice(line.indexOf(':') + 1).trim();
+  }
+} catch {}
 const requested = process.argv[2] || process.env.PORT;
 let port = Number(requested || 4321);
 
@@ -30,16 +39,16 @@ const TYPES = {
   '.txt': 'text/plain; charset=utf-8',
 };
 
-// Returns the file inside the project for a URL path, or null if the path tries to leave it
+// Returns the file inside site/ for a URL path, or null if the path tries to leave it
 // (../, encoded slashes or backslashes, sibling folders such as ../Bright-other, symlinks),
-// targets a hidden file, or a private folder.
+// or targets a hidden file or Netlify's config file.
 async function resolveInside(path) {
   if (path.includes('\0')) return null;
   const file = resolve(root, '.' + sep + path);
   const rel = relative(root, file);
   if (!rel || rel.startsWith('..') || isAbsolute(rel)) return null;
   const parts = rel.split(sep);
-  if (parts.some(part => part.startsWith('.')) || PRIVATE.has(parts[0])) return null;
+  if (parts.some(part => part.startsWith('.')) || rel === '_headers') return null;
   // Follow symlinks and check again, so a link cannot point outside the project.
   const real = await realpath(file);
   const realRel = relative(realRoot, real);
@@ -71,7 +80,7 @@ const server = createServer(async (req, res) => {
     }
     let body = await readFile(file);
     const type = TYPES[extname(file).toLowerCase()] || 'application/octet-stream';
-    const headers = { 'Content-Type': type, 'Cache-Control': 'no-cache' };
+    const headers = { ...siteHeaders, 'Content-Type': type, 'Cache-Control': 'no-cache' };
     // Compress text like the production host does, so local audits are representative.
     if (/text|json|xml|javascript/.test(type) && /\bgzip\b/.test(req.headers['accept-encoding'] || '')) {
       body = gzipSync(body);

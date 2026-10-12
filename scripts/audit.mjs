@@ -13,7 +13,7 @@ const args = process.argv.slice(2);
 const LANGS = ['en', 'ar', 'el'], DEVICES = ['mobile', 'desktop'];
 const RUNS = Number(args.find(a => /^x\d+$/.test(a))?.slice(1) || 1);
 const options = args.filter(a => !/^x\d+$/.test(a));
-const all = [...readFileSync('sitemap.xml', 'utf8').matchAll(/<loc>https?:\/\/[^/]+(\/[^<]*)<\/loc>/g)].map(m => m[1]);
+const all = [...readFileSync('site/sitemap.xml', 'utf8').matchAll(/<loc>https?:\/\/[^/]+(\/[^<]*)<\/loc>/g)].map(m => m[1]);
 const langOf = path => LANGS.find(l => path.startsWith(`/${l}/`)) || 'en';
 const slugOf = path => path.replace(/^\/(ar|el)\//, '/').replace(/\//g, '') || 'home';
 const given = { langs: options.filter(a => LANGS.includes(a)), devices: options.filter(a => DEVICES.includes(a)), slugs: options.filter(a => !LANGS.includes(a) && !DEVICES.includes(a)) };

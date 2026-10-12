@@ -1,4 +1,4 @@
-// Builds the static site from src/ into the repo root, which is what Netlify publishes:
+// Builds the static site from src/ into site/, the only folder Netlify publishes:
 // the homepage and every service page in each language (/, /ar/, /el/, /porter-services/, /ar/porter-services/ ...),
 // optimized images, the Arabic font, the video, robots.txt and sitemap.xml.
 // Run: npm run build
@@ -12,6 +12,9 @@ import subsetFont from 'subset-font';
 
 const root = resolve(fileURLToPath(new URL('..', import.meta.url)));
 const at = (...parts) => join(root, ...parts);
+// Netlify publishes only this folder, so sources and tooling never become public.
+const OUT = 'site';
+const out = (...parts) => join(root, OUT, ...parts);
 
 const SITE = 'https://brightlb.com';
 const LANGS = {
@@ -46,21 +49,21 @@ async function exists(path) {
 }
 
 async function writeOut(path, content) {
-  await mkdir(dirname(at(path)), { recursive: true });
-  await writeFile(at(path), content);
+  await mkdir(dirname(out(path)), { recursive: true });
+  await writeFile(out(path), content);
 }
 
 // Deletes generated files in a folder that this build did not produce (old photos, old video versions).
 async function prune(folder, keep) {
-  await mkdir(at(folder), { recursive: true });
-  for (const file of await readdir(at(folder))) if (!keep.has(file)) await rm(at(folder, file));
+  await mkdir(out(folder), { recursive: true });
+  for (const file of await readdir(out(folder))) if (!keep.has(file)) await rm(out(folder, file));
 }
 
 // Image variants are only regenerated when the source is newer than the output.
 async function render(source, output, pipeline) {
-  await mkdir(dirname(at(output)), { recursive: true });
-  if (!(await isFresh(at(source), at(output)))) await pipeline(sharp(at(source))).toFile(at(output));
-  return sharp(at(output)).metadata();
+  await mkdir(dirname(out(output)), { recursive: true });
+  if (!(await isFresh(at(source), out(output)))) await pipeline(sharp(at(source))).toFile(out(output));
+  return sharp(out(output)).metadata();
 }
 
 // Photo files are named after a hash of the original, so they can be cached for a year
@@ -75,7 +78,7 @@ async function buildPhotos(names) {
     for (const w of widths) {
       const file = `${name}-${hash}-${w}.webp`;
       keep.add(file);
-      if (!(await exists(at('assets/img', file)))) await render(source, `assets/img/${file}`, img => img.resize({ width: w }).webp({ quality: 70, effort: 6 }));
+      if (!(await exists(out('assets/img', file)))) await render(source, `assets/img/${file}`, img => img.resize({ width: w }).webp({ quality: 70, effort: 6 }));
     }
     photos[name] = {
       width, height, source,
@@ -94,7 +97,7 @@ async function buildShareImages(pages, photos) {
     if (images[key]) continue;
     const file = `${key}-${photos[hero].src.match(/-([0-9a-f]{8})-/)[1]}.jpg`;
     keep.add(file);
-    if (!(await exists(at('assets/og', file)))) await render(photos[hero].source, `assets/og/${file}`, img => img.resize(1200, 630, { fit: 'cover' }).jpeg({ quality: 80, mozjpeg: true }));
+    if (!(await exists(out('assets/og', file)))) await render(photos[hero].source, `assets/og/${file}`, img => img.resize(1200, 630, { fit: 'cover' }).jpeg({ quality: 80, mozjpeg: true }));
     images[key] = `/assets/og/${file}`;
   }
   await prune('assets/og', keep);
@@ -116,7 +119,6 @@ async function buildBrand() {
   await render(source, 'assets/brand/favicon-32.png', img => img.resize(32, 32, { fit: 'contain', background: '#0000' }).png());
   await render(source, 'assets/brand/bright-512.png', img => img.resize(512, 512, { fit: 'contain', background: '#0000' }).png());
   await render(source, 'assets/brand/apple-touch-icon.png', img => img.resize(140, 140, { fit: 'contain', background: '#fff' }).extend({ top: 20, bottom: 20, left: 20, right: 20, background: '#fff' }).flatten({ background: '#fff' }).png());
-  await rm(at('assets/brand/og-image.jpg'), { force: true });
   return brand;
 }
 
@@ -127,8 +129,8 @@ async function buildVideo() {
   const files = { src: `bright-video-${hashOf(video)}.mp4` };
   const poster = await readFile(at('source/video/bright-video-poster.jpg'));
   files.poster = `bright-video-poster-${hashOf(poster)}.webp`;
-  if (!(await exists(at('assets/video', files.src)))) { await mkdir(at('assets/video'), { recursive: true }); await copyFile(at('source/video/bright-video.mp4'), at('assets/video', files.src)) }
-  if (!(await exists(at('assets/video', files.poster)))) await render('source/video/bright-video-poster.jpg', `assets/video/${files.poster}`, img => img.webp({ quality: 70, effort: 6 }));
+  if (!(await exists(out('assets/video', files.src)))) { await mkdir(out('assets/video'), { recursive: true }); await copyFile(at('source/video/bright-video.mp4'), out('assets/video', files.src)) }
+  if (!(await exists(out('assets/video', files.poster)))) await render('source/video/bright-video-poster.jpg', `assets/video/${files.poster}`, img => img.webp({ quality: 70, effort: 6 }));
   await prune('assets/video', new Set(Object.values(files)));
   return { src: `/assets/video/${files.src}`, poster: `/assets/video/${files.poster}` };
 }
@@ -138,8 +140,8 @@ async function buildVideo() {
 async function buildFonts(text) {
   let css = '';
   const files = {};
-  await rm(at('assets/fonts'), { recursive: true, force: true });
-  await mkdir(at('assets/fonts'), { recursive: true });
+  await rm(out('assets/fonts'), { recursive: true, force: true });
+  await mkdir(out('assets/fonts'), { recursive: true });
   for (const [family, pkg, subsets] of FONTS) {
     const sourceCss = await readFile(at(`node_modules/@fontsource-variable/${pkg}/wght.css`), 'utf8');
     for (const file of subsets) {
@@ -148,7 +150,7 @@ async function buildFonts(text) {
       const original = await readFile(at(`node_modules/@fontsource-variable/${pkg}/files/${file}-wght-normal.woff2`));
       const subset = await subsetFont(original, text, { targetFormat: 'woff2' });
       files[file] = `/assets/fonts/${file}-${hashOf(subset)}.woff2`;
-      await writeFile(at(files[file].slice(1)), subset);
+      await writeFile(out(files[file].slice(1)), subset);
       const weight = block[1].match(/font-weight:\s*([^;]+);/)[1];
       const range = block[1].match(/unicode-range:\s*([^;]+);/)[1];
       css += `@font-face{font-family:'${family}';font-style:normal;font-display:swap;font-weight:${weight};src:url(${files[file]}) format('woff2');unicode-range:${range}}`;
@@ -323,6 +325,26 @@ function renderPage(layout, lang, page, c, main, assets) {
     });
 }
 
+// Content-Security-Policy for Netlify (site/_headers). Everything is self-hosted; the inlined
+// <style> and <script> blocks are allowed by their exact SHA-256 hash, so no 'unsafe-inline'.
+// JSON-LD blocks are data, not scripts, and need no hash.
+function securityHeaders(pages) {
+  const hashes = { script: new Set(), style: new Set() };
+  const sha = text => `'sha256-${createHash('sha256').update(text).digest('base64')}'`;
+  for (const html of pages) {
+    for (const [, body] of html.matchAll(/<script>([\s\S]*?)<\/script>/g)) hashes.script.add(sha(body));
+    for (const [, body] of html.matchAll(/<style>([\s\S]*?)<\/style>/g)) hashes.style.add(sha(body));
+  }
+  const policy = [
+    "default-src 'self'",
+    `script-src 'self' ${[...hashes.script].join(' ')}`,
+    `style-src 'self' ${[...hashes.style].join(' ')}`,
+    "img-src 'self'", "font-src 'self'", "media-src 'self'", "connect-src 'self'",
+    "object-src 'none'", "base-uri 'self'", "form-action 'self'", "frame-ancestors 'none'", 'upgrade-insecure-requests',
+  ].join('; ');
+  return `/*\n  Content-Security-Policy: ${policy}\n`;
+}
+
 async function build() {
   const [layout, homeTemplate] = await Promise.all([readFile(at('src/layout.html'), 'utf8'), readFile(at('src/home.html'), 'utf8')]);
   const content = new Function(`${await readFile(at('src/content.js'), 'utf8')};return CONTENT`)();
@@ -353,7 +375,7 @@ async function build() {
   const js = (await transform(await readFile(at('src/app.js'), 'utf8'), { loader: 'js', minify: true, target: 'es2020' })).code.trim();
   const assets = { photos, logos, brand, css, js, fonts: fonts.files, video, shareImages };
 
-  const written = [];
+  const written = [], htmlPages = [];
   for (const lang of Object.keys(LANGS)) {
     const c = content[lang];
     const services = servicePages(lang);
@@ -369,9 +391,12 @@ async function build() {
       if (leftover) throw new Error(`Unrendered "${leftover[0]}" in ${pagePath(lang, page.slug)}`);
       const file = `${pagePath(lang, page.slug).slice(1)}index.html`;
       await writeOut(file, html);
+      htmlPages.push(html);
       written.push(`${pagePath(lang, page.slug)} ${(html.length / 1024).toFixed(0)}K`);
     }
   }
+
+  await writeOut('_headers', securityHeaders(htmlPages));
 
   const urls = pages.map(page => {
     const links = Object.keys(LANGS).map(code => `<xhtml:link rel="alternate" hreflang="${code}" href="${SITE}${pagePath(code, page.slug)}"/>`).join('')
@@ -379,7 +404,7 @@ async function build() {
     return Object.keys(LANGS).map(code => `  <url><loc>${SITE}${pagePath(code, page.slug)}</loc>${links}</url>\n`).join('');
   }).join('');
   await writeOut('sitemap.xml', `<?xml version="1.0" encoding="UTF-8"?>\n<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9" xmlns:xhtml="http://www.w3.org/1999/xhtml">\n${urls}</urlset>\n`);
-  await writeOut('robots.txt', `User-agent: *\nAllow: /\nDisallow: /src/\nDisallow: /source/\nDisallow: /scripts/\n\nSitemap: ${SITE}/sitemap.xml\n`);
+  await writeOut('robots.txt', `User-agent: *\nAllow: /\n\nSitemap: ${SITE}/sitemap.xml\n`);
 
   console.log(`Built ${written.length} pages: ${written.join(', ')}\n${Object.keys(photos).length} photos, ${LOGOS.length} logos, video ${video.src}`);
 }

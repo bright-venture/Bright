@@ -1,0 +1,2 @@
+/*
+  Content-Security-Policy: default-src 'self'; script-src 'self' 'sha256-zzDVe2j+HnZ54YK4vDra+nDRKlAD/N/CuP5L1f+9fYI=' 'sha256-/AniUEOAGteVlq9XwSXT8aMqljsQEDFG9JyFiQ/MEBA=' 'sha256-Du+OJKJSbdUgz5nrHeWWINvez6XKDDU/tyj/5c2uvwo='; style-src 'self' 'sha256-obGXXruPd9Juan9znbKd9aA9w9Y9d74HSZLH3NAaNKM='; img-src 'self'; font-src 'self'; media-src 'self'; connect-src 'self'; object-src 'none'; base-uri 'self'; form-action 'self'; frame-ancestors 'none'; upgrade-insecure-requests
