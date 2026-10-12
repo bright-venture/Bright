@@ -9,13 +9,13 @@
 <header class="header">
   <a href="{{homePath}}" class="brand"><img src="/assets/brand/bright.webp" alt="" width="{{brandWidth}}" height="{{brandHeight}}" fetchpriority="low"><span class="brand-name" dir="ltr">Bright Service<span>Company SARL</span><span class="brand-slogan">Glad to help you</span></span></a>
   <button class="menu-toggle" type="button" aria-expanded="false" aria-controls="main-navigation" data-aria="menuLabel"><span class="menu-icon" aria-hidden="true"></span></button>
-  <nav id="main-navigation" class="navigation" data-aria="navLabel"><a href="{{anchorBase}}#about" data-t="navAbout">About Bright</a><a href="{{anchorBase}}#services" data-t="navServices">Services</a><a href="{{anchorBase}}#work" data-t="navWork">Our work</a><a href="{{anchorBase}}#standards" data-t="navQuality">Our standards</a></nav>
+  <nav id="main-navigation" class="navigation" data-aria="navLabel"><a href="{{anchorBase}}#about" data-t="navAbout">About Bright</a><a href="{{anchorBase}}#services" data-t="navServices">Services</a><a href="{{anchorBase}}#work" data-t="navWork">Our work</a><a href="{{anchorBase}}#standards" data-t="navQuality">Our standards</a><a href="{{contactPath}}"{{contactCurrent}} data-t="navContact">Contact</a></nav>
   <div class="languages" data-aria="languageLabel"><!--languages--></div>
 </header>
 <main id="main">
 {{main}}
 </main>
-<footer><a href="{{homePath}}" class="footer-brand">bright<span data-t="footerDescriptor">Facility & support services</span></a><p data-t="footerText">Bright Service Company SARL · Established 2005</p><a href="#main" data-t="backTop">Back to top</a></footer>
+<footer><a href="{{homePath}}" class="footer-brand">bright<span data-t="footerDescriptor">Facility & support services</span></a><div class="footer-info"><p data-t="footerText">Bright Service Company SARL · Established 2005</p><p class="footer-contact"><!--footerContact--></p></div><a href="#main" data-t="backTop">Back to top</a></footer>
 {{script}}
 </body>
 </html>

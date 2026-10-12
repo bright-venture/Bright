@@ -25,6 +25,13 @@ const LANGS = {
 const LOGOS = [['spinneys', 'Spinneys'], ['happy', 'Happy'], ['skygate', 'Sky Gate'], ['noknok', 'Noknok'], ['grabngo', 'Grab’n Go'], ['maliks', 'Maliks'], ['tawfeer', 'Tawfeer'], ['beirut-duty-free', 'Beirut Duty Free'], ['teska', 'Teska']];
 const HOME_PHOTOS = ['cleaning-food-hygiene', 'warehouse-order-picking', 'porter-vehicle'];
 const HOME_HERO = 'cleaning-mall';
+// Contact details shown on the contact page, in the footer and in structured data.
+// Phones in international format (Lebanese landlines drop the leading 0 after +961).
+const CONTACT = {
+  email: 'contact@brightlb.com',
+  phones: ['+961 79 300 350', '+961 79 300 359', '+961 1 488 450'],
+};
+const tel = phone => 'tel:' + phone.replace(/[^\d+]/g, '');
 const PHOTO_WIDTHS = [480, 640, 800, 1200];
 // Rendered widths of each photo slot (layout widths come from style.css: 18px phone gutters, 1200px max content).
 const SIZES = {
@@ -173,9 +180,15 @@ function structuredData(lang, page, c, shareImage) {
     foundingDate: '2005',
     areaServed: { '@type': 'Country', name: 'Lebanon' },
     knowsAbout: c.services.map(service => service.title),
+    email: CONTACT.email,
+    telephone: CONTACT.phones[0],
+    contactPoint: CONTACT.phones.map(phone => ({
+      '@type': 'ContactPoint', telephone: phone, email: CONTACT.email, contactType: 'customer service',
+      areaServed: 'LB', availableLanguage: ['English', 'Arabic', 'Greek'],
+    })),
   };
   const graph = [organization, {
-    '@type': 'WebPage',
+    '@type': page.key === 'contact' ? 'ContactPage' : 'WebPage',
     '@id': `${url}#webpage`,
     url, name: page.title, description: page.description, inLanguage: lang,
     isPartOf: { '@id': `${SITE}/#website` },
@@ -184,14 +197,15 @@ function structuredData(lang, page, c, shareImage) {
   if (!page.slug) {
     graph.push({ '@type': 'WebSite', '@id': `${SITE}/#website`, url: `${SITE}/`, name: 'Bright', inLanguage: Object.keys(LANGS), publisher: { '@id': `${SITE}/#organization` } });
   } else {
-    graph.push({
+    if (page.service) graph.push({
       '@type': 'Service', '@id': `${url}#service`, name: page.service.title, description: page.service.intro, url,
       provider: { '@id': `${SITE}/#organization` }, areaServed: { '@type': 'Country', name: 'Lebanon' }, image: `${SITE}${shareImage}`,
-    }, {
+    });
+    graph.push({
       '@type': 'BreadcrumbList',
       itemListElement: [
         { '@type': 'ListItem', position: 1, name: 'Bright', item: `${SITE}${pagePath(lang)}` },
-        { '@type': 'ListItem', position: 2, name: page.service.title, item: url },
+        { '@type': 'ListItem', position: 2, name: page.service ? page.service.title : c.navContact, item: url },
       ],
     });
   }
@@ -291,7 +305,17 @@ function serviceMain(lang, s, c, services, assets) {
     + `<aside><div><h2>${esc(s.scopeTitle || c.scopeLabel)}</h2>${list(s.items)}</div><div><h2>${esc(c.benefitsLabel)}</h2>${list(s.benefits)}</div></aside></section>`
     + (s.gallery?.length ? `<section class="section service-photo-gallery"><h2>${esc(s.galleryTitle)}</h2><div class="service-photo-grid">${s.gallery.map(g => `<figure>${photo(assets, g.image.replace(/\.webp$/, ''), SIZES.grid, g.alt)}<figcaption>${esc(g.caption)}</figcaption></figure>`).join('')}</div></section>` : '')
     + `<section class="section other-services"><h2>${esc(c.otherServices)}</h2><div>${otherLinks}</div></section>`
-    + `<section class="closing"><p class="eyebrow">${esc(c.sloganLabel)}</p><h2>${esc(c.serviceMotto)}</h2><p>${esc(c.closingBody)}</p><a class="button light" href="${home}#services">${esc(c.backServices)}</a></section>`;
+    + `<section class="closing"><p class="eyebrow">${esc(c.sloganLabel)}</p><h2>${esc(c.serviceMotto)}</h2><p>${esc(c.closingBody)}</p><div class="hero-actions"><a class="button light" href="${home}#services">${esc(c.backServices)}</a><a class="button outline" href="${pagePath(lang, 'contact')}">${esc(c.contactAction)}</a></div></section>`;
+}
+
+function contactMain(lang, c) {
+  const phones = CONTACT.phones.map(phone => `<li><a href="${tel(phone)}" dir="ltr">${esc(phone)}</a></li>`).join('');
+  return `<section class="service-hero contact-hero"><div><p class="eyebrow">${esc(c.contactLabel)}</p><h1>${esc(c.contactTitle)}</h1><p class="service-slogan">${esc(c.serviceMotto)}</p><p class="service-intro">${esc(c.contactIntro)}</p></div></section>`
+    + `<section class="section contact-details"><div class="contact-grid">`
+    + `<article class="contact-card"><h2>${esc(c.contactPhoneTitle)}</h2><p>${esc(c.contactPhoneNote)}</p><ul class="contact-list">${phones}</ul></article>`
+    + `<article class="contact-card"><h2>${esc(c.contactEmailTitle)}</h2><p>${esc(c.contactEmailNote)}</p><ul class="contact-list"><li><a href="mailto:${CONTACT.email}" dir="ltr">${CONTACT.email}</a></li></ul></article>`
+    + `</div></section>`
+    + `<section class="closing"><p class="eyebrow">${esc(c.sloganLabel)}</p><h2>${esc(c.serviceMotto)}</h2><p>${esc(c.closingBody)}</p><a class="button light" href="${pagePath(lang)}#services">${esc(c.backServices)}</a></section>`;
 }
 
 function renderPage(layout, lang, page, c, main, assets) {
@@ -308,6 +332,9 @@ function renderPage(layout, lang, page, c, main, assets) {
     .replace('{{main}}', () => main)
     .replace('{{script}}', () => `<script>${assets.js}</script>`)
     .replace(/\{\{homePath\}\}/g, pagePath(lang))
+    .replace(/\{\{contactPath\}\}/g, pagePath(lang, 'contact'))
+    .replace('{{contactCurrent}}', page.key === 'contact' ? ' aria-current="page"' : '')
+    .replace('<!--footerContact-->', `<a href="mailto:${CONTACT.email}" dir="ltr">${CONTACT.email}</a><a href="${tel(CONTACT.phones[0])}" dir="ltr">${esc(CONTACT.phones[0])}</a>`)
     // Section links stay on the page at home, and point back to the homepage from service pages.
     .replace(/\{\{anchorBase\}\}/g, page.slug ? pagePath(lang) : '')
     .replace('{{brandWidth}}', assets.brand.width)
@@ -354,6 +381,7 @@ async function build() {
 
   const pages = [{ key: 'home', slug: '', hero: HOME_HERO }];
   for (const s of servicePages('en')) pages.push({ key: s.slug, slug: s.slug, hero: s.image.replace(/\.webp$/, '') });
+  pages.push({ key: 'contact', slug: 'contact', hero: HOME_HERO });
 
   const photoNames = new Set([HOME_HERO, ...HOME_PHOTOS, ...[...homeTemplate.matchAll(/data-photo="([\w-]+)"/g)].map(m => m[1])]);
   for (const lang of Object.keys(LANGS)) for (const s of servicePages(lang)) {
@@ -380,12 +408,13 @@ async function build() {
     const c = content[lang];
     const services = servicePages(lang);
     for (const page of pages) {
-      const s = page.slug && services.find(x => x.slug === page.slug);
-      if (page.slug && !s) throw new Error(`Service "${page.slug}" missing in ${lang}`);
-      const meta = s
-        ? { ...page, service: s, title: `${s.title} | Bright Service Company SARL`, description: s.intro, imageAlt: s.alt }
+      const contact = page.key === 'contact';
+      const s = page.slug && !contact && services.find(x => x.slug === page.slug);
+      if (page.slug && !contact && !s) throw new Error(`Service "${page.slug}" missing in ${lang}`);
+      const meta = s ? { ...page, service: s, title: `${s.title} | Bright Service Company SARL`, description: s.intro, imageAlt: s.alt }
+        : contact ? { ...page, title: c.contactPageTitle, description: c.contactDescription, imageAlt: c.heroAlt }
         : { ...page, title: c.title, description: c.description, imageAlt: c.heroAlt };
-      const main = s ? serviceMain(lang, s, c, services, assets) : homeMain(homeTemplate, lang, c, services, assets);
+      const main = s ? serviceMain(lang, s, c, services, assets) : contact ? contactMain(lang, c) : homeMain(homeTemplate, lang, c, services, assets);
       const html = renderPage(layout, lang, meta, c, main, assets);
       const leftover = html.match(/\{\{\w+\}\}|<!--\w+-->|data-(t|alt|aria|photo)=/);
       if (leftover) throw new Error(`Unrendered "${leftover[0]}" in ${pagePath(lang, page.slug)}`);

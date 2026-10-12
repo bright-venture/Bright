@@ -11,7 +11,7 @@ Static marketing site for Bright Service Company SARL (facility and support serv
 
 ## Pages
 
-- 15 pages: the homepage and four service pages in `en` (`/`), `ar` (`/ar/`) and `el` (`/el/`), e.g. `/porter-services/`, `/ar/porter-services/`. Maintenance has no page; its card and links go to https://be-rightbright.com/.
+- 18 pages: the homepage, four service pages and the contact page (`/contact/`) in `en` (`/`), `ar` (`/ar/`) and `el` (`/el/`), e.g. `/porter-services/`, `/ar/porter-services/`. Maintenance has no page; its card and links go to https://be-rightbright.com/.
 - Each page has canonical, hreflang, Open Graph (a share image cropped from its hero photo) and JSON-LD (Organization, WebPage, plus Service and BreadcrumbList on service pages).
 
 ## Layout
@@ -31,4 +31,4 @@ Static marketing site for Bright Service Company SARL (facility and support serv
 - When adding copy, add it to all three locales.
 - Arabic: Western digits, "شركة برايت للخدمات ش.م.م." for the legal name, plural address (أعمالكم), porter service is "مساعدة المتسوقين" (never حمّال).
 - Greek: sentence case for titles, porter service is "μεταφοράς αγορών" (never αχθοφόρος), motto "Χαρά μας να σας βοηθάμε".
-- Contact details are still awaiting confirmation from the client; do not invent any.
+- Contact details live in `CONTACT` at the top of `scripts/build.mjs` (contact page, footer, structured data): contact@brightlb.com (a Google Workspace alias of m.lamaa@brightlb.com) and +961 79 300 350, +961 79 300 359, +961 1 488 450. Lebanese numbers drop the leading 0 after +961. Do not invent other details (address, hours, WhatsApp) until the client provides them.

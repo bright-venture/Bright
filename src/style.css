@@ -19,3 +19,15 @@
 @media(prefers-reduced-motion:reduce){.js .navigation,.menu-icon,.menu-icon::before,.menu-icon::after{transition:none!important}}
 /* Sections below the first screen skip style and layout until scrolled near (big win for long Arabic pages); auto remembers their real size */
 main>section:not(.hero):not(.service-hero):not(.clients){content-visibility:auto;contain-intrinsic-size:auto 900px}
+/* Contact page, footer contact line, and the second closing button on light backgrounds */
+.contact-hero{grid-template-columns:1fr}.contact-hero>div{max-width:760px}
+.contact-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:20px}
+.contact-card{padding:30px;border:1px solid var(--border);border-radius:5px;background:var(--pale)}
+.contact-card h2{font-size:26px;letter-spacing:-.5px}.contact-card>p{color:var(--muted);margin-top:10px}
+.contact-list{list-style:none;padding:0;margin:20px 0 0;display:grid;gap:6px}
+.contact-list a{display:inline-flex;align-items:center;min-height:44px;font-size:21px;font-weight:700;color:var(--blue);overflow-wrap:anywhere}
+.contact-list a:hover{text-decoration:underline}
+.closing .hero-actions{margin-top:25px}.closing .hero-actions .button{margin-top:0}
+.closing .button.outline{color:var(--blue);border-color:var(--blue);background:transparent}
+.footer-contact{margin-top:6px;display:flex;flex-wrap:wrap;gap:4px 14px}.footer-contact a{color:var(--ink)}.footer-contact a:hover{color:var(--blue)}
+@media(max-width:680px){.contact-grid{grid-template-columns:1fr}.contact-card{padding:24px}.contact-list a{font-size:20px}}

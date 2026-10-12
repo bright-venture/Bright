@@ -194,7 +194,18 @@ const CONTENT = {
       "Bright-branded porter loading shopping bags into a customer’s vehicle"
     ],
     "navLabel": "Main navigation",
-    "languageLabel": "Language"
+    "languageLabel": "Language",
+    "navContact": "Contact",
+    "contactAction": "Contact us",
+    "contactLabel": "CONTACT US",
+    "contactTitle": "Get in touch",
+    "contactIntro": "Tell us about your premises and the support you need. Our team will get back to you to discuss a suitable service plan and a tailored quotation.",
+    "contactPhoneTitle": "Call us",
+    "contactPhoneNote": "Speak directly with our team.",
+    "contactEmailTitle": "Email us",
+    "contactEmailNote": "Send us your request and your site details.",
+    "contactPageTitle": "Contact us | Bright Service Company SARL",
+    "contactDescription": "Contact Bright Service Company SARL in Lebanon by phone or email for facility management and operational support services."
   },
   "ar": {
     "title": "برايت | خدمات المرافق والدعم",
@@ -391,7 +402,18 @@ const CONTENT = {
       "عامل بزي برايت يحمّل أكياس المشتريات في سيارة عميلة"
     ],
     "navLabel": "التنقل الرئيسي",
-    "languageLabel": "اللغة"
+    "languageLabel": "اللغة",
+    "navContact": "اتصل بنا",
+    "contactAction": "تواصلوا معنا",
+    "contactLabel": "تواصل معنا",
+    "contactTitle": "تواصلوا معنا",
+    "contactIntro": "أخبرونا عن مقارّكم والدعم الذي تحتاجونه، وسيتواصل معكم فريقنا لمناقشة خطة خدمة مناسبة وإعداد عرض سعر وفق متطلباتكم.",
+    "contactPhoneTitle": "اتصلوا بنا",
+    "contactPhoneNote": "تحدّثوا مباشرة مع فريقنا.",
+    "contactEmailTitle": "راسلونا عبر البريد الإلكتروني",
+    "contactEmailNote": "أرسلوا إلينا طلبكم وتفاصيل موقعكم.",
+    "contactPageTitle": "اتصل بنا | Bright Service Company SARL",
+    "contactDescription": "تواصلوا مع شركة برايت للخدمات ش.م.م. في لبنان عبر الهاتف أو البريد الإلكتروني للاستفسار عن خدمات إدارة المرافق والدعم التشغيلي."
   },
   "el": {
     "title": "Bright | Υπηρεσίες εγκαταστάσεων και υποστήριξης",
@@ -588,6 +610,17 @@ const CONTENT = {
       "Εργαζόμενος με στολή Bright φορτώνει σακούλες αγορών σε όχημα"
     ],
     "navLabel": "Κύρια πλοήγηση",
-    "languageLabel": "Γλώσσα"
+    "languageLabel": "Γλώσσα",
+    "navContact": "Επικοινωνία",
+    "contactAction": "Επικοινωνήστε μαζί μας",
+    "contactLabel": "ΕΠΙΚΟΙΝΩΝΙΑ",
+    "contactTitle": "Επικοινωνήστε μαζί μας",
+    "contactIntro": "Πείτε μας για τους χώρους σας και την υποστήριξη που χρειάζεστε. Η ομάδα μας θα επικοινωνήσει μαζί σας για να συζητήσουμε ένα κατάλληλο σχέδιο υπηρεσιών και μια προσαρμοσμένη προσφορά.",
+    "contactPhoneTitle": "Καλέστε μας",
+    "contactPhoneNote": "Μιλήστε απευθείας με την ομάδα μας.",
+    "contactEmailTitle": "Στείλτε μας email",
+    "contactEmailNote": "Στείλτε μας το αίτημά σας και τα στοιχεία του χώρου σας.",
+    "contactPageTitle": "Επικοινωνία | Bright Service Company SARL",
+    "contactDescription": "Επικοινωνήστε με την Bright Service Company SARL στον Λίβανο τηλεφωνικά ή μέσω email για υπηρεσίες διαχείρισης εγκαταστάσεων και λειτουργικής υποστήριξης."
   }
 };
