@@ -1,0 +1,21 @@
+<!doctype html>
+<html lang="{{lang}}" dir="{{dir}}">
+<head>
+  <meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+  {{head}}
+</head>
+<body>
+<a class="skip" href="#main" data-t="skip">Skip to content</a>
+<header class="header">
+  <a href="{{homePath}}" class="brand"><img src="/assets/brand/bright.webp" alt="" width="{{brandWidth}}" height="{{brandHeight}}" fetchpriority="low"><span class="brand-name" dir="ltr">Bright Service<span>Company SARL</span><span class="brand-slogan">Glad to help you</span></span></a>
+  <button class="menu-toggle" type="button" aria-expanded="false" aria-controls="main-navigation" data-t="menuLabel">Menu</button>
+  <nav id="main-navigation" class="navigation" data-aria="navLabel"><a href="{{anchorBase}}#about" data-t="navAbout">About Bright</a><a href="{{anchorBase}}#services" data-t="navServices">Services</a><a href="{{anchorBase}}#work" data-t="navWork">Our work</a><a href="{{anchorBase}}#standards" data-t="navQuality">Our standards</a></nav>
+  <div class="languages" data-aria="languageLabel"><!--languages--></div>
+</header>
+<main id="main">
+{{main}}
+</main>
+<footer><a href="{{homePath}}" class="footer-brand">bright<span data-t="footerDescriptor">Facility & support services</span></a><p data-t="footerText">Bright Service Company SARL · Established 2005</p><a href="#main" data-t="backTop">Back to top</a></footer>
+{{script}}
+</body>
+</html>

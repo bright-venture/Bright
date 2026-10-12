@@ -1,5 +1,6 @@
 // Builds the static site from src/ into the repo root, which is what Netlify publishes:
-// index.html (en), ar/index.html, el/index.html, optimized images, fonts, robots.txt and sitemap.xml.
+// the homepage and every service page in each language (/, /ar/, /el/, /porter-services/, /ar/porter-services/ ...),
+// optimized images, the Arabic font, the video, robots.txt and sitemap.xml.
 // Run: npm run build
 import { createHash } from 'node:crypto';
 import { copyFile, mkdir, readdir, readFile, rm, stat, writeFile } from 'node:fs/promises';
@@ -14,29 +15,45 @@ const at = (...parts) => join(root, ...parts);
 
 const SITE = 'https://brightlb.com';
 const LANGS = {
-  en: { path: '/', dir: 'ltr', locale: 'en_US', label: 'EN', preload: ['dm-sans-latin', 'manrope-latin'] },
+  en: { path: '/', dir: 'ltr', locale: 'en_US', label: 'EN', preload: [] },
   ar: { path: '/ar/', dir: 'rtl', locale: 'ar_LB', label: 'عربي', preload: ['noto-sans-arabic-arabic'] },
-  el: { path: '/el/', dir: 'ltr', locale: 'el_GR', label: 'ΕΛ', preload: ['dm-sans-latin', 'manrope-greek'] },
+  el: { path: '/el/', dir: 'ltr', locale: 'el_GR', label: 'ΕΛ', preload: [] },
 };
 const LOGOS = [['spinneys', 'Spinneys'], ['happy', 'Happy'], ['skygate', 'Sky Gate'], ['noknok', 'Noknok'], ['grabngo', 'Grab’n Go'], ['maliks', 'Maliks'], ['tawfeer', 'Tawfeer'], ['beirut-duty-free', 'Beirut Duty Free'], ['teska', 'Teska']];
-const PHOTO_WIDTHS = [480, 640, 800, 1200, 1800];
-const GALLERY_SIZES = '(max-width: 380px) 88vw, (max-width: 760px) 44vw, 22vw';
-// [family, fontsource package, files] — only the subsets the site's three languages need.
-const FONTS = [
-  ['DM Sans', 'dm-sans', ['dm-sans-latin', 'dm-sans-latin-ext']],
-  ['Manrope', 'manrope', ['manrope-latin', 'manrope-latin-ext', 'manrope-greek']],
-  ['Noto Sans Arabic', 'noto-sans-arabic', ['noto-sans-arabic-arabic']],
-];
+const HOME_PHOTOS = ['cleaning-food-hygiene', 'warehouse-order-picking', 'porter-vehicle'];
+const HOME_HERO = 'cleaning-mall';
+const PHOTO_WIDTHS = [480, 640, 800, 1200];
+// Rendered widths of each photo slot (layout widths come from style.css: 18px phone gutters, 1200px max content).
+const SIZES = {
+  hero: '(max-width: 680px) calc(100vw - 36px), (min-width: 1264px) 560px, 45vw',
+  section: '(max-width: 680px) calc(100vw - 36px), (min-width: 1264px) 700px, 56vw',
+  grid: '(max-width: 680px) calc(100vw - 36px), (min-width: 1264px) 387px, 31vw',
+};
+// Latin and Greek use the system Arial; only Arabic pages need a web font.
+const FONTS = [['Noto Sans Arabic', 'noto-sans-arabic', ['noto-sans-arabic-arabic']]];
 
 const esc = text => String(text).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+const hashOf = data => createHash('sha256').update(data).digest('hex').slice(0, 8);
+const pad = index => String(index + 1).padStart(2, '0');
+const pagePath = (lang, slug) => LANGS[lang].path + (slug ? `${slug}/` : '');
 
 async function isFresh(source, output) {
   try { return (await stat(output)).mtimeMs >= (await stat(source)).mtimeMs } catch { return false }
 }
 
+async function exists(path) {
+  try { await stat(path); return true } catch { return false }
+}
+
 async function writeOut(path, content) {
   await mkdir(dirname(at(path)), { recursive: true });
   await writeFile(at(path), content);
+}
+
+// Deletes generated files in a folder that this build did not produce (old photos, old video versions).
+async function prune(folder, keep) {
+  await mkdir(at(folder), { recursive: true });
+  for (const file of await readdir(at(folder))) if (!keep.has(file)) await rm(at(folder, file));
 }
 
 // Image variants are only regenerated when the source is newer than the output.
@@ -46,25 +63,42 @@ async function render(source, output, pipeline) {
   return sharp(at(output)).metadata();
 }
 
+// Photo files are named after a hash of the original, so they can be cached for a year
+// and a replaced photo gets a new URL.
 async function buildPhotos(names) {
-  const photos = {};
-  // Drop sizes of photos that are no longer on the site.
-  await mkdir(at('assets/img'), { recursive: true });
-  for (const file of await readdir(at('assets/img'))) {
-    if (!names.includes(file.replace(/-d+.webp$/, ''))) await rm(at('assets/img', file));
-  }
+  const photos = {}, keep = new Set();
   for (const name of names) {
     const source = `source/photos/${name}.webp`;
+    const hash = hashOf(await readFile(at(source)));
     const { width, height } = await sharp(at(source)).metadata();
-    const widths = PHOTO_WIDTHS.filter(w => w <= width);
-    for (const w of widths) await render(source, `assets/img/${name}-${w}.webp`, img => img.resize({ width: w }).webp({ quality: 70, effort: 6 }));
+    const widths = [...PHOTO_WIDTHS.filter(w => w < width), width];
+    for (const w of widths) {
+      const file = `${name}-${hash}-${w}.webp`;
+      keep.add(file);
+      if (!(await exists(at('assets/img', file)))) await render(source, `assets/img/${file}`, img => img.resize({ width: w }).webp({ quality: 70, effort: 6 }));
+    }
     photos[name] = {
-      width, height,
-      src: `/assets/img/${name}-${widths.find(w => w >= 800) ?? widths.at(-1)}.webp`,
-      srcset: widths.map(w => `/assets/img/${name}-${w}.webp ${w}w`).join(', '),
+      width, height, source,
+      src: `/assets/img/${name}-${hash}-${widths.find(w => w >= 800) ?? width}.webp`,
+      srcset: widths.map(w => `/assets/img/${name}-${hash}-${w}.webp ${w}w`).join(', '),
     };
   }
+  await prune('assets/img', keep);
   return photos;
+}
+
+// One share image per page, cropped from that page's hero photo.
+async function buildShareImages(pages, photos) {
+  const images = {}, keep = new Set();
+  for (const { key, hero } of pages) {
+    if (images[key]) continue;
+    const file = `${key}-${photos[hero].src.match(/-([0-9a-f]{8})-/)[1]}.jpg`;
+    keep.add(file);
+    if (!(await exists(at('assets/og', file)))) await render(photos[hero].source, `assets/og/${file}`, img => img.resize(1200, 630, { fit: 'cover' }).jpeg({ quality: 80, mozjpeg: true }));
+    images[key] = `/assets/og/${file}`;
+  }
+  await prune('assets/og', keep);
+  return images;
 }
 
 async function buildLogos() {
@@ -82,19 +116,25 @@ async function buildBrand() {
   await render(source, 'assets/brand/favicon-32.png', img => img.resize(32, 32, { fit: 'contain', background: '#0000' }).png());
   await render(source, 'assets/brand/bright-512.png', img => img.resize(512, 512, { fit: 'contain', background: '#0000' }).png());
   await render(source, 'assets/brand/apple-touch-icon.png', img => img.resize(140, 140, { fit: 'contain', background: '#fff' }).extend({ top: 20, bottom: 20, left: 20, right: 20, background: '#fff' }).flatten({ background: '#fff' }).png());
-  await render('source/photos/real-70.webp', 'assets/brand/og-image.jpg', img => img.resize(1200, 630, { fit: 'cover' }).jpeg({ quality: 80, mozjpeg: true }));
+  await rm(at('assets/brand/og-image.jpg'), { force: true });
   return brand;
 }
 
-// Fonts are cut down to the characters the site actually uses (all languages); shaping features
-// such as Arabic joining forms are kept. File names carry a content hash so they can be cached forever.
 // The video is served as-is (H.264, index at the start so it streams); the poster becomes WebP.
+// Both get hashed names so a new cut replaces the cached one immediately.
 async function buildVideo() {
-  await mkdir(at('assets/video'), { recursive: true });
-  if (!(await isFresh(at('source/video/bright-video.mp4'), at('assets/video/bright-video.mp4')))) await copyFile(at('source/video/bright-video.mp4'), at('assets/video/bright-video.mp4'));
-  await render('source/video/bright-video-poster.jpg', 'assets/video/bright-video-poster.webp', img => img.webp({ quality: 70, effort: 6 }));
+  const video = await readFile(at('source/video/bright-video.mp4'));
+  const files = { src: `bright-video-${hashOf(video)}.mp4` };
+  const poster = await readFile(at('source/video/bright-video-poster.jpg'));
+  files.poster = `bright-video-poster-${hashOf(poster)}.webp`;
+  if (!(await exists(at('assets/video', files.src)))) { await mkdir(at('assets/video'), { recursive: true }); await copyFile(at('source/video/bright-video.mp4'), at('assets/video', files.src)) }
+  if (!(await exists(at('assets/video', files.poster)))) await render('source/video/bright-video-poster.jpg', `assets/video/${files.poster}`, img => img.webp({ quality: 70, effort: 6 }));
+  await prune('assets/video', new Set(Object.values(files)));
+  return { src: `/assets/video/${files.src}`, poster: `/assets/video/${files.poster}` };
 }
 
+// Fonts are cut down to the characters the site actually uses; shaping features such as
+// Arabic joining forms are kept. File names carry a content hash so they can be cached forever.
 async function buildFonts(text) {
   let css = '';
   const files = {};
@@ -107,7 +147,7 @@ async function buildFonts(text) {
       if (!block) throw new Error(`Font subset not found: ${file}`);
       const original = await readFile(at(`node_modules/@fontsource-variable/${pkg}/files/${file}-wght-normal.woff2`));
       const subset = await subsetFont(original, text, { targetFormat: 'woff2' });
-      files[file] = `/assets/fonts/${file}-${createHash('sha256').update(subset).digest('hex').slice(0, 8)}.woff2`;
+      files[file] = `/assets/fonts/${file}-${hashOf(subset)}.woff2`;
       await writeFile(at(files[file].slice(1)), subset);
       const weight = block[1].match(/font-weight:\s*([^;]+);/)[1];
       const range = block[1].match(/unicode-range:\s*([^;]+);/)[1];
@@ -117,157 +157,231 @@ async function buildFonts(text) {
   return { css, files };
 }
 
-function structuredData(lang, c) {
-  return {
-    '@context': 'https://schema.org',
-    '@graph': [
-      {
-        '@type': 'Organization',
-        '@id': `${SITE}/#organization`,
-        name: 'Bright Service Company SARL',
-        alternateName: 'Bright',
-        url: `${SITE}/`,
-        logo: `${SITE}/assets/brand/bright-512.png`,
-        image: `${SITE}/assets/brand/og-image.jpg`,
-        description: c.description,
-        foundingDate: '2005',
-        numberOfEmployees: { '@type': 'QuantitativeValue', value: 85 },
-        areaServed: { '@type': 'Country', name: 'Lebanon' },
-        knowsAbout: c.services.map(service => service.title),
-      },
-      {
-        '@type': 'WebSite',
-        '@id': `${SITE}/#website`,
-        url: `${SITE}/`,
-        name: 'Bright',
-        inLanguage: Object.keys(LANGS),
-        publisher: { '@id': `${SITE}/#organization` },
-      },
-      {
-        '@type': 'WebPage',
-        '@id': `${SITE}${LANGS[lang].path}#webpage`,
-        url: `${SITE}${LANGS[lang].path}`,
-        name: c.title,
-        description: c.description,
-        inLanguage: lang,
-        isPartOf: { '@id': `${SITE}/#website` },
-        about: { '@id': `${SITE}/#organization` },
-        primaryImageOfPage: `${SITE}/assets/brand/og-image.jpg`,
-      },
-    ],
+function structuredData(lang, page, c, shareImage) {
+  const url = `${SITE}${pagePath(lang, page.slug)}`;
+  const organization = {
+    '@type': 'Organization',
+    '@id': `${SITE}/#organization`,
+    name: 'Bright Service Company SARL',
+    alternateName: 'Bright',
+    url: `${SITE}/`,
+    logo: `${SITE}/assets/brand/bright-512.png`,
+    slogan: c.heroFoot,
+    description: c.description,
+    foundingDate: '2005',
+    areaServed: { '@type': 'Country', name: 'Lebanon' },
+    knowsAbout: c.services.map(service => service.title),
   };
+  const graph = [organization, {
+    '@type': 'WebPage',
+    '@id': `${url}#webpage`,
+    url, name: page.title, description: page.description, inLanguage: lang,
+    isPartOf: { '@id': `${SITE}/#website` },
+    primaryImageOfPage: `${SITE}${shareImage}`,
+  }];
+  if (!page.slug) {
+    graph.push({ '@type': 'WebSite', '@id': `${SITE}/#website`, url: `${SITE}/`, name: 'Bright', inLanguage: Object.keys(LANGS), publisher: { '@id': `${SITE}/#organization` } });
+  } else {
+    graph.push({
+      '@type': 'Service', '@id': `${url}#service`, name: page.service.title, description: page.service.intro, url,
+      provider: { '@id': `${SITE}/#organization` }, areaServed: { '@type': 'Country', name: 'Lebanon' }, image: `${SITE}${shareImage}`,
+    }, {
+      '@type': 'BreadcrumbList',
+      itemListElement: [
+        { '@type': 'ListItem', position: 1, name: 'Bright', item: `${SITE}${pagePath(lang)}` },
+        { '@type': 'ListItem', position: 2, name: page.service.title, item: url },
+      ],
+    });
+  }
+  return { '@context': 'https://schema.org', '@graph': graph };
 }
 
-function head(lang, c, assets) {
-  const page = LANGS[lang];
-  const url = `${SITE}${page.path}`;
-  const alternates = Object.entries(LANGS).map(([code, { path }]) => `<link rel="alternate" hreflang="${code}" href="${SITE}${path}">`).join('');
+function head(lang, page, c, assets) {
+  const url = `${SITE}${pagePath(lang, page.slug)}`;
+  const shareImage = assets.shareImages[page.key];
+  const alternates = Object.keys(LANGS).map(code => `<link rel="alternate" hreflang="${code}" href="${SITE}${pagePath(code, page.slug)}">`).join('')
+    + `<link rel="alternate" hreflang="x-default" href="${SITE}${pagePath('en', page.slug)}">`;
   const otherLocales = Object.entries(LANGS).filter(([code]) => code !== lang).map(([, { locale }]) => `<meta property="og:locale:alternate" content="${locale}">`).join('');
-  const preloads = page.preload.map(file => `<link rel="preload" href="${assets.fonts[file]}" as="font" type="font/woff2" crossorigin>`).join('');
-  // Visitors who picked Arabic or Greek before land on their language; crawlers have no stored choice.
+  const preloads = LANGS[lang].preload.map(file => `<link rel="preload" href="${assets.fonts[file]}" as="font" type="font/woff2" crossorigin>`).join('');
   // The js class switches phones to the menu button before first paint; without JS the links stay visible.
-  const remember = `<script>document.documentElement.classList.add('js')${lang === 'en' ? ";try{var l=localStorage.getItem('bright-language');if(l==='ar'||l==='el')location.replace('/'+l+'/'+location.hash)}catch(e){}" : ''}</script>`;
+  // Visitors who picked Arabic or Greek before land on their language; crawlers have no stored choice.
+  const remember = `<script>document.documentElement.classList.add('js')${lang === 'en' ? ";try{var l=localStorage.getItem('bright-language');if(l==='ar'||l==='el')location.replace('/'+l+location.pathname+location.hash)}catch(e){}" : ''}</script>`;
   return [
-    `<title>${esc(c.title)}</title>`,
-    `<meta name="description" content="${esc(c.description)}">`,
-    `<meta name="theme-color" content="#071b33">`,
+    `<title>${esc(page.title)}</title>`,
+    `<meta name="description" content="${esc(page.description)}">`,
+    `<meta name="theme-color" content="#0b2038">`,
     remember,
     `<link rel="canonical" href="${url}">`,
-    alternates + `<link rel="alternate" hreflang="x-default" href="${SITE}/">`,
+    alternates,
     preloads,
     `<link rel="icon" href="/assets/brand/favicon-32.png" sizes="32x32" type="image/png"><link rel="apple-touch-icon" href="/assets/brand/apple-touch-icon.png">`,
-    `<meta property="og:type" content="website"><meta property="og:site_name" content="Bright"><meta property="og:url" content="${url}"><meta property="og:title" content="${esc(c.title)}"><meta property="og:description" content="${esc(c.description)}">`,
-    `<meta property="og:image" content="${SITE}/assets/brand/og-image.jpg"><meta property="og:image:width" content="1200"><meta property="og:image:height" content="630"><meta property="og:image:alt" content="${esc(c.heroAlt)}">`,
-    `<meta property="og:locale" content="${page.locale}">${otherLocales}`,
+    `<meta property="og:type" content="website"><meta property="og:site_name" content="Bright"><meta property="og:url" content="${url}"><meta property="og:title" content="${esc(page.title)}"><meta property="og:description" content="${esc(page.description)}">`,
+    `<meta property="og:image" content="${SITE}${shareImage}"><meta property="og:image:width" content="1200"><meta property="og:image:height" content="630"><meta property="og:image:alt" content="${esc(page.imageAlt)}">`,
+    `<meta property="og:locale" content="${LANGS[lang].locale}">${otherLocales}`,
     `<meta name="twitter:card" content="summary_large_image">`,
-    `<script type="application/ld+json">${JSON.stringify(structuredData(lang, c)).replace(/</g, '\\u003c')}</script>`,
+    `<script type="application/ld+json">${JSON.stringify(structuredData(lang, page, c, shareImage)).replace(/</g, '\\u003c')}</script>`,
     `<style>${assets.css}</style>`,
   ].filter(Boolean).join('\n  ');
 }
 
-// The LCP hero decodes synchronously; everything else decodes off the main thread.
-function photoAttributes(photo, priority = false) {
-  return `src="${photo.src}" srcset="${photo.srcset}" width="${photo.width}" height="${photo.height}"${priority ? '' : ' decoding="async"'}`;
+// The LCP hero decodes synchronously and loads first; everything else is lazy and decodes off the main thread.
+function photo(assets, name, sizes, alt, { priority = false, className = '' } = {}) {
+  const p = assets.photos[name];
+  if (!p) throw new Error(`Photo not built: ${name}`);
+  return `<img${className ? ` class="${className}"` : ''} src="${p.src}" srcset="${p.srcset}" sizes="${sizes}" width="${p.width}" height="${p.height}" alt="${esc(alt)}"`
+    + (priority ? ' fetchpriority="high"' : ' loading="lazy" decoding="async"') + '>';
 }
 
-function renderPage(template, lang, content, assets) {
-  const c = content[lang];
+const list = items => `<ul>${items.map(item => `<li>${esc(item)}</li>`).join('')}</ul>`;
+
+function homeMain(template, lang, c, services, assets) {
+  const logoSet = hidden => `<div class="logo-set"${hidden ? ' aria-hidden="true"' : ''}>` + LOGOS.map(([file, name]) =>
+    `<div class="client-logo"><img src="/assets/logos/${file}.webp" alt="${hidden ? '' : esc(name)}" width="${assets.logos[file].width}" height="${assets.logos[file].height}" loading="lazy" decoding="async"></div>`).join('') + '</div>';
+  const cards = c.services.map((card, index) => {
+    if (card.externalUrl) {
+      return `<a class="service-card direct-service" href="${esc(card.externalUrl)}"><span class="service-number" dir="ltr">${pad(index)}</span><h3>${esc(card.title)}</h3><p>${esc(card.body)}</p><span class="service-detail-link">${esc(card.externalLabel)}</span></a>`;
+    }
+    if (!services.some(s => s.slug === card.slug)) throw new Error(`No service page for card "${card.slug}" in ${lang}`);
+    return `<article class="service-card"><span class="service-number" dir="ltr">${pad(index)}</span><h3>${esc(card.title)}</h3><p>${esc(card.body)}</p>`
+      + `<details name="bright-services"><summary>${esc(c.scopeLabel)}</summary>${list(card.items)}</details>`
+      + `<a class="service-detail-link" href="${pagePath(lang, card.slug)}">${esc(c.serviceDetails)}</a></article>`;
+  }).join('');
+  const values = c.values.map(([title, text]) => `<article><h3>${esc(title)}</h3><p>${esc(text)}</p></article>`).join('');
+  const steps = c.steps.map(([title, text], index) => `<article><span dir="ltr">${pad(index)}</span><h3>${esc(title)}</h3><p>${esc(text)}</p></article>`).join('');
+  const homePhotos = HOME_PHOTOS.map((name, index) =>
+    `<figure>${photo(assets, name, SIZES.grid, c.homePhotoAlts[index])}<figcaption>${esc(c.homePhotoCaptions[index])}</figcaption></figure>`).join('');
+  return template
+    .replace('<!--logos-->', logoSet(false) + logoSet(true))
+    .replace('<!--serviceCards-->', cards)
+    .replace('<!--values-->', values)
+    .replace('<!--steps-->', steps)
+    .replace('<!--homePhotos-->', homePhotos)
+    .replace('{{videoSrc}}', assets.video.src)
+    .replace('{{videoPoster}}', assets.video.poster);
+}
+
+function serviceMain(lang, s, c, services, assets) {
+  const home = pagePath(lang);
+  const articles = s.sections.map((section, sectionIndex) => {
+    // Corporate cleaning's first section lists its scope between the last two paragraphs (as designed).
+    const inlineList = s.slug === 'corporate-cleaning' && sectionIndex === 0 && section.items?.length;
+    const paragraphs = section.paragraphs.map((text, index) =>
+      `<p>${esc(text)}</p>` + (inlineList && index === section.paragraphs.length - 2 ? list(section.items) : '')).join('');
+    return `<article><h2>${esc(section.heading)}</h2>${paragraphs}`
+      + (section.items?.length && !inlineList ? list(section.items) : '')
+      + (section.image ? `<figure class="service-section-photo">${photo(assets, section.image.replace(/\.webp$/, ''), SIZES.section, section.alt)}<figcaption>${esc(section.caption)}</figcaption></figure>` : '')
+      + '</article>';
+  }).join('');
+  const others = services.concat(c.services.filter(card => card.externalUrl).map(card => ({ ...card, external: true })))
+    .filter((other, index, all) => other.slug !== s.slug && all.findIndex(x => x.slug === other.slug) === index);
+  // Keep the homepage order for "other services"
+  others.sort((a, b) => c.services.findIndex(x => x.slug === a.slug) - c.services.findIndex(x => x.slug === b.slug));
+  const arrow = lang === 'ar' ? '←' : '→';
+  const otherLinks = others.map(other => {
+    const page = services.find(x => x.slug === other.slug);
+    const title = page ? page.title : other.title;
+    return `<a href="${esc(other.externalUrl || pagePath(lang, other.slug))}">${esc(title)}<span aria-hidden="true">${arrow}</span></a>`;
+  }).join('');
+  return `<section class="service-hero"><div><a class="service-back" href="${home}#services">${esc(c.backServices)}</a><p class="eyebrow">${esc(c.servicePageLabel)}</p><h1>${esc(s.title)}</h1>`
+    + (s.slogan ? `<p class="service-slogan">${esc(s.slogan)}</p>` : '') + (s.subtitle ? `<p class="service-subtitle">${esc(s.subtitle)}</p>` : '')
+    + `<p class="service-intro">${esc(s.intro)}</p></div><figure>${photo(assets, s.image.replace(/\.webp$/, ''), SIZES.hero, s.alt, { priority: true })}<figcaption>${esc(s.caption)}</figcaption></figure></section>`
+    + `<section class="section service-detail"><div class="service-prose">${(s.pageIntro || []).map(text => `<p class="lead">${esc(text)}</p>`).join('')}${articles}</div>`
+    + `<aside><div><h2>${esc(s.scopeTitle || c.scopeLabel)}</h2>${list(s.items)}</div><div><h2>${esc(c.benefitsLabel)}</h2>${list(s.benefits)}</div></aside></section>`
+    + (s.gallery?.length ? `<section class="section service-photo-gallery"><h2>${esc(s.galleryTitle)}</h2><div class="service-photo-grid">${s.gallery.map(g => `<figure>${photo(assets, g.image.replace(/\.webp$/, ''), SIZES.grid, g.alt)}<figcaption>${esc(g.caption)}</figcaption></figure>`).join('')}</div></section>` : '')
+    + `<section class="section other-services"><h2>${esc(c.otherServices)}</h2><div>${otherLinks}</div></section>`
+    + `<section class="closing"><p class="eyebrow">${esc(c.sloganLabel)}</p><h2>${esc(c.serviceMotto)}</h2><p>${esc(c.closingBody)}</p><a class="button light" href="${home}#services">${esc(c.backServices)}</a></section>`;
+}
+
+function renderPage(layout, lang, page, c, main, assets) {
   const t = key => {
     if (typeof c[key] !== 'string') throw new Error(`Missing "${key}" in ${lang} content`);
     return c[key];
   };
-  const languages = Object.entries(LANGS).map(([code, { path, label }]) =>
-    `<a href="${path}" hreflang="${code}" lang="${code}"${code === lang ? ' aria-current="page"' : ''}>${label}</a>`).join('');
-  const logoSet = hidden => `<div class="logo-set"${hidden ? ' aria-hidden="true"' : ''}>` + LOGOS.map(([file, name]) =>
-    `<div class="client-logo"><img src="/assets/logos/${file}.webp" alt="${hidden ? '' : esc(name)}" width="${assets.logos[file].width}" height="${assets.logos[file].height}" loading="lazy" decoding="async"></div>`).join('') + '</div>';
-  const services = c.services.map((service, index) =>
-    `<details name="bright-services"${index === 0 ? ' open' : ''}><summary><span class="service-number" dir="ltr">${String(index + 1).padStart(2, '0')}</span><h3>${esc(service.title)}</h3></summary>` +
-    `<div class="service-body"><p>${esc(service.body)}</p><ul>${service.items.map(item => `<li>${esc(item)}</li>`).join('')}</ul></div></details>`).join('');
-  const filters = Object.entries(c.categories).map(([key, label]) =>
-    `<button type="button" data-category="${key}" aria-pressed="${key === 'all'}">${esc(label)}</button>`).join('');
-  const gallery = c.photos.map((photo, index) => {
-    const name = photo.src.replace(/\.webp$/, '');
-    return `<button type="button" data-category="${photo.category}" aria-label="${esc(photo.title)}"><img ${photoAttributes(assets.photos[name])} sizes="${GALLERY_SIZES}" alt="${esc(photo.alt)}" loading="lazy">` +
-      `<span class="gallery-caption"><strong>${esc(photo.title)}</strong><small dir="ltr">${String(index + 1).padStart(2, '0')}</small></span></button>`;
-  }).join('');
-
-  return template
+  const languages = Object.entries(LANGS).map(([code, { label }]) =>
+    `<a href="${pagePath(code, page.slug)}" hreflang="${code}" lang="${code}"${code === lang ? ' aria-current="page"' : ''}>${label}</a>`).join('');
+  return layout
     .replace('{{lang}}', lang)
     .replace('{{dir}}', LANGS[lang].dir)
-    .replace('{{head}}', () => head(lang, c, assets))
+    .replace('{{head}}', () => head(lang, page, c, assets))
+    .replace('{{main}}', () => main)
     .replace('{{script}}', () => `<script>${assets.js}</script>`)
-    .replace('{{galleryCount}}', c.photos.length)
+    .replace(/\{\{homePath\}\}/g, pagePath(lang))
+    // Section links stay on the page at home, and point back to the homepage from service pages.
+    .replace(/\{\{anchorBase\}\}/g, page.slug ? pagePath(lang) : '')
     .replace('{{brandWidth}}', assets.brand.width)
     .replace('{{brandHeight}}', assets.brand.height)
     .replace('<!--languages-->', languages)
-    .replace('<!--logos-->', logoSet(false) + logoSet(true))
-    .replace('<!--services-->', services)
-    .replace('<!--filters-->', filters)
-    .replace('<!--gallery-->', gallery)
     .replace(/<(\w+)([^>]*?)\sdata-t="(\w+)"([^>]*)>[^<]*<\/\1>/g, (_, tag, before, key, after) => `<${tag}${before}${after}>${esc(t(key))}</${tag}>`)
     .replace(/\sdata-aria="(\w+)"/g, (_, key) => ` aria-label="${esc(t(key))}"`)
     .replace(/<img\b[^>]*>/g, tag => {
-      const photo = tag.match(/\sdata-photo="([\w-]+)"/);
-      if (photo) tag = tag.replace(photo[0], ' ' + photoAttributes(assets.photos[photo[1]], tag.includes('fetchpriority="high"')));
+      const name = tag.match(/\sdata-photo="([\w-]+)"/);
+      if (!name) return tag;
       const alt = tag.match(/\sdata-alt="(\w+)"/);
-      if (alt) tag = tag.replace(alt[0], ` alt="${esc(t(alt[1]))}"`);
-      return tag;
+      const sizes = tag.match(/\ssizes="([^"]+)"/)[1];
+      const className = tag.match(/\sclass="([^"]+)"/)?.[1];
+      return photo(assets, name[1], sizes, t(alt[1]), { priority: tag.includes('fetchpriority="high"'), className });
     });
 }
 
 async function build() {
-  const template = await readFile(at('src/index.html'), 'utf8');
+  const [layout, homeTemplate] = await Promise.all([readFile(at('src/layout.html'), 'utf8'), readFile(at('src/home.html'), 'utf8')]);
   const content = new Function(`${await readFile(at('src/content.js'), 'utf8')};return CONTENT`)();
-  const photoNames = new Set([...template.matchAll(/data-photo="([\w-]+)"/g)].map(m => m[1]));
-  for (const { photos } of Object.values(content)) for (const photo of photos) photoNames.add(photo.src.replace(/\.webp$/, ''));
+  const serviceContent = new Function(`${await readFile(at('src/services-content.js'), 'utf8')};return SERVICE_CONTENT`)();
+  // Service pages exist for every service without an external site (maintenance links out).
+  const servicePages = lang => serviceContent[lang].filter(s => !s.externalUrl);
+
+  const pages = [{ key: 'home', slug: '', hero: HOME_HERO }];
+  for (const s of servicePages('en')) pages.push({ key: s.slug, slug: s.slug, hero: s.image.replace(/\.webp$/, '') });
+
+  const photoNames = new Set([HOME_HERO, ...HOME_PHOTOS, ...[...homeTemplate.matchAll(/data-photo="([\w-]+)"/g)].map(m => m[1])]);
+  for (const lang of Object.keys(LANGS)) for (const s of servicePages(lang)) {
+    photoNames.add(s.image.replace(/\.webp$/, ''));
+    for (const section of s.sections) if (section.image) photoNames.add(section.image.replace(/\.webp$/, ''));
+    for (const g of s.gallery || []) photoNames.add(g.image.replace(/\.webp$/, ''));
+  }
 
   // Every character that can appear on any page, plus printable ASCII as a safety net.
   const strings = [];
   const collect = value => typeof value === 'string' ? strings.push(value) : Object.values(value).forEach(collect);
-  collect(content);
+  collect(content); collect(serviceContent);
   const ascii = Array.from({ length: 95 }, (_, i) => String.fromCharCode(32 + i)).join('');
-  const text = [...new Set(ascii + template + strings.join('') + LOGOS.flat().join('') + Object.values(LANGS).map(l => l.label).join(''))].join('');
+  const text = [...new Set(ascii + layout + homeTemplate + strings.join('') + '←→' + Object.values(LANGS).map(l => l.label).join(''))].join('');
 
-  const [photos, logos, brand, fonts] = await Promise.all([buildPhotos([...photoNames]), buildLogos(), buildBrand(), buildFonts(text), buildVideo()]);
+  const [photos, logos, brand, fonts, video] = await Promise.all([buildPhotos([...photoNames]), buildLogos(), buildBrand(), buildFonts(text), buildVideo()]);
+  const shareImages = await buildShareImages(pages, photos);
   const css = (await transform(fonts.css + await readFile(at('src/style.css'), 'utf8'), { loader: 'css', minify: true })).code.trim();
   const js = (await transform(await readFile(at('src/app.js'), 'utf8'), { loader: 'js', minify: true, target: 'es2020' })).code.trim();
-  const assets = { photos, logos, brand, css, js, fonts: fonts.files };
+  const assets = { photos, logos, brand, css, js, fonts: fonts.files, video, shareImages };
 
+  const written = [];
   for (const lang of Object.keys(LANGS)) {
-    const html = renderPage(template, lang, content, assets);
-    const leftover = html.match(/\{\{\w+\}\}|<!--\w+-->|data-(t|alt|aria|photo)=/);
-    if (leftover) throw new Error(`Unrendered "${leftover[0]}" in ${lang} page`);
-    await writeOut(`${LANGS[lang].path.slice(1)}index.html`, html);
+    const c = content[lang];
+    const services = servicePages(lang);
+    for (const page of pages) {
+      const s = page.slug && services.find(x => x.slug === page.slug);
+      if (page.slug && !s) throw new Error(`Service "${page.slug}" missing in ${lang}`);
+      const meta = s
+        ? { ...page, service: s, title: `${s.title} | Bright Service Company SARL`, description: s.intro, imageAlt: s.alt }
+        : { ...page, title: c.title, description: c.description, imageAlt: c.heroAlt };
+      const main = s ? serviceMain(lang, s, c, services, assets) : homeMain(homeTemplate, lang, c, services, assets);
+      const html = renderPage(layout, lang, meta, c, main, assets);
+      const leftover = html.match(/\{\{\w+\}\}|<!--\w+-->|data-(t|alt|aria|photo)=/);
+      if (leftover) throw new Error(`Unrendered "${leftover[0]}" in ${pagePath(lang, page.slug)}`);
+      const file = `${pagePath(lang, page.slug).slice(1)}index.html`;
+      await writeOut(file, html);
+      written.push(`${pagePath(lang, page.slug)} ${(html.length / 1024).toFixed(0)}K`);
+    }
   }
 
-  const today = new Date().toISOString().slice(0, 10);
-  const links = Object.entries(LANGS).map(([code, { path }]) => `<xhtml:link rel="alternate" hreflang="${code}" href="${SITE}${path}"/>`).join('') + `<xhtml:link rel="alternate" hreflang="x-default" href="${SITE}/"/>`;
-  await writeOut('sitemap.xml', `<?xml version="1.0" encoding="UTF-8"?>\n<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9" xmlns:xhtml="http://www.w3.org/1999/xhtml">\n` +
-    Object.values(LANGS).map(({ path }) => `  <url><loc>${SITE}${path}</loc><lastmod>${today}</lastmod>${links}</url>\n`).join('') + '</urlset>\n');
+  const urls = pages.map(page => {
+    const links = Object.keys(LANGS).map(code => `<xhtml:link rel="alternate" hreflang="${code}" href="${SITE}${pagePath(code, page.slug)}"/>`).join('')
+      + `<xhtml:link rel="alternate" hreflang="x-default" href="${SITE}${pagePath('en', page.slug)}"/>`;
+    return Object.keys(LANGS).map(code => `  <url><loc>${SITE}${pagePath(code, page.slug)}</loc>${links}</url>\n`).join('');
+  }).join('');
+  await writeOut('sitemap.xml', `<?xml version="1.0" encoding="UTF-8"?>\n<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9" xmlns:xhtml="http://www.w3.org/1999/xhtml">\n${urls}</urlset>\n`);
   await writeOut('robots.txt', `User-agent: *\nAllow: /\nDisallow: /src/\nDisallow: /source/\nDisallow: /scripts/\n\nSitemap: ${SITE}/sitemap.xml\n`);
 
-  const sizes = await Promise.all(Object.values(LANGS).map(async ({ path }) => `${path} ${((await stat(at(`${path.slice(1)}index.html`))).size / 1024).toFixed(1)} KB`));
-  console.log(`Built ${sizes.join(', ')}; ${Object.keys(photos).length} photos, ${LOGOS.length} logos.`);
+  console.log(`Built ${written.length} pages: ${written.join(', ')}\n${Object.keys(photos).length} photos, ${LOGOS.length} logos, video ${video.src}`);
 }
 
 build().catch(error => { console.error(error); process.exit(1) });

@@ -1,5 +1,5 @@
-// Runs Lighthouse (mobile and desktop) on every language page of the built site and prints the scores.
-// Run: npm run audit   or narrow it by language and device, e.g. npm run audit -- ar mobile
+// Runs Lighthouse (mobile and desktop) on every page in sitemap.xml and prints the scores.
+// Run: npm run audit   or narrow it by language, device or page, e.g. npm run audit -- ar mobile porter-services
 // Uses the locally installed Chrome; reports go to the OS temp folder.
 import { spawn, execFileSync } from 'node:child_process';
 import { mkdtempSync, readFileSync } from 'node:fs';
@@ -8,10 +8,13 @@ import { join } from 'node:path';
 
 const PORT = 4455;
 const args = process.argv.slice(2);
-const LANG_PAGES = { en: '/', ar: '/ar/', el: '/el/' };
-const pick = (options, given) => given.length ? options.filter(option => given.includes(option)) : options;
-const PAGES = pick(Object.keys(LANG_PAGES), args.filter(a => a in LANG_PAGES)).map(lang => LANG_PAGES[lang]);
-const FORM_FACTORS = pick(['mobile', 'desktop'], args.filter(a => !(a in LANG_PAGES)));
+const LANGS = ['en', 'ar', 'el'], DEVICES = ['mobile', 'desktop'];
+const all = [...readFileSync('sitemap.xml', 'utf8').matchAll(/<loc>https?:\/\/[^/]+(\/[^<]*)<\/loc>/g)].map(m => m[1]);
+const langOf = path => LANGS.find(l => path.startsWith(`/${l}/`)) || 'en';
+const slugOf = path => path.replace(/^\/(ar|el)\//, '/').replace(/\//g, '') || 'home';
+const given = { langs: args.filter(a => LANGS.includes(a)), devices: args.filter(a => DEVICES.includes(a)), slugs: args.filter(a => !LANGS.includes(a) && !DEVICES.includes(a)) };
+const PAGES = all.filter(path => (!given.langs.length || given.langs.includes(langOf(path))) && (!given.slugs.length || given.slugs.includes(slugOf(path))));
+const FORM_FACTORS = given.devices.length ? given.devices : DEVICES;
 const outDir = mkdtempSync(join(tmpdir(), 'bright-lighthouse-'));
 const server = spawn(process.execPath, ['scripts/serve.mjs', String(PORT)], { stdio: 'ignore' });
 await new Promise(done => setTimeout(done, 800));
@@ -26,7 +29,7 @@ try {
       execFileSync('npx', args, { stdio: 'inherit', shell: process.platform === 'win32' });
       const report = JSON.parse(readFileSync(output, 'utf8'));
       const scores = Object.values(report.categories).map(c => `${c.title} ${Math.round(c.score * 100)}`);
-      console.log(`${formFactor.padEnd(7)} ${page.padEnd(5)} ${scores.join(' | ')}`);
+      console.log(`${formFactor.padEnd(7)} ${page.padEnd(32)} ${scores.join(' | ')}`);
       for (const category of Object.values(report.categories)) {
         if (category.score < 1) failed = true;
         for (const ref of category.auditRefs) {

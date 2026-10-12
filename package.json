@@ -11,8 +11,6 @@
     "audit": "node scripts/audit.mjs"
   },
   "devDependencies": {
-    "@fontsource-variable/dm-sans": "^5.3.0",
-    "@fontsource-variable/manrope": "^5.3.0",
     "@fontsource-variable/noto-sans-arabic": "^5.3.0",
     "esbuild": "^0.28.2",
     "sharp": "^0.35.5",

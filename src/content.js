@@ -10,35 +10,27 @@ const CONTENT = {
     "heroLabel": "FACILITY & SUPPORT SERVICES",
     "heroTitle": "Care for spaces.",
     "heroAccent": "Support for business.",
-    "heroDescription": "Professional people behind the places you depend on. Bright keeps your facilities welcoming and your daily operations running smoothly.",
+    "heroDescription": "Bright Service Company SARL supports businesses across Lebanon with facility management and operational support services. Established in 2005, we bring more than two decades of practical experience to your daily operations.",
     "explore": "Explore our services",
     "heroFoot": "Glad to help you",
-    "heroCaption": "Real people. Real care.",
-    "heroAlt": "Bright professional operating a floor cleaning machine inside a supermarket",
+    "heroCaption": "Professional care for busy spaces.",
+    "heroAlt": "Bright-branded worker operating a floor-cleaning machine in a shopping mall",
     "clientsTitle": "Some of the names we’ve supported",
     "clientsNote": "Client & market experience",
     "aboutLabel": "ABOUT BRIGHT",
-    "aboutTitle": "The strength behind your everyday.",
-    "aboutLead": "Great service starts with people who care about the details.",
-    "aboutBody": "Bright brings cleaning, facility maintenance and operational support together under one professional team. With trained employees and attentive management, we help businesses focus on what they do best.",
-    "aboutOutlook": "Our approach is built around your environment, your people and your standards. Wherever the next opportunity takes you, dependable service makes the difference.",
-    "historyOne": "Bright established",
-    "historyTwo": "Porter service introduced",
-    "aboutCaption": "People at the heart of every service.",
-    "aboutCaptionSmall": "A Bright team member at work",
-    "aboutAlt": "Bright porter smiling while holding shopping bags at a supermarket checkout",
-    "numbersLabel": "BRIGHT IN NUMBERS",
-    "employees": "Employees",
-    "sites": "Active sites",
-    "activeClients": "Active clients",
+    "aboutTitle": "Who we are",
+    "aboutLead": "Supporting businesses across Lebanon since 2005.",
+    "aboutBody": "Bright Service Company SARL is a Lebanese company providing facility management and operational support services to businesses across diverse sectors. Established in 2005, we bring more than two decades of practical experience to maintaining commercial facilities and supporting daily business operations.",
+    "aboutOutlook": "We combine qualified personnel, operational knowledge and close coordination with client management to deliver services tailored to each organization’s premises, schedules and priorities.",
+    "aboutCaption": "Professional assistance. A better shopping experience.",
+    "aboutCaptionSmall": "Porter services",
+    "aboutAlt": "Bright-branded porter packing groceries at a supermarket checkout",
     "servicesLabel": "WHAT WE DO",
     "servicesTitle": "One team. Everyday support.",
-    "servicesIntro": "Services shaped around the way your business works, from the first arrival to the last inspection.",
-    "serviceCaption": "Care in the details. Consistency in the delivery.",
-    "serviceAlt": "Bright team member replenishing supermarket shelves",
+    "servicesIntro": "Five complementary services for your facilities, employees and everyday operations.",
     "workLabel": "BRIGHT AT WORK",
     "workTitle": "Our people, in their element.",
-    "workIntro": "A closer look at the teams supporting real facilities and everyday operations.",
+    "workIntro": "Cleaning, customer assistance and operational support, shaped around your business.",
     "qualityLabel": "OUR STANDARDS",
     "qualityTitle": "Good service is a daily practice.",
     "qualityIntro": "Clear expectations, close supervision and continuous improvement guide every Bright operation.",
@@ -50,129 +42,72 @@ const CONTENT = {
     "qualityThreeBody": "Direct client communication and corrective actions turn feedback into better service. Responsibility and respect shape how we work.",
     "isoTitle": "Quality management",
     "isoBody": "Bright held ISO 9001:2015 certification from 2017 to 2019. Recertification is currently in progress, with an ongoing focus on continuous improvement.",
-    "closingLabel": "BRIGHT",
+    "closingLabel": "OUR SLOGAN",
     "closingTitle": "Glad to help you",
-    "closingBody": "Thoughtful service. Dependable people. Room for what comes next.",
+    "closingBody": "Dependable facility and operational support for businesses across Lebanon.",
     "closingAction": "Find your service",
     "footerDescriptor": "Facility & support services",
     "footerText": "Bright Service Company SARL · Established 2005",
     "backTop": "Back to top",
-    "close": "Close",
-    "previous": "Previous",
-    "next": "Next",
-    "navLabel": "Main navigation",
-    "languageLabel": "Language",
-    "filtersLabel": "Photo categories",
-    "categories": {
-      "all": "All work",
-      "cleaning": "Cleaning",
-      "retail": "Retail support",
-      "porter": "Porter services"
-    },
     "services": [
       {
-        "title": "Professional cleaning",
-        "body": "Clean, attractive environments that support the wellbeing of employees, customers and guests. From routine care to specialist assignments, we adapt the service to your space.",
+        "slug": "maintenance",
+        "title": "Maintenance Services",
+        "body": "Keep your facilities operating efficiently with maintenance services tailored to your business. Our scope includes generator maintenance, electrical maintenance, plumbing and energy-saving solutions.",
         "items": [
-          "Daily office & retail cleaning",
-          "Carpet & floor maintenance",
-          "Glass, windows & façades",
-          "Washrooms & waste handling",
-          "Industrial & periodic cleaning",
-          "Duct & HVAC cleaning"
+          "Generator maintenance",
+          "Electrical maintenance",
+          "Plumbing maintenance",
+          "Energy-saving solutions"
+        ],
+        "externalUrl": "https://be-rightbright.com/",
+        "externalLabel": "Visit maintenance website"
+      },
+      {
+        "slug": "corporate-cleaning",
+        "title": "Corporate Cleaning & Specialized Deep Cleaning",
+        "body": "Professional cleaning for supermarkets, shopping malls, offices and corporate facilities. From daily cleaning to specialized deep cleaning, our qualified teams provide floor and tile care, building exterior cleaning and high-level glass cleaning, with methods adapted to each site and surface.",
+        "items": [
+          "Corporate and daily cleaning",
+          "Supermarket and fresh food area hygiene",
+          "Specialist floor and tile care",
+          "Building exterior and façade cleaning",
+          "High-level glass and window cleaning",
+          "Opening and post-renovation cleaning"
         ]
       },
       {
-        "title": "Facility maintenance",
-        "body": "Coordinated maintenance for individual buildings and operations across multiple locations. Planned works and responsive support help keep your facilities in good condition.",
+        "slug": "porter-services",
+        "title": "Supermarket Porter Services",
+        "body": "Customer assistance at the checkout and beyond. Our porters pack customers’ purchases into bags and help transport them to their vehicles, supporting a smooth and convenient shopping experience.",
         "items": [
-          "Painting & waterproofing",
-          "Building repairs & drainage",
-          "Air conditioning & pumps",
-          "Electrical & security systems",
-          "Fire systems",
-          "Generator maintenance & repair"
+          "Packing purchases at the checkout",
+          "Carrying shopping bags",
+          "Assisting customers to their vehicles",
+          "Support coordinated with supermarket operations"
         ]
       },
       {
-        "title": "Workforce & retail support",
-        "body": "Trained, flexible teams that fit your operational requirements. Professional management supports reliable deployment and consistent day-to-day performance.",
+        "slug": "retail-warehouse-support",
+        "title": "Shelf Replenishment, Warehouse Support & Order Picking",
+        "body": "Operational support for supermarkets and warehouses, covering shelf replenishment, warehouse tasks and order picking. Our teams help keep shelves stocked and collect and prepare customer orders for delivery.",
         "items": [
           "Shelf replenishment",
-          "Retail floor support",
-          "Operational support workers",
-          "Teams tailored to site needs"
+          "Warehouse support tasks",
+          "Collecting customer orders",
+          "Preparing orders for delivery"
         ]
       },
       {
-        "title": "Transportation & delivery",
-        "body": "Managed employee transportation between accommodation and workplaces, alongside delivery support tailored to specific operating needs.",
+        "slug": "employee-transportation",
+        "title": "Employee Transportation",
+        "body": "Organized transportation between employees’ homes and their workplace, using buses equipped for staff transport. We support companies with coordinated journeys that fit their employees’ work schedules.",
         "items": [
-          "Employee bus transportation",
-          "Transport coordination",
-          "Delivery support",
-          "Support in busy operating environments"
+          "Transport between homes and workplaces",
+          "Buses equipped for employee transportation",
+          "Journeys coordinated with work schedules",
+          "Coordination with company management"
         ]
-      },
-      {
-        "title": "Porter services",
-        "body": "Attentive assistance that helps customers and staff move through the everyday demands of busy commercial spaces. Bright introduced its porter service in 2013.",
-        "items": [
-          "Customer assistance",
-          "Shopping & carrying support",
-          "Support for retail operations",
-          "Trained on-site personnel"
-        ]
-      }
-    ],
-    "photos": [
-      {
-        "src": "real-24.webp",
-        "category": "cleaning",
-        "title": "Everyday floor care",
-        "alt": "Bright team member mopping a supermarket aisle"
-      },
-      {
-        "src": "real-79.webp",
-        "category": "cleaning",
-        "title": "Machine floor cleaning",
-        "alt": "Bright team member operating a floor cleaning machine inside a supermarket"
-      },
-      {
-        "src": "real-89.webp",
-        "category": "retail",
-        "title": "Shelves ready for customers",
-        "alt": "Bright team member replenishing products on supermarket shelves"
-      },
-      {
-        "src": "real-92.webp",
-        "category": "retail",
-        "title": "Careful product placement",
-        "alt": "Bright team member arranging products neatly on a supermarket shelf"
-      },
-      {
-        "src": "real-0.webp",
-        "category": "porter",
-        "title": "A helping hand",
-        "alt": "Bright porter packing shopping bags at a checkout"
-      },
-      {
-        "src": "real-80.webp",
-        "category": "cleaning",
-        "title": "Care for commercial spaces",
-        "alt": "Bright team member cleaning the floor in a homeware store"
-      },
-      {
-        "src": "real-60.webp",
-        "category": "cleaning",
-        "title": "Attention to every detail",
-        "alt": "Bright team member cleaning a washroom basin"
-      },
-      {
-        "src": "real-45.webp",
-        "category": "porter",
-        "title": "Support beyond the checkout",
-        "alt": "Bright porter loading shopping bags into a customer’s car"
       }
     ],
     "filmLabel": "BRIGHT IN MOTION",
@@ -180,7 +115,86 @@ const CONTENT = {
     "filmBody": "A closer look at the care, skill and teamwork behind Bright’s everyday services.",
     "filmFallback": "Your browser does not support video playback.",
     "filmAria": "Bright company video",
-    "menuLabel": "Menu"
+    "historyTitle": "Our history",
+    "historyBody": "Since our establishment in 2005, we have developed our expertise through hands-on work in the Lebanese market. This experience has shaped our understanding of the challenges businesses face in maintaining their facilities, coordinating personnel and ensuring continuity of service.",
+    "historyBodyTwo": "Today, Bright Service brings together five complementary service areas, offering clients coordinated support for their facilities, employees and operations. We continue to build lasting working relationships through consistent service, clear communication and attention to each client’s requirements.",
+    "missionTitle": "Our mission",
+    "missionBody": "To provide dependable facility and operational support services that help businesses maintain their premises, support their people and keep their daily operations running smoothly.",
+    "visionTitle": "Our vision",
+    "visionBody": "To be a trusted long-term partner for businesses across Lebanon, recognized for professional teams, consistent service and practical solutions.",
+    "valuesTitle": "Our values",
+    "values": [
+      [
+        "Reliability",
+        "Delivering agreed services consistently and following through on our commitments."
+      ],
+      [
+        "Professionalism",
+        "Maintaining respectful conduct, capable teams and clear standards of work."
+      ],
+      [
+        "Accountability",
+        "Taking responsibility for our work and addressing client observations."
+      ],
+      [
+        "Safety & care",
+        "Working with attention to people, property, equipment and the surrounding environment."
+      ],
+      [
+        "Partnership",
+        "Listening to clients and coordinating closely with their management teams."
+      ],
+      [
+        "Continuous improvement",
+        "Reviewing our methods and adapting to changing operational needs."
+      ]
+    ],
+    "commitmentTitle": "Our commitment",
+    "commitmentBody": "We approach every assignment with a clear understanding of its scope and the client’s expectations. Through organized teams, practical planning and regular follow-up, we work to deliver consistent service and build confidence in the support we provide.",
+    "serviceDetails": "Explore this service",
+    "servicePageLabel": "OUR SERVICES",
+    "scopeLabel": "Service scope",
+    "benefitsLabel": "What this means for your business",
+    "approachLabel": "OUR APPROACH",
+    "otherServices": "Explore our other services",
+    "backServices": "All services",
+    "serviceMotto": "Glad to help you",
+    "serviceHome": "Home",
+    "sloganLabel": "OUR SLOGAN",
+    "menuLabel": "Menu",
+    "howWeWork": "How we work",
+    "approachTitle": "A clear process. From assessment to follow-up.",
+    "approachIntro": "A practical service plan starts with understanding the site and continues with regular communication.",
+    "steps": [
+      [
+        "Understand your site",
+        "Review the premises, activity levels, operating hours and service priorities."
+      ],
+      [
+        "Define the scope",
+        "Agree on tasks, schedules, staffing needs and service responsibilities."
+      ],
+      [
+        "Coordinate the team",
+        "Organize daily work around site requirements and the agreed plan."
+      ],
+      [
+        "Follow up & improve",
+        "Review site conditions, address observations and adjust priorities with management."
+      ]
+    ],
+    "homePhotoCaptions": [
+      "Hygiene for fresh food areas",
+      "Careful order picking",
+      "Assistance to customers’ vehicles"
+    ],
+    "homePhotoAlts": [
+      "Bright-branded worker cleaning a stainless-steel counter",
+      "Bright-branded worker scanning a product for an order",
+      "Bright-branded porter loading shopping bags into a customer’s vehicle"
+    ],
+    "navLabel": "Main navigation",
+    "languageLabel": "Language"
   },
   "ar": {
     "title": "برايت | خدمات المرافق والدعم",
@@ -193,35 +207,27 @@ const CONTENT = {
     "heroLabel": "خدمات المرافق والدعم",
     "heroTitle": "عناية بمساحاتكم.",
     "heroAccent": "دعم لأعمالكم.",
-    "heroDescription": "خلف كل مكان تعتمدون عليه، أشخاص يهتمّون بالتفاصيل. تحافظ برايت على مرافقكم لتبقى مريحة ومهيّأة لاستقبال زوّاركم، وتدعم سير أعمالكم اليومية بسلاسة.",
+    "heroDescription": "تدعم شركة برايت للخدمات ش.م.م. الشركات في مختلف أنحاء لبنان بخدمات إدارة المرافق والدعم التشغيلي. منذ تأسيسنا عام 2005، نضع أكثر من عقدَين من الخبرة العملية في خدمة أعمالكم اليومية.",
     "explore": "اكتشف خدماتنا",
     "heroFoot": "يسعدنا مساعدتكم",
-    "heroCaption": "أشخاص حقيقيون. عناية حقيقية.",
-    "heroAlt": "موظف من برايت يستخدم آلة لتنظيف الأرضيات داخل سوبرماركت",
+    "heroCaption": "عناية احترافية بالمساحات المزدحمة.",
+    "heroAlt": "عامل بزي برايت يستخدم آلة تنظيف الأرضيات في مركز تجاري",
     "clientsTitle": "بعض الشركات التي دعمنا أعمالها",
     "clientsNote": "خبراتنا مع العملاء وفي السوق",
     "aboutLabel": "عن برايت",
-    "aboutTitle": "الدعم الذي تعتمدون عليه كل يوم.",
-    "aboutLead": "الخدمة الجيدة تبدأ بأشخاص يهتمّون بأدق التفاصيل.",
-    "aboutBody": "تجمع برايت خدمات التنظيف وصيانة المرافق والدعم التشغيلي ضمن فريق مهني واحد. من خلال موظفين مدرّبين وإدارة تتابع التفاصيل، نساعد الشركات على التركيز على أعمالها الأساسية.",
-    "aboutOutlook": "نصمّم خدماتنا وفق بيئة عملكم واحتياجات فرقكم ومعاييركم. أينما تقودكم الفرص المقبلة، تبقى الخدمة الموثوقة أساس النجاح.",
-    "historyOne": "تأسيس برايت",
-    "historyTwo": "إطلاق خدمة مساعدة المتسوّقين",
-    "aboutCaption": "الأشخاص في صميم كل خدمة.",
-    "aboutCaptionSmall": "أحد أفراد فريق برايت أثناء العمل",
-    "aboutAlt": "مساعد تسوّق من برايت يبتسم وهو يحمل أكياس المشتريات عند صندوق الدفع",
-    "numbersLabel": "برايت بالأرقام",
-    "employees": "موظفًا",
-    "sites": "موقعًا نشطًا",
-    "activeClients": "عملاء حاليون",
+    "aboutTitle": "من نحن",
+    "aboutLead": "ندعم الشركات في مختلف أنحاء لبنان منذ عام 2005.",
+    "aboutBody": "شركة برايت للخدمات ش.م.م. هي شركة لبنانية تقدّم خدمات إدارة المرافق والدعم التشغيلي للشركات في قطاعات متنوعة. تأسست عام 2005، وتتمتع بأكثر من عقدَين من الخبرة العملية في العناية بالمرافق التجارية ودعم العمليات اليومية.",
+    "aboutOutlook": "نجمع بين موظفين مؤهلين ومعرفة تشغيلية وتنسيق وثيق مع إدارة العملاء، لتقديم خدمات تتناسب مع مقارّ كل مؤسسة وجداولها وأولوياتها.",
+    "aboutCaption": "مساعدة احترافية. تجربة تسوّق أفضل.",
+    "aboutCaptionSmall": "خدمات مساعدة المتسوقين",
+    "aboutAlt": "عامل بزي برايت يعبّئ المشتريات عند صندوق الدفع",
     "servicesLabel": "ما نقدّمه",
     "servicesTitle": "فريق واحد لدعم أعمالكم اليومية.",
-    "servicesIntro": "خدمات تتناسب مع طبيعة عملكم، من بداية اليوم وحتى آخر جولة تفقدية.",
-    "serviceCaption": "عناية بالتفاصيل وثبات في مستوى الخدمة.",
-    "serviceAlt": "موظف من برايت يعيد تعبئة رفوف السوبرماركت",
+    "servicesIntro": "خمسة مجالات خدمية متكاملة لدعم مرافقكم وموظفيكم وعملياتكم اليومية.",
     "workLabel": "برايت أثناء العمل",
     "workTitle": "فرقنا في مواقع العمل.",
-    "workIntro": "نظرة أقرب إلى الأشخاص الذين يعتنون بالمرافق ويدعمون العمليات اليومية على أرض الواقع.",
+    "workIntro": "تنظيف ومساعدة للعملاء ودعم تشغيلي وفق احتياجات أعمالكم.",
     "qualityLabel": "معاييرنا",
     "qualityTitle": "الخدمة الجيدة ممارسة يومية.",
     "qualityIntro": "متطلبات واضحة وإشراف مستمر وتحسين متواصل توجّه كل عملية تنفّذها برايت.",
@@ -233,129 +239,72 @@ const CONTENT = {
     "qualityThreeBody": "نحوّل الملاحظات إلى تحسينات من خلال التواصل المباشر والإجراءات التصحيحية. المسؤولية والاحترام أساس أسلوب عملنا.",
     "isoTitle": "إدارة الجودة",
     "isoBody": "كانت برايت حاصلة على شهادة ISO 9001:2015 من عام 2017 حتى عام 2019. تجري حاليًا عملية إعادة الاعتماد، مع مواصلة العمل على التحسين المستمر.",
-    "closingLabel": "برايت",
+    "closingLabel": "شعارنا",
     "closingTitle": "يسعدنا مساعدتكم",
-    "closingBody": "خدمة مدروسة. أشخاص يمكن الاعتماد عليهم. واستعداد لما يحمله الغد.",
+    "closingBody": "دعم موثوق للمرافق والعمليات للشركات في مختلف أنحاء لبنان.",
     "closingAction": "تعرّف إلى خدماتنا",
     "footerDescriptor": "خدمات المرافق والدعم",
     "footerText": "شركة برايت للخدمات ش.م.م. · تأسست عام 2005",
     "backTop": "العودة إلى الأعلى",
-    "close": "إغلاق",
-    "previous": "السابق",
-    "next": "التالي",
-    "navLabel": "التنقل الرئيسي",
-    "languageLabel": "اللغة",
-    "filtersLabel": "فئات الصور",
-    "categories": {
-      "all": "جميع الأعمال",
-      "cleaning": "التنظيف",
-      "retail": "دعم المتاجر",
-      "porter": "خدمة مساعدة المتسوّقين"
-    },
     "services": [
       {
-        "title": "التنظيف المهني",
-        "body": "بيئات نظيفة ومريحة تدعم صحة الموظفين والعملاء والزوار. نكيّف خدماتنا مع متطلبات مساحاتكم، من العناية اليومية إلى الأعمال المتخصصة.",
+        "slug": "maintenance",
+        "title": "خدمات الصيانة",
+        "body": "حافظوا على كفاءة تشغيل مرافقكم من خلال خدمات صيانة تتناسب مع طبيعة أعمالكم. يشمل نطاقنا صيانة المولّدات والصيانة الكهربائية وأعمال السباكة وحلول توفير الطاقة.",
         "items": [
-          "تنظيف المكاتب والمتاجر يوميًا",
-          "العناية بالسجاد والأرضيات",
-          "تنظيف الزجاج والنوافذ والواجهات",
-          "تنظيف دورات المياه وإدارة النفايات",
-          "التنظيف الصناعي والدوري",
-          "تنظيف مجاري الهواء وأنظمة التكييف والتهوية"
+          "صيانة المولّدات",
+          "الصيانة الكهربائية",
+          "صيانة السباكة",
+          "حلول توفير الطاقة"
+        ],
+        "externalUrl": "https://be-rightbright.com/",
+        "externalLabel": "زيارة موقع خدمات الصيانة"
+      },
+      {
+        "slug": "corporate-cleaning",
+        "title": "تنظيف الشركات والتنظيف العميق المتخصص",
+        "body": "تنظيف مهني للسوبرماركت ومراكز التسوق والمكاتب ومرافق الشركات. من التنظيف اليومي إلى التنظيف العميق المتخصص، تقدّم فرقنا المؤهلة العناية بالأرضيات والبلاط وتنظيف واجهات المباني والزجاج المرتفع، بأساليب تتناسب مع كل موقع وسطح.",
+        "items": [
+          "التنظيف اليومي وتنظيف الشركات",
+          "نظافة السوبرماركت وأقسام الأغذية الطازجة",
+          "العناية المتخصصة بالأرضيات والبلاط",
+          "تنظيف المباني والواجهات الخارجية",
+          "تنظيف النوافذ والزجاج المرتفع",
+          "التنظيف قبل الافتتاح وبعد التجديد"
         ]
       },
       {
-        "title": "صيانة المرافق",
-        "body": "صيانة منسّقة للمباني المنفردة وللعمليات الموزّعة على مواقع متعددة. تساعد الأعمال المخطّطة والاستجابة السريعة على الحفاظ على مرافقكم بحالة جيدة.",
+        "slug": "porter-services",
+        "title": "خدمات مساعدة المتسوقين في السوبرماركت",
+        "body": "مساعدة العملاء عند صندوق الدفع وما بعده. يعبّئ فريق مساعدة المتسوقين لدينا مشتريات العملاء في الأكياس ويساعد في نقلها إلى سياراتهم، لتجربة تسوق سهلة ومريحة.",
         "items": [
-          "الدهان والعزل المائي",
-          "إصلاح المباني وأنظمة تصريف المياه",
-          "التكييف والمضخات",
-          "الأنظمة الكهربائية والأمنية",
-          "أنظمة مكافحة الحريق",
-          "صيانة المولّدات وإصلاحها"
+          "تعبئة المشتريات عند صندوق الدفع",
+          "حمل أكياس المشتريات",
+          "مساعدة العملاء حتى سياراتهم",
+          "دعم منسّق مع عمليات السوبرماركت"
         ]
       },
       {
-        "title": "القوى العاملة ودعم المتاجر",
-        "body": "فرق مدرّبة ومرنة تتناسب مع احتياجاتكم التشغيلية. تضمن المتابعة الإدارية توزيعًا منظّمًا للفرق وأداءً يوميًا ثابتًا.",
+        "slug": "retail-warehouse-support",
+        "title": "تعبئة الرفوف ودعم المستودعات وتجهيز الطلبات",
+        "body": "دعم تشغيلي للسوبرماركت والمستودعات، يشمل تعبئة الرفوف ومهام المستودعات وجمع المنتجات للطلبات. تساعد فرقنا على إبقاء الرفوف ممتلئة وجمع طلبات العملاء وتجهيزها للتوصيل.",
         "items": [
-          "تعبئة الرفوف وترتيب المنتجات",
-          "دعم العمل داخل المتاجر",
-          "عمّال دعم تشغيلي",
-          "فرق تتناسب مع احتياجات كل موقع"
+          "تعبئة الرفوف",
+          "مهام دعم المستودعات",
+          "جمع المنتجات لطلبات العملاء",
+          "تجهيز الطلبات للتوصيل"
         ]
       },
       {
-        "title": "النقل والتوصيل",
-        "body": "تنظيم نقل الموظفين بين أماكن الإقامة والعمل، إلى جانب دعم التوصيل وفق متطلبات التشغيل المحددة.",
+        "slug": "employee-transportation",
+        "title": "نقل الموظفين",
+        "body": "نقل منظّم بين منازل الموظفين وأماكن عملهم باستخدام حافلات مجهّزة لنقل العاملين. ندعم الشركات برحلات منسّقة تتناسب مع جداول عمل موظفيها.",
         "items": [
-          "نقل الموظفين بالحافلات",
-          "تنسيق عمليات النقل",
-          "دعم خدمات التوصيل",
-          "المساعدة في بيئات العمل المزدحمة"
+          "النقل بين المنازل وأماكن العمل",
+          "حافلات مجهّزة لنقل الموظفين",
+          "رحلات منسّقة مع جداول العمل",
+          "تنسيق مع إدارة الشركة"
         ]
-      },
-      {
-        "title": "خدمة مساعدة المتسوّقين",
-        "body": "نساعد العملاء والموظفين بعناية في المساحات التجارية المزدحمة. أطلقت برايت خدمة مساعدة المتسوّقين عام 2013.",
-        "items": [
-          "مساعدة العملاء",
-          "المساعدة في حمل المشتريات",
-          "دعم عمليات المتاجر",
-          "موظفون مدرّبون في الموقع"
-        ]
-      }
-    ],
-    "photos": [
-      {
-        "src": "real-24.webp",
-        "category": "cleaning",
-        "title": "العناية اليومية بالأرضيات",
-        "alt": "موظف من برايت يمسح أرضية ممر في سوبرماركت"
-      },
-      {
-        "src": "real-79.webp",
-        "category": "cleaning",
-        "title": "تنظيف الأرضيات بالآلات",
-        "alt": "موظف من برايت يستخدم آلة لتنظيف الأرضيات داخل سوبرماركت"
-      },
-      {
-        "src": "real-89.webp",
-        "category": "retail",
-        "title": "رفوف جاهزة للعملاء",
-        "alt": "موظف من برايت يعيد تعبئة المنتجات على رفوف سوبرماركت"
-      },
-      {
-        "src": "real-92.webp",
-        "category": "retail",
-        "title": "ترتيب المنتجات بعناية",
-        "alt": "موظف من برايت يرتّب المنتجات بعناية على أحد رفوف سوبرماركت"
-      },
-      {
-        "src": "real-0.webp",
-        "category": "porter",
-        "title": "يد للمساعدة",
-        "alt": "مساعد تسوّق من برايت يعبّئ أكياس المشتريات عند صندوق الدفع"
-      },
-      {
-        "src": "real-80.webp",
-        "category": "cleaning",
-        "title": "عناية بالمساحات التجارية",
-        "alt": "موظف من برايت ينظّف أرضية متجر للأدوات المنزلية"
-      },
-      {
-        "src": "real-60.webp",
-        "category": "cleaning",
-        "title": "اهتمام بكل تفصيل",
-        "alt": "موظف من برايت ينظّف حوضًا في دورة مياه"
-      },
-      {
-        "src": "real-45.webp",
-        "category": "porter",
-        "title": "دعم يتجاوز صندوق الدفع",
-        "alt": "مساعد تسوّق من برايت يحمّل أكياس المشتريات في سيارة عميل"
       }
     ],
     "filmLabel": "برايت في الميدان",
@@ -363,7 +312,86 @@ const CONTENT = {
     "filmBody": "نظرة أقرب إلى العناية والخبرة والعمل الجماعي وراء خدمات برايت اليومية.",
     "filmFallback": "متصفحك لا يدعم تشغيل الفيديو.",
     "filmAria": "فيديو تعريفي عن برايت",
-    "menuLabel": "القائمة"
+    "historyTitle": "تاريخنا",
+    "historyBody": "منذ تأسيسنا عام 2005، طوّرنا خبرتنا من خلال العمل الميداني في السوق اللبنانية. ساعدتنا هذه التجربة على فهم التحديات التي تواجهها الشركات في صيانة مرافقها وتنسيق فرقها وضمان استمرارية خدماتها.",
+    "historyBodyTwo": "تجمع برايت اليوم خمسة مجالات خدمية متكاملة، لتقديم دعم منسّق لمرافق العملاء وموظفيهم وعملياتهم. ونواصل بناء علاقات عمل طويلة الأمد من خلال خدمة ثابتة وتواصل واضح واهتمام بمتطلبات كل عميل.",
+    "missionTitle": "رسالتنا",
+    "missionBody": "تقديم خدمات موثوقة لدعم المرافق والعمليات، تساعد الشركات على العناية بمقارّها ودعم موظفيها والحفاظ على سير أعمالها اليومية بسلاسة.",
+    "visionTitle": "رؤيتنا",
+    "visionBody": "أن نكون شريكًا موثوقًا طويل الأمد للشركات في مختلف أنحاء لبنان، معروفًا بفرقه المهنية وخدماته الثابتة وحلوله العملية.",
+    "valuesTitle": "قيمنا",
+    "values": [
+      [
+        "الموثوقية",
+        "تقديم الخدمات المتفق عليها بثبات والوفاء بالتزاماتنا."
+      ],
+      [
+        "المهنية",
+        "الحفاظ على سلوك محترم وفرق كفوءة ومعايير عمل واضحة."
+      ],
+      [
+        "المساءلة",
+        "تحمّل مسؤولية أعمالنا والاستجابة لملاحظات العملاء."
+      ],
+      [
+        "السلامة والعناية",
+        "العمل باهتمام بالأشخاص والممتلكات والمعدات والبيئة المحيطة."
+      ],
+      [
+        "الشراكة",
+        "الإصغاء إلى العملاء والتنسيق الوثيق مع فرقهم الإدارية."
+      ],
+      [
+        "التحسين المستمر",
+        "مراجعة أساليبنا والتكيّف مع الاحتياجات التشغيلية المتغيرة."
+      ]
+    ],
+    "commitmentTitle": "التزامنا",
+    "commitmentBody": "نبدأ كل مهمة بفهم واضح لنطاقها وتوقعات العميل. من خلال فرق منظّمة وتخطيط عملي ومتابعة منتظمة، نعمل على تقديم خدمة ثابتة وبناء الثقة بالدعم الذي نقدّمه.",
+    "serviceDetails": "اكتشف هذه الخدمة",
+    "servicePageLabel": "خدماتنا",
+    "scopeLabel": "نطاق الخدمة",
+    "benefitsLabel": "ما نقدّمه لأعمالكم",
+    "approachLabel": "نهجنا",
+    "otherServices": "اكتشف خدماتنا الأخرى",
+    "backServices": "جميع الخدمات",
+    "serviceMotto": "يسعدنا مساعدتكم",
+    "serviceHome": "الرئيسية",
+    "sloganLabel": "شعارنا",
+    "menuLabel": "القائمة",
+    "howWeWork": "كيف نعمل",
+    "approachTitle": "خطوات واضحة. من التقييم إلى المتابعة.",
+    "approachIntro": "تبدأ خطة الخدمة العملية بفهم الموقع، وتستمر بالتواصل المنتظم.",
+    "steps": [
+      [
+        "فهم موقعكم",
+        "مراجعة المرافق ومستويات النشاط وساعات التشغيل وأولويات الخدمة."
+      ],
+      [
+        "تحديد نطاق العمل",
+        "الاتفاق على المهام والجداول واحتياجات العاملين ومسؤوليات الخدمة."
+      ],
+      [
+        "تنسيق الفريق",
+        "تنظيم العمل اليومي وفق متطلبات الموقع والخطة المتفق عليها."
+      ],
+      [
+        "المتابعة والتحسين",
+        "مراجعة ظروف الموقع ومعالجة الملاحظات وتعديل الأولويات بالتنسيق مع الإدارة."
+      ]
+    ],
+    "homePhotoCaptions": [
+      "النظافة في أقسام الأغذية الطازجة",
+      "تجهيز الطلبات بعناية",
+      "مساعدة العملاء في نقل المشتريات إلى سياراتهم"
+    ],
+    "homePhotoAlts": [
+      "عاملة بزي برايت تنظف سطحاً من الفولاذ المقاوم للصدأ",
+      "عامل بزي برايت يمسح رمز منتج لتجهيز طلب",
+      "عامل بزي برايت يحمّل أكياس المشتريات في سيارة عميلة"
+    ],
+    "navLabel": "التنقل الرئيسي",
+    "languageLabel": "اللغة"
   },
   "el": {
     "title": "Bright | Υπηρεσίες εγκαταστάσεων και υποστήριξης",
@@ -376,35 +404,27 @@ const CONTENT = {
     "heroLabel": "ΥΠΗΡΕΣΙΕΣ ΕΓΚΑΤΑΣΤΑΣΕΩΝ ΚΑΙ ΥΠΟΣΤΗΡΙΞΗΣ",
     "heroTitle": "Φροντίδα για τον χώρο σας.",
     "heroAccent": "Στήριξη για την επιχείρησή σας.",
-    "heroDescription": "Πίσω από τους χώρους στους οποίους βασίζεστε, βρίσκονται άνθρωποι που φροντίζουν κάθε λεπτομέρεια. Η Bright διατηρεί τις εγκαταστάσεις σας φιλόξενες και την καθημερινή λειτουργία σας ομαλή.",
+    "heroDescription": "Η Bright Service Company SARL υποστηρίζει επιχειρήσεις σε όλο τον Λίβανο με υπηρεσίες διαχείρισης εγκαταστάσεων και λειτουργικής υποστήριξης. Από την ίδρυσή μας το 2005, φέρνουμε πάνω από δύο δεκαετίες πρακτικής εμπειρίας στην καθημερινή λειτουργία σας.",
     "explore": "Δείτε τις υπηρεσίες μας",
     "heroFoot": "Χαρά μας να σας βοηθάμε",
-    "heroCaption": "Πραγματικοί άνθρωποι. Ουσιαστική φροντίδα.",
-    "heroAlt": "Επαγγελματίας της Bright χειρίζεται μηχάνημα καθαρισμού δαπέδου μέσα σε σουπερμάρκετ",
+    "heroCaption": "Επαγγελματική φροντίδα χώρων με έντονη δραστηριότητα.",
+    "heroAlt": "Εργαζόμενος με στολή Bright χειρίζεται μηχάνημα καθαρισμού δαπέδων σε εμπορικό κέντρο",
     "clientsTitle": "Ορισμένες από τις επιχειρήσεις που έχουμε υποστηρίξει",
     "clientsNote": "Εμπειρία σε πελάτες και αγορά",
     "aboutLabel": "ΣΧΕΤΙΚΑ ΜΕ ΤΗΝ BRIGHT",
-    "aboutTitle": "Η δύναμη πίσω από την καθημερινότητά σας.",
-    "aboutLead": "Η καλή εξυπηρέτηση ξεκινά από ανθρώπους που νοιάζονται για τις λεπτομέρειες.",
-    "aboutBody": "Η Bright συνδυάζει τον καθαρισμό, τη συντήρηση εγκαταστάσεων και τη λειτουργική υποστήριξη σε μία επαγγελματική ομάδα. Με εκπαιδευμένο προσωπικό και προσεκτική διοίκηση, βοηθάμε τις επιχειρήσεις να επικεντρωθούν στη δική τους δουλειά.",
-    "aboutOutlook": "Προσαρμόζουμε τις υπηρεσίες μας στον χώρο, στους ανθρώπους και στα πρότυπά σας. Όπου κι αν σας οδηγήσει η επόμενη ευκαιρία, η αξιόπιστη εξυπηρέτηση κάνει τη διαφορά.",
-    "historyOne": "Ίδρυση της Bright",
-    "historyTwo": "Έναρξη υπηρεσιών βοηθών αγορών",
-    "aboutCaption": "Οι άνθρωποι στο επίκεντρο κάθε υπηρεσίας.",
-    "aboutCaptionSmall": "Μέλος της ομάδας Bright εν ώρα εργασίας",
-    "aboutAlt": "Βοηθός αγορών της Bright χαμογελά κρατώντας σακούλες με αγορές στο ταμείο σουπερμάρκετ",
-    "numbersLabel": "Η BRIGHT ΣΕ ΑΡΙΘΜΟΥΣ",
-    "employees": "Εργαζόμενοι",
-    "sites": "Ενεργές εγκαταστάσεις",
-    "activeClients": "Ενεργοί πελάτες",
+    "aboutTitle": "Ποιοι είμαστε",
+    "aboutLead": "Υποστηρίζουμε επιχειρήσεις σε όλο τον Λίβανο από το 2005.",
+    "aboutBody": "Η Bright Service Company SARL είναι λιβανέζικη εταιρεία που παρέχει υπηρεσίες διαχείρισης εγκαταστάσεων και λειτουργικής υποστήριξης σε επιχειρήσεις διαφορετικών κλάδων. Ιδρύθηκε το 2005 και διαθέτει πάνω από δύο δεκαετίες πρακτικής εμπειρίας στη φροντίδα εμπορικών εγκαταστάσεων και στην υποστήριξη της καθημερινής λειτουργίας τους.",
+    "aboutOutlook": "Συνδυάζουμε καταρτισμένο προσωπικό, λειτουργική τεχνογνωσία και στενό συντονισμό με τη διοίκηση των πελατών, ώστε οι υπηρεσίες μας να ανταποκρίνονται στους χώρους, στα ωράρια και στις προτεραιότητες κάθε οργανισμού.",
+    "aboutCaption": "Επαγγελματική βοήθεια. Καλύτερη εμπειρία αγορών.",
+    "aboutCaptionSmall": "Υπηρεσίες μεταφοράς αγορών",
+    "aboutAlt": "Εργαζόμενος με στολή Bright συσκευάζει τρόφιμα στο ταμείο",
     "servicesLabel": "ΤΙ ΠΡΟΣΦΕΡΟΥΜΕ",
     "servicesTitle": "Μία ομάδα. Καθημερινή υποστήριξη.",
-    "servicesIntro": "Υπηρεσίες προσαρμοσμένες στον τρόπο λειτουργίας της επιχείρησής σας, από την πρώτη άφιξη μέχρι τον τελευταίο έλεγχο.",
-    "serviceCaption": "Προσοχή στη λεπτομέρεια. Συνέπεια στην εξυπηρέτηση.",
-    "serviceAlt": "Μέλος της ομάδας Bright αναπληρώνει προϊόντα στα ράφια σουπερμάρκετ",
+    "servicesIntro": "Πέντε συμπληρωματικές υπηρεσίες για τις εγκαταστάσεις, τους εργαζομένους και την καθημερινή λειτουργία σας.",
     "workLabel": "Η BRIGHT ΣΤΗΝ ΠΡΑΞΗ",
     "workTitle": "Οι άνθρωποί μας στον χώρο εργασίας.",
-    "workIntro": "Μια πιο κοντινή ματιά στις ομάδες που φροντίζουν πραγματικές εγκαταστάσεις και στηρίζουν την καθημερινή λειτουργία τους.",
+    "workIntro": "Καθαρισμός, εξυπηρέτηση πελατών και λειτουργική υποστήριξη προσαρμοσμένα στην επιχείρησή σας.",
     "qualityLabel": "ΤΑ ΠΡΟΤΥΠΑ ΜΑΣ",
     "qualityTitle": "Η καλή εξυπηρέτηση είναι καθημερινή πράξη.",
     "qualityIntro": "Σαφείς απαιτήσεις, στενή επίβλεψη και συνεχής βελτίωση καθοδηγούν κάθε δραστηριότητα της Bright.",
@@ -416,129 +436,72 @@ const CONTENT = {
     "qualityThreeBody": "Η άμεση επικοινωνία και οι διορθωτικές ενέργειες μετατρέπουν τα σχόλια σε καλύτερη εξυπηρέτηση. Η υπευθυνότητα και ο σεβασμός καθορίζουν τον τρόπο που εργαζόμαστε.",
     "isoTitle": "Διαχείριση ποιότητας",
     "isoBody": "Η Bright διέθετε πιστοποίηση ISO 9001:2015 από το 2017 έως το 2019. Η διαδικασία επαναπιστοποίησης βρίσκεται σε εξέλιξη, με σταθερή προσήλωση στη συνεχή βελτίωση.",
-    "closingLabel": "BRIGHT",
+    "closingLabel": "ΤΟ ΣΥΝΘΗΜΑ ΜΑΣ",
     "closingTitle": "Χαρά μας να σας βοηθάμε",
-    "closingBody": "Φροντίδα στην εξυπηρέτηση. Άνθρωποι που μπορείτε να εμπιστευτείτε. Χώρος για το επόμενο βήμα.",
+    "closingBody": "Αξιόπιστη υποστήριξη εγκαταστάσεων και λειτουργιών για επιχειρήσεις σε όλο τον Λίβανο.",
     "closingAction": "Βρείτε την υπηρεσία σας",
     "footerDescriptor": "Υπηρεσίες εγκαταστάσεων και υποστήριξης",
     "footerText": "Bright Service Company SARL · Από το 2005",
     "backTop": "Επιστροφή στην κορυφή",
-    "close": "Κλείσιμο",
-    "previous": "Προηγούμενη",
-    "next": "Επόμενη",
-    "navLabel": "Κύρια πλοήγηση",
-    "languageLabel": "Γλώσσα",
-    "filtersLabel": "Κατηγορίες φωτογραφιών",
-    "categories": {
-      "all": "Όλα",
-      "cleaning": "Καθαρισμός",
-      "retail": "Υποστήριξη καταστημάτων",
-      "porter": "Υπηρεσίες βοηθών αγορών"
-    },
     "services": [
       {
-        "title": "Επαγγελματικός καθαρισμός",
-        "body": "Καθαροί και ευχάριστοι χώροι που συμβάλλουν στην ευεξία εργαζομένων, πελατών και επισκεπτών. Από την καθημερινή φροντίδα έως τις εξειδικευμένες εργασίες, προσαρμόζουμε την υπηρεσία στον χώρο σας.",
+        "slug": "maintenance",
+        "title": "Υπηρεσίες συντήρησης",
+        "body": "Διατηρήστε τις εγκαταστάσεις σας σε αποδοτική λειτουργία με υπηρεσίες συντήρησης προσαρμοσμένες στην επιχείρησή σας. Το αντικείμενό μας περιλαμβάνει συντήρηση γεννητριών, ηλεκτρολογική συντήρηση, υδραυλικές εργασίες και λύσεις εξοικονόμησης ενέργειας.",
         "items": [
-          "Καθημερινός καθαρισμός γραφείων και καταστημάτων",
-          "Φροντίδα χαλιών και δαπέδων",
-          "Τζάμια, παράθυρα και προσόψεις",
-          "Χώροι υγιεινής και διαχείριση αποβλήτων",
-          "Βιομηχανικός και περιοδικός καθαρισμός",
-          "Καθαρισμός αεραγωγών και συστημάτων κλιματισμού"
+          "Συντήρηση γεννητριών",
+          "Ηλεκτρολογική συντήρηση",
+          "Συντήρηση υδραυλικών εγκαταστάσεων",
+          "Λύσεις εξοικονόμησης ενέργειας"
+        ],
+        "externalUrl": "https://be-rightbright.com/",
+        "externalLabel": "Επισκεφθείτε τον ιστότοπο συντήρησης"
+      },
+      {
+        "slug": "corporate-cleaning",
+        "title": "Εταιρικός καθαρισμός & εξειδικευμένος βαθύς καθαρισμός",
+        "body": "Επαγγελματικός καθαρισμός για σουπερμάρκετ, εμπορικά κέντρα, γραφεία και εταιρικές εγκαταστάσεις. Από τον καθημερινό καθαρισμό έως τον εξειδικευμένο βαθύ καθαρισμό, οι καταρτισμένες ομάδες μας φροντίζουν δάπεδα και πλακίδια, εξωτερικές όψεις κτιρίων και υαλοπίνακες σε ύψος, με μεθόδους κατάλληλες για κάθε χώρο και επιφάνεια.",
+        "items": [
+          "Εταιρικός και καθημερινός καθαρισμός",
+          "Υγιεινή σουπερμάρκετ και τμημάτων νωπών τροφίμων",
+          "Εξειδικευμένη φροντίδα δαπέδων και πλακιδίων",
+          "Καθαρισμός εξωτερικών όψεων και προσόψεων",
+          "Καθαρισμός παραθύρων και υαλοπινάκων σε ύψος",
+          "Καθαρισμός πριν το άνοιγμα και μετά από ανακαίνιση"
         ]
       },
       {
-        "title": "Συντήρηση εγκαταστάσεων",
-        "body": "Συντονισμένη συντήρηση για μεμονωμένα κτίρια και επιχειρήσεις με πολλές εγκαταστάσεις. Προγραμματισμένες εργασίες και άμεση υποστήριξη διατηρούν τους χώρους σας σε καλή κατάσταση.",
+        "slug": "porter-services",
+        "title": "Υπηρεσίες μεταφοράς αγορών σε σουπερμάρκετ",
+        "body": "Εξυπηρέτηση πελατών στο ταμείο και πέρα από αυτό. Οι ομάδες μας συσκευάζουν τις αγορές σε σακούλες και βοηθούν στη μεταφορά τους στα οχήματα των πελατών, για μια ομαλή και βολική εμπειρία αγορών.",
         "items": [
-          "Βαφές και στεγανοποίηση",
-          "Επισκευές κτιρίων και αποχετεύσεις",
-          "Κλιματισμός και αντλίες",
-          "Ηλεκτρικά συστήματα και συστήματα ασφαλείας",
-          "Συστήματα πυρασφάλειας",
-          "Συντήρηση και επισκευή γεννητριών"
+          "Συσκευασία αγορών στο ταμείο",
+          "Μεταφορά σακουλών με αγορές",
+          "Βοήθεια μέχρι το όχημα του πελάτη",
+          "Υποστήριξη συντονισμένη με τη λειτουργία του σουπερμάρκετ"
         ]
       },
       {
-        "title": "Προσωπικό και υποστήριξη λιανικής",
-        "body": "Εκπαιδευμένες, ευέλικτες ομάδες που ανταποκρίνονται στις λειτουργικές σας απαιτήσεις. Η επαγγελματική διοίκηση εξασφαλίζει οργανωμένη στελέχωση και σταθερή καθημερινή απόδοση.",
+        "slug": "retail-warehouse-support",
+        "title": "Αναπλήρωση ραφιών, υποστήριξη αποθηκών & συλλογή παραγγελιών",
+        "body": "Λειτουργική υποστήριξη για σουπερμάρκετ και αποθήκες, που περιλαμβάνει αναπλήρωση ραφιών, εργασίες αποθήκης και συλλογή παραγγελιών. Οι ομάδες μας διατηρούν τα ράφια εφοδιασμένα και συλλέγουν και προετοιμάζουν παραγγελίες πελατών για παράδοση.",
         "items": [
           "Αναπλήρωση προϊόντων στα ράφια",
-          "Υποστήριξη εντός καταστημάτων",
-          "Προσωπικό λειτουργικής υποστήριξης",
-          "Ομάδες ανάλογα με τις ανάγκες κάθε εγκατάστασης"
+          "Εργασίες υποστήριξης αποθήκης",
+          "Συλλογή παραγγελιών πελατών",
+          "Προετοιμασία παραγγελιών για παράδοση"
         ]
       },
       {
-        "title": "Μεταφορά και διανομή",
-        "body": "Οργανωμένη μεταφορά εργαζομένων μεταξύ κατοικίας και χώρου εργασίας, καθώς και υποστήριξη διανομών προσαρμοσμένη σε συγκεκριμένες λειτουργικές ανάγκες.",
+        "slug": "employee-transportation",
+        "title": "Μεταφορά εργαζομένων",
+        "body": "Οργανωμένη μεταφορά μεταξύ των κατοικιών των εργαζομένων και του χώρου εργασίας, με λεωφορεία εξοπλισμένα για μεταφορά προσωπικού. Υποστηρίζουμε επιχειρήσεις με συντονισμένα δρομολόγια που ανταποκρίνονται στα ωράρια εργασίας.",
         "items": [
-          "Μεταφορά εργαζομένων με λεωφορεία",
-          "Συντονισμός μεταφορών",
-          "Υποστήριξη διανομών",
-          "Υποστήριξη σε περιβάλλοντα με έντονη δραστηριότητα"
+          "Μεταφορά μεταξύ κατοικίας και εργασίας",
+          "Λεωφορεία για μεταφορά προσωπικού",
+          "Δρομολόγια συντονισμένα με τα ωράρια",
+          "Συντονισμός με τη διοίκηση της εταιρείας"
         ]
-      },
-      {
-        "title": "Υπηρεσίες βοηθών αγορών",
-        "body": "Προσεκτική εξυπηρέτηση που βοηθά πελάτες και προσωπικό στις καθημερινές ανάγκες πολυσύχναστων εμπορικών χώρων. Η Bright ξεκίνησε τις υπηρεσίες βοηθών αγορών το 2013.",
-        "items": [
-          "Εξυπηρέτηση πελατών",
-          "Βοήθεια στη μεταφορά αγορών",
-          "Υποστήριξη λειτουργίας καταστημάτων",
-          "Εκπαιδευμένο προσωπικό στον χώρο"
-        ]
-      }
-    ],
-    "photos": [
-      {
-        "src": "real-24.webp",
-        "category": "cleaning",
-        "title": "Καθημερινή φροντίδα δαπέδων",
-        "alt": "Μέλος της ομάδας Bright σφουγγαρίζει διάδρομο σουπερμάρκετ"
-      },
-      {
-        "src": "real-79.webp",
-        "category": "cleaning",
-        "title": "Καθαρισμός δαπέδων με μηχανήματα",
-        "alt": "Μέλος της ομάδας Bright χειρίζεται μηχάνημα καθαρισμού δαπέδου μέσα σε σουπερμάρκετ"
-      },
-      {
-        "src": "real-89.webp",
-        "category": "retail",
-        "title": "Ράφια έτοιμα για τους πελάτες",
-        "alt": "Μέλος της ομάδας Bright αναπληρώνει προϊόντα στα ράφια σουπερμάρκετ"
-      },
-      {
-        "src": "real-92.webp",
-        "category": "retail",
-        "title": "Προσεκτική τοποθέτηση προϊόντων",
-        "alt": "Μέλος της ομάδας Bright τοποθετεί προσεκτικά προϊόντα σε ράφι σουπερμάρκετ"
-      },
-      {
-        "src": "real-0.webp",
-        "category": "porter",
-        "title": "Ένα χέρι βοήθειας",
-        "alt": "Βοηθός αγορών της Bright συσκευάζει αγορές στο ταμείο"
-      },
-      {
-        "src": "real-80.webp",
-        "category": "cleaning",
-        "title": "Φροντίδα εμπορικών χώρων",
-        "alt": "Μέλος της ομάδας Bright καθαρίζει το δάπεδο καταστήματος ειδών σπιτιού"
-      },
-      {
-        "src": "real-60.webp",
-        "category": "cleaning",
-        "title": "Προσοχή σε κάθε λεπτομέρεια",
-        "alt": "Μέλος της ομάδας Bright καθαρίζει νιπτήρα σε χώρο υγιεινής"
-      },
-      {
-        "src": "real-45.webp",
-        "category": "porter",
-        "title": "Υποστήριξη και μετά το ταμείο",
-        "alt": "Βοηθός αγορών της Bright φορτώνει σακούλες με αγορές στο αυτοκίνητο πελάτη"
       }
     ],
     "filmLabel": "Η BRIGHT ΣΕ ΚΙΝΗΣΗ",
@@ -546,6 +509,85 @@ const CONTENT = {
     "filmBody": "Μια πιο κοντινή ματιά στη φροντίδα, την τεχνογνωσία και την ομαδική δουλειά πίσω από τις καθημερινές υπηρεσίες της Bright.",
     "filmFallback": "Το πρόγραμμα περιήγησής σας δεν υποστηρίζει αναπαραγωγή βίντεο.",
     "filmAria": "Εταιρικό βίντεο της Bright",
-    "menuLabel": "Μενού"
+    "historyTitle": "Η ιστορία μας",
+    "historyBody": "Από την ίδρυσή μας το 2005, αναπτύσσουμε την τεχνογνωσία μας μέσα από πρακτική εργασία στην αγορά του Λιβάνου. Αυτή η εμπειρία διαμόρφωσε την κατανόησή μας για τις προκλήσεις που αντιμετωπίζουν οι επιχειρήσεις στη συντήρηση εγκαταστάσεων, στον συντονισμό προσωπικού και στη διασφάλιση της συνέχειας των υπηρεσιών.",
+    "historyBodyTwo": "Σήμερα η Bright Service συνδυάζει πέντε συμπληρωματικούς τομείς υπηρεσιών, προσφέροντας συντονισμένη υποστήριξη για εγκαταστάσεις, εργαζομένους και λειτουργίες. Συνεχίζουμε να χτίζουμε μακροχρόνιες συνεργασίες με σταθερή εξυπηρέτηση, σαφή επικοινωνία και προσοχή στις απαιτήσεις κάθε πελάτη.",
+    "missionTitle": "Η αποστολή μας",
+    "missionBody": "Να παρέχουμε αξιόπιστες υπηρεσίες υποστήριξης εγκαταστάσεων και λειτουργιών, βοηθώντας τις επιχειρήσεις να φροντίζουν τους χώρους τους, να στηρίζουν τους ανθρώπους τους και να διατηρούν ομαλή την καθημερινή λειτουργία τους.",
+    "visionTitle": "Το όραμά μας",
+    "visionBody": "Να είμαστε ένας αξιόπιστος μακροχρόνιος συνεργάτης για επιχειρήσεις σε όλο τον Λίβανο, αναγνωρισμένος για τις επαγγελματικές ομάδες, τη συνέπεια στην εξυπηρέτηση και τις πρακτικές λύσεις.",
+    "valuesTitle": "Οι αξίες μας",
+    "values": [
+      [
+        "Αξιοπιστία",
+        "Παρέχουμε με συνέπεια τις συμφωνημένες υπηρεσίες και τηρούμε τις δεσμεύσεις μας."
+      ],
+      [
+        "Επαγγελματισμός",
+        "Διατηρούμε σεβασμό, ικανές ομάδες και σαφή πρότυπα εργασίας."
+      ],
+      [
+        "Υπευθυνότητα",
+        "Αναλαμβάνουμε την ευθύνη της δουλειάς μας και ανταποκρινόμαστε στις παρατηρήσεις των πελατών."
+      ],
+      [
+        "Ασφάλεια και φροντίδα",
+        "Εργαζόμαστε με προσοχή στους ανθρώπους, στην περιουσία, στον εξοπλισμό και στο περιβάλλον."
+      ],
+      [
+        "Συνεργασία",
+        "Ακούμε τους πελάτες και συντονιζόμαστε στενά με τις διοικητικές τους ομάδες."
+      ],
+      [
+        "Συνεχής βελτίωση",
+        "Επανεξετάζουμε τις μεθόδους μας και προσαρμοζόμαστε στις μεταβαλλόμενες λειτουργικές ανάγκες."
+      ]
+    ],
+    "commitmentTitle": "Η δέσμευσή μας",
+    "commitmentBody": "Προσεγγίζουμε κάθε εργασία με σαφή κατανόηση του αντικειμένου και των προσδοκιών του πελάτη. Με οργανωμένες ομάδες, πρακτικό σχεδιασμό και τακτική παρακολούθηση, επιδιώκουμε σταθερή εξυπηρέτηση και εμπιστοσύνη στην υποστήριξη που παρέχουμε.",
+    "serviceDetails": "Δείτε αυτή την υπηρεσία",
+    "servicePageLabel": "ΟΙ ΥΠΗΡΕΣΙΕΣ ΜΑΣ",
+    "scopeLabel": "Αντικείμενο υπηρεσιών",
+    "benefitsLabel": "Τι προσφέρουμε στην επιχείρησή σας",
+    "approachLabel": "Η ΠΡΟΣΕΓΓΙΣΗ ΜΑΣ",
+    "otherServices": "Δείτε τις άλλες υπηρεσίες μας",
+    "backServices": "Όλες οι υπηρεσίες",
+    "serviceMotto": "Χαρά μας να σας βοηθάμε",
+    "serviceHome": "Αρχική",
+    "sloganLabel": "ΤΟ ΣΥΝΘΗΜΑ ΜΑΣ",
+    "menuLabel": "Μενού",
+    "howWeWork": "Πώς εργαζόμαστε",
+    "approachTitle": "Σαφής διαδικασία. Από την αξιολόγηση έως την παρακολούθηση.",
+    "approachIntro": "Ένα πρακτικό σχέδιο υπηρεσιών ξεκινά με την κατανόηση του χώρου και συνεχίζεται με τακτική επικοινωνία.",
+    "steps": [
+      [
+        "Κατανόηση του χώρου σας",
+        "Εξετάζουμε τις εγκαταστάσεις, τη δραστηριότητα, το ωράριο και τις προτεραιότητες εξυπηρέτησης."
+      ],
+      [
+        "Καθορισμός αντικειμένου",
+        "Συμφωνούμε τις εργασίες, τα προγράμματα, τις ανάγκες στελέχωσης και τις αρμοδιότητες."
+      ],
+      [
+        "Συντονισμός της ομάδας",
+        "Οργανώνουμε την καθημερινή εργασία σύμφωνα με τις ανάγκες του χώρου και το συμφωνημένο σχέδιο."
+      ],
+      [
+        "Παρακολούθηση και βελτίωση",
+        "Εξετάζουμε τις συνθήκες του χώρου, αντιμετωπίζουμε παρατηρήσεις και προσαρμόζουμε τις προτεραιότητες με τη διεύθυνση."
+      ]
+    ],
+    "homePhotoCaptions": [
+      "Υγιεινή στους χώρους φρέσκων τροφίμων",
+      "Προσεκτική συλλογή παραγγελιών",
+      "Βοήθεια έως το όχημα του πελάτη"
+    ],
+    "homePhotoAlts": [
+      "Εργαζόμενη με στολή Bright καθαρίζει ανοξείδωτο πάγκο",
+      "Εργαζόμενος με στολή Bright σαρώνει προϊόν για παραγγελία",
+      "Εργαζόμενος με στολή Bright φορτώνει σακούλες αγορών σε όχημα"
+    ],
+    "navLabel": "Κύρια πλοήγηση",
+    "languageLabel": "Γλώσσα"
   }
 };
