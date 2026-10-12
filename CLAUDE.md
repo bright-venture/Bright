@@ -5,7 +5,7 @@ Static marketing site for Bright Service Company SARL (facility and support serv
 ## Workflow
 
 - Edit files in `src/` (and photos/logos/video in `source/`), then `npm run build`. Commit the build output: Netlify publishes the repo root as-is and does not run a build.
-- `npm run dev` builds, then serves at http://localhost:4321 (or the next free port). The preview config is `.claude/launch.json` (`bright-site`; it only serves, so build first).
+- `npm run dev` builds, then serves at http://localhost:4321 (or the next free port). `scripts/serve.mjs` binds to 127.0.0.1 only and refuses paths outside the project (checked with `path.relative` and `realpath`, never `startsWith`), hidden files and `src/`, `source/`, `scripts/`, `node_modules/`; keep it that way (Aikido SAST finding, Oct 2026). The preview config is `.claude/launch.json` (`bright-site`; it only serves, so build first).
 - `npm run audit` runs Lighthouse (mobile + desktop) on every page in `sitemap.xml`; narrow it with language, device or page, e.g. `npm run audit -- ar mobile porter-services`. Target is 100 in every category. On this Windows machine headless Chrome occasionally stalls its compositor for ~1 to 2 s, giving a one-off 99; re-run or confirm on PageSpeed Insights.
 - When a new Kimi export arrives: their `content.js` / `services-content.js` reintroduce wording we corrected. Merge only new or changed strings, keep ours otherwise, and re-check the Conventions below.
 

@@ -1,11 +1,16 @@
 // Zero-dependency static server for local development: node scripts/serve.mjs [port]
+// It only listens on this computer (127.0.0.1) and only serves the built site inside the project folder.
 import { createServer } from 'node:http';
-import { readFile, stat } from 'node:fs/promises';
-import { extname, join, normalize, resolve } from 'node:path';
+import { readFile, realpath, stat } from 'node:fs/promises';
+import { extname, isAbsolute, relative, resolve, sep } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { gzipSync } from 'node:zlib';
 
 const root = resolve(fileURLToPath(new URL('..', import.meta.url)));
+const realRoot = await realpath(root);
+const HOST = '127.0.0.1';
+// Project sources and tooling are never served, only the generated pages and assets.
+const PRIVATE = new Set(['src', 'source', 'scripts', 'node_modules']);
 const requested = process.argv[2] || process.env.PORT;
 let port = Number(requested || 4321);
 
@@ -25,19 +30,43 @@ const TYPES = {
   '.txt': 'text/plain; charset=utf-8',
 };
 
+// Returns the file inside the project for a URL path, or null if the path tries to leave it
+// (../, encoded slashes or backslashes, sibling folders such as ../Bright-other, symlinks),
+// targets a hidden file, or a private folder.
+async function resolveInside(path) {
+  if (path.includes('\0')) return null;
+  const file = resolve(root, '.' + sep + path);
+  const rel = relative(root, file);
+  if (!rel || rel.startsWith('..') || isAbsolute(rel)) return null;
+  const parts = rel.split(sep);
+  if (parts.some(part => part.startsWith('.')) || PRIVATE.has(parts[0])) return null;
+  // Follow symlinks and check again, so a link cannot point outside the project.
+  const real = await realpath(file);
+  const realRel = relative(realRoot, real);
+  if (!realRel || realRel.startsWith('..') || isAbsolute(realRel)) return null;
+  return real;
+}
+
 const server = createServer(async (req, res) => {
   try {
-    let path = decodeURIComponent(new URL(req.url, 'http://localhost').pathname);
+    const { pathname } = new URL(req.url, 'http://localhost');
+    let path = decodeURIComponent(pathname);
     if (path.endsWith('/')) path += 'index.html';
-    const file = normalize(join(root, path));
-    if (!file.startsWith(root) || /[\\/]\./.test(file.slice(root.length))) {
-      res.writeHead(403).end('Forbidden');
+    let file;
+    try {
+      file = await resolveInside(path);
+    } catch {
+      file = undefined; // does not exist
+    }
+    if (file === null) {
+      res.writeHead(403, { 'Content-Type': 'text/plain' }).end('Forbidden');
       return;
     }
+    if (!file) throw new Error('not found');
     const info = await stat(file);
     // Folder URLs without a trailing slash redirect, as on Netlify: /ar -> /ar/
     if (info.isDirectory()) {
-      res.writeHead(301, { Location: path + '/' }).end();
+      res.writeHead(301, { Location: pathname + '/' }).end();
       return;
     }
     let body = await readFile(file);
@@ -60,7 +89,7 @@ const server = createServer(async (req, res) => {
 server.on('error', (err) => {
   if (err.code === 'EADDRINUSE' && !requested && port < 4341) {
     console.log(`Port ${port} is busy, trying ${port + 1}...`);
-    server.listen(++port);
+    server.listen(++port, HOST);
     return;
   }
   console.error(err.code === 'EADDRINUSE' ? `Port ${port} is already in use. Pass another: npm run dev -- 4400` : err);
@@ -68,4 +97,4 @@ server.on('error', (err) => {
 });
 
 server.on('listening', () => console.log(`Bright site running at http://localhost:${port}`));
-server.listen(port);
+server.listen(port, HOST);
