@@ -220,7 +220,12 @@ const CONTENT = {
       "Forn El Chebbak, Lebanon"
     ],
     "contactMaps": "Google Maps",
-    "contactWaze": "Waze"
+    "contactWaze": "Waze",
+    "agreementTitle": "Value of Agreement",
+    "agreementUnit": "USD · Selected years",
+    "agreementSelected": "Selected year",
+    "agreementHint": "Tap or click the curve to select a year.",
+    "agreementChartLabel": "Value of Agreement in USD, curve chart"
   },
   "ar": {
     "title": "برايت | خدمات المرافق والدعم",
@@ -443,7 +448,12 @@ const CONTENT = {
       "فرن الشباك، لبنان"
     ],
     "contactMaps": "خرائط Google",
-    "contactWaze": "Waze"
+    "contactWaze": "Waze",
+    "agreementTitle": "قيمة الاتفاقية",
+    "agreementUnit": "دولار أمريكي · سنوات مختارة",
+    "agreementSelected": "السنة المختارة",
+    "agreementHint": "المسوا المنحنى أو انقروا عليه لاختيار سنة.",
+    "agreementChartLabel": "قيمة الاتفاقية بالدولار الأمريكي، رسم بياني منحني"
   },
   "el": {
     "title": "Bright | Υπηρεσίες εγκαταστάσεων και υποστήριξης",
@@ -666,6 +676,11 @@ const CONTENT = {
       "Forn El Chebbak, Λίβανος"
     ],
     "contactMaps": "Χάρτες Google",
-    "contactWaze": "Waze"
+    "contactWaze": "Waze",
+    "agreementTitle": "Αξία συμφωνίας",
+    "agreementUnit": "Δολάρια ΗΠΑ · Επιλεγμένα έτη",
+    "agreementSelected": "Επιλεγμένο έτος",
+    "agreementHint": "Αγγίξτε ή κάντε κλικ στην καμπύλη για να επιλέξετε έτος.",
+    "agreementChartLabel": "Αξία συμφωνίας σε δολάρια ΗΠΑ, διάγραμμα καμπύλης"
   }
 };

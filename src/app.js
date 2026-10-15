@@ -37,6 +37,52 @@ document.querySelectorAll('[data-copy]').forEach(button => button.addEventListen
   button.copyTimer = setTimeout(() => { button.classList.remove('copied'); if (copyStatus) copyStatus.textContent = '' }, 2000);
 }));
 
+// "Value of Agreement" chart: click/tap the curve or use arrow keys to select a year (latest selected by default).
+// Values come from the prerendered points; without JS every value stays visible on the chart.
+const agreement = document.getElementById('agreement-values');
+if (agreement) {
+  const svg = agreement.querySelector('svg');
+  const points = [...agreement.querySelectorAll('.chart-point')];
+  const labels = [...agreement.querySelectorAll('.chart-value')];
+  const ring = agreement.querySelector('.chart-selection-ring');
+  const yearOut = agreement.querySelector('[data-selected-year]');
+  const valueOut = agreement.querySelector('[data-selected-value]');
+  const money = new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD', maximumFractionDigits: 0 });
+  let selected = points.length - 1;
+  const select = index => {
+    if (index < 0 || index >= points.length) return;
+    selected = index;
+    const { year, value } = points[index].dataset;
+    yearOut.textContent = year;
+    valueOut.textContent = money.format(Number(value));
+    svg.setAttribute('aria-valuenow', year);
+    svg.setAttribute('aria-valuetext', `${year}: USD ${Number(value).toLocaleString('en-US')}`);
+    ring.setAttribute('cx', points[index].getAttribute('cx'));
+    ring.setAttribute('cy', points[index].getAttribute('cy'));
+    points.forEach((point, i) => {
+      point.classList.toggle('chart-point-selected', i === index);
+      point.setAttribute('r', i === index ? '7' : '5');
+      labels[i].classList.toggle('chart-value-selected', i === index);
+    });
+  };
+  svg.addEventListener('click', event => {
+    const bounds = svg.getBoundingClientRect();
+    if (!bounds.width) return;
+    const x = (event.clientX - bounds.left) / bounds.width * 528;
+    let nearest = 0;
+    points.forEach((point, i) => { if (Math.abs(point.getAttribute('cx') - x) < Math.abs(points[nearest].getAttribute('cx') - x)) nearest = i });
+    select(nearest);
+  });
+  svg.addEventListener('keydown', event => {
+    const next = { ArrowRight: selected + 1, ArrowUp: selected + 1, ArrowLeft: selected - 1, ArrowDown: selected - 1, Home: 0, End: points.length - 1 }[event.key];
+    if (next === undefined) return;
+    event.preventDefault();
+    select(Math.max(0, Math.min(points.length - 1, next)));
+  });
+  agreement.querySelector('[data-chart-hint]').hidden = false;
+  agreement.classList.add('is-interactive');
+}
+
 // Browsers fetch a poster immediately, even far below the fold; set it only as the video comes near.
 const video = document.getElementById('bright-video');
 if (video) {

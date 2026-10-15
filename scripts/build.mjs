@@ -45,6 +45,62 @@ const ICON_PATHS = {
   copy: '<rect x="9" y="9" width="13" height="13" rx="2" ry="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/>',
   check: '<polyline points="20 6 9 17 4 12"/>',
 };
+// "Value of Agreement" chart in the About section (values supplied by Bright, 15 Oct 2026).
+// Label positions are hand-tuned so the close 2005/2006 labels and the edge 2025 label stay readable;
+// `guide` draws a short leader line from the point to its label.
+const AGREEMENT = [
+  { year: 2005, value: 37000, label: { x: 70, y: 246, anchor: 'start', guide: true }, yearAnchor: 'end' },
+  { year: 2006, value: 100000, label: { x: 91.2, y: 207, anchor: 'start', guide: true }, yearAnchor: 'start' },
+  { year: 2010, value: 300000, label: { dy: -16 } },
+  { year: 2016, value: 2500000, label: { dy: -14 } },
+  { year: 2020, value: 750000, label: { dy: 28 } },
+  { year: 2025, value: 2500000, label: { x: 514, dy: -14, anchor: 'end' } },
+];
+const usd = value => '$' + value.toLocaleString('en-US');
+
+// SVG curve chart, 528x316. Smooth monotone curve (PCHIP: never overshoots the data points).
+function agreementChart(c) {
+  const [x0, x1, y0, y1, max] = [64, 488, 270, 30, 2500000];
+  const first = AGREEMENT[0].year, last = AGREEMENT.at(-1).year;
+  const pts = AGREEMENT.map(d => ({ ...d, x: x0 + (d.year - first) / (last - first) * (x1 - x0), y: y0 - d.value / max * (y0 - y1) }));
+  const n = pts.length, h = [], s = [];
+  for (let i = 0; i < n - 1; i++) { h[i] = pts[i + 1].x - pts[i].x; s[i] = (pts[i + 1].y - pts[i].y) / h[i] }
+  const m = pts.map((_, i) => {
+    if (i === 0) return s[0];
+    if (i === n - 1) return s[n - 2];
+    if (s[i - 1] * s[i] <= 0) return 0;
+    const w1 = 2 * h[i] + h[i - 1], w2 = h[i] + 2 * h[i - 1];
+    return (w1 + w2) / (w1 / s[i - 1] + w2 / s[i]);
+  });
+  const r = v => Math.round(v * 100) / 100;
+  let path = `M ${r(pts[0].x)} ${r(pts[0].y)}`;
+  for (let i = 0; i < n - 1; i++) {
+    const d = h[i] / 3;
+    path += ` C ${r(pts[i].x + d)} ${r(pts[i].y + d * m[i])}, ${r(pts[i + 1].x - d)} ${r(pts[i + 1].y - d * m[i + 1])}, ${r(pts[i + 1].x)} ${r(pts[i + 1].y)}`;
+  }
+  const ticks = [0, 500000, 1000000, 1500000, 2000000, 2500000].map(v => {
+    const y = r(y0 - v / max * (y0 - y1));
+    return `<line x1="50" x2="514" y1="${y}" y2="${y}" class="chart-grid"/><text x="42" y="${y + 5}" text-anchor="end" class="chart-tick">${v ? (v >= 1e6 ? v / 1e6 + 'M' : v / 1e3 + 'K') : '0'}</text>`;
+  }).join('');
+  const describe = d => `${d.year}: USD ${d.value.toLocaleString('en-US')}`;
+  const latest = pts.at(-1);
+  const points = pts.map((d, i) => {
+    const lx = r(d.label.x ?? d.x), ly = r(d.label.y ?? d.y + d.label.dy);
+    const guide = d.label.guide ? `<line x1="${r(d.x)}" y1="${r(d.y - 8)}" x2="${lx}" y2="${ly + 5}" class="chart-guide"/>` : '';
+    const isLatest = i === n - 1;
+    return `<g><title>${describe(d)}</title>${guide}<circle cx="${r(d.x)}" cy="${r(d.y)}" r="${isLatest ? 7 : 5}" class="chart-point${isLatest ? ' chart-point-latest chart-point-selected' : ''}" data-year="${d.year}" data-value="${d.value}"/>`
+      + `<text x="${lx}" y="${ly}" text-anchor="${d.label.anchor || 'middle'}" class="chart-value${isLatest ? ' chart-value-selected' : ''}">${usd(d.value)}</text>`
+      + `<text x="${r(d.x)}" y="297" text-anchor="${d.yearAnchor || 'middle'}" class="chart-year">${d.year}</text></g>`;
+  }).join('');
+  const svg = `<svg viewBox="0 0 528 316" role="slider" tabindex="0" aria-orientation="horizontal" aria-valuemin="${first}" aria-valuemax="${last}" aria-valuenow="${latest.year}" aria-valuetext="${describe(latest)}" aria-labelledby="agreement-title" aria-describedby="agreement-desc" dir="ltr" xmlns="http://www.w3.org/2000/svg">`
+    + `<title id="agreement-title">${esc(c.agreementChartLabel)}</title><desc id="agreement-desc">${pts.map(describe).join('; ')}.</desc>`
+    + `${ticks}<path d="${path}" class="chart-curve"/><circle class="chart-selection-ring" cx="${r(latest.x)}" cy="${r(latest.y)}" r="12" aria-hidden="true"/>${points}</svg>`;
+  return `<div class="bright-agreement-panel" id="agreement-values"><div class="bright-agreement-heading"><h3 id="bright-agreement-heading">${esc(c.agreementTitle)}</h3><p>${esc(c.agreementUnit)}</p>`
+    + `<div class="bright-agreement-readout" aria-live="polite" aria-atomic="true"><p class="bright-selected-year">${esc(c.agreementSelected)} <bdi data-selected-year>${latest.year}</bdi></p><p class="bright-selected-value"><bdi data-selected-value>${usd(latest.value)}</bdi></p></div>`
+    + `<p class="bright-agreement-hint" data-chart-hint hidden>${esc(c.agreementHint)}</p></div>`
+    + `<div class="bright-agreement-visual"><figure class="bright-agreement-chart" aria-labelledby="bright-agreement-heading">${svg}</figure></div></div>`;
+}
+
 const icon = (name, className = '') => `<svg${className ? ` class="${className}"` : ''} viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false">${ICON_PATHS[name]}</svg>`;
 const PHOTO_WIDTHS = [480, 640, 800, 1200];
 // Rendered widths of each photo slot (layout widths come from style.css: 18px phone gutters, 1200px max content).
@@ -291,6 +347,7 @@ function homeMain(template, lang, c, services, assets) {
     .replace('<!--values-->', values)
     .replace('<!--steps-->', steps)
     .replace('<!--homePhotos-->', homePhotos)
+    .replace('<!--agreement-->', agreementChart(c))
     .replace('{{videoSrc}}', assets.video.src)
     .replace('{{videoPoster}}', assets.video.poster);
 }
