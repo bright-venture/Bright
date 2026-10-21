@@ -441,3 +441,13 @@ button.text-link{background:none;border:0;border-bottom:1px solid #9ea8b3;border
 .machine-card[dir="rtl"] .eyebrow{font-size:12.5px}
 .machine-card[dir="rtl"] .mr-meta-text small,.machine-card[dir="rtl"] .mr-report-block h4{font-size:12px}
 .machine-card[dir="rtl"] .mr-field>span,.machine-card[dir="rtl"] .mr-sub{font-size:13px}
+/* Bright brand block, as in the brightlb.com header: logo, "Bright Service", "Company SARL". */
+.wordmark{display:inline-flex;align-items:center;gap:10px;font-family:var(--sans);font-size:16px;font-weight:400;letter-spacing:0;white-space:nowrap}
+.wordmark img{height:46px;width:auto;margin:0}
+.wordmark .wordmark-name{color:#696969;font-size:18px;font-weight:700;line-height:1.2;letter-spacing:-.4px}
+.wordmark .wordmark-name>span{display:block;font-size:10px;font-weight:400;letter-spacing:1.6px;margin-top:4px}
+.sidebar .wordmark{font-size:16px}
+.sidebar .wordmark img{height:42px}
+.sidebar .wordmark .wordmark-name{font-size:17px}
+/* Headings in bold Arial like the website; the tight tracking was made for TomatoSky's display font. */
+h1,h2{font-weight:700;letter-spacing:-.025em}

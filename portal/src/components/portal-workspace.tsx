@@ -68,7 +68,7 @@ export function PortalWorkspace({ brands, folders, role, currentUserId, employee
   return <div className="portal-shell">
     <aside className={`sidebar${menuOpen ? " menu-open" : ""}`}>
       <div className="sidebar-top">
-        <Wordmark asLink={false} />
+        <Wordmark />
         <button type="button" className="menu-toggle" onClick={() => setMenuOpen(open => !open)} aria-expanded={menuOpen} aria-controls="portal-nav" aria-label={menuOpen ? "Close menu" : "Open menu"}>
           {menuOpen ? <X size={20} /> : <Menu size={20} />}<span>Menu</span>
         </button>
@@ -86,7 +86,8 @@ export function PortalWorkspace({ brands, folders, role, currentUserId, employee
       <main className="portal-main">
         <div className="portal-heading">
           <div><p className="eyebrow">BRIGHT WORKSPACE</p><h1>{section}</h1><p>{section === "Overview" ? "Your brands and operations, in one place." : `Company-wide ${section.toLowerCase()}, organized around your team.`}</p></div>
-          <div className="brand-select"><label htmlFor="brand-filter">Brand</label><Select id="brand-filter" ariaLabel="Filter by brand" className="ui-brand" value={brandId} onChange={setBrandId} options={[{ value: "", label: "All brands" }, ...brands.map(brand => ({ value: brand.id, label: brand.name }))]} /></div>
+          {/* A filter only helps with two or more brands. */}
+          {brands.length > 1 && <div className="brand-select"><label htmlFor="brand-filter">Brand</label><Select id="brand-filter" ariaLabel="Filter by brand" className="ui-brand" value={brandId} onChange={setBrandId} options={[{ value: "", label: "All brands" }, ...brands.map(brand => ({ value: brand.id, label: brand.name }))]} /></div>}
         </div>
         {section === "Reports" ? <ReportsList machines={machines} reports={reports} snapshots={snapshots} brandId={brandId} onOpenVersions={openVersions} /> : section === "Overview" ? <>
           <div className="metric-grid">

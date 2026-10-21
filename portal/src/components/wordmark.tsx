@@ -1,12 +1,8 @@
-import Link from "next/link";
-
-// Bright logo plus "Bright Service" in the portal's display type.
-
-// On the portal and auth pages, pass asLink={false} so the wordmark is plain
-// text (no navigation). The public site uses the default linked wordmark.
-export function Wordmark({ light = false, asLink = true }: { light?: boolean; asLink?: boolean }) {
-  const className = `wordmark ${light ? "wordmark-light" : ""}`;
-  const content = <><img src="/bright-logo.webp" alt="" width={37} height={40} />Bright<span>Service</span></>;
-  if (!asLink) return <span aria-label="Bright Service" className={className}>{content}</span>;
-  return <Link href="/" aria-label="Bright portal home" className={className}>{content}</Link>;
+// Bright logo with "Bright Service / Company SARL", as in the brightlb.com header.
+// Plain text, never a link: the portal has no public home page to go back to.
+export function Wordmark() {
+  return <span className="wordmark" aria-label="Bright Service Company SARL">
+    <img src="/bright-logo.webp" alt="" width={37} height={40} />
+    <span className="wordmark-name">Bright Service<span>Company SARL</span></span>
+  </span>;
 }
