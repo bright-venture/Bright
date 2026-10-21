@@ -9,6 +9,11 @@
 [build.environment]
   NODE_VERSION = "22"
 
+# Declared explicitly so the build always runs the Next.js runtime (pages, server actions, proxy.ts)
+# instead of publishing .next as plain files.
+[[plugins]]
+  package = "@netlify/plugin-nextjs"
+
 # proxy.ts adds Cache-Control no-store, Referrer-Policy and X-Robots-Tag to every page.
 [[headers]]
   for = "/*"
