@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { Sprout, Users } from "lucide-react";
+import { Building2, Users } from "lucide-react";
 import { BrandsConsole } from "./brands-console";
 import { AdminConsole } from "./admin-console";
 import type { Brand } from "@/lib/portal/brand-types";
@@ -13,8 +13,8 @@ type Tab = "brands" | "people";
 // panels don't stack: Brands, then People (invite + employee management).
 export function AdministrationConsole({ brands, productCounts, employees, currentUserId }: { brands: Brand[]; productCounts: Record<string, number>; employees: Employee[]; currentUserId: string }) {
   const [tab, setTab] = useState<Tab>("brands");
-  const tabs: { id: Tab; label: string; icon: typeof Sprout }[] = [
-    { id: "brands", label: "Brands", icon: Sprout },
+  const tabs: { id: Tab; label: string; icon: typeof Building2 }[] = [
+    { id: "brands", label: "Brands", icon: Building2 },
     { id: "people", label: "People", icon: Users },
   ];
 

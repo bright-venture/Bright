@@ -2,7 +2,7 @@
 
 import { useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
-import { Check, Pencil, Plus, Sprout, Trash2, X } from "lucide-react";
+import { Check, Pencil, Plus, Building2, Trash2, X } from "lucide-react";
 import { createBrand, deleteBrand, updateBrand } from "@/lib/portal/brands";
 import type { Brand, BrandResult } from "@/lib/portal/brand-types";
 import { ConfirmDelete } from "./confirm-delete";
@@ -46,14 +46,14 @@ export function BrandsConsole({ brands, productCounts }: { brands: Brand[]; prod
     <ul className="inv-list">
       {brands.length === 0 && <li className="inv-empty">No brands yet. Add one above.</li>}
       {brands.map(brand => editing?.id === brand.id ? <li key={brand.id} className="inv-row">
-        <span className="inv-icon"><Sprout size={19} /></span>
+        <span className="inv-icon"><Building2 size={19} /></span>
         <div className="inv-edit">
           <input value={editing.name} onChange={e => setEditing({ ...editing, name: e.target.value })} maxLength={120} placeholder="Name" disabled={pending} aria-label="Brand name" />
           <button className="icon-btn" disabled={pending || !editing.name.trim()} onClick={() => run(() => updateBrand({ id: brand.id, name: editing.name }), () => setEditing(null))} aria-label="Save"><Check size={16} /></button>
           <button type="button" className="icon-btn" onClick={() => setEditing(null)} disabled={pending} aria-label="Cancel"><X size={16} /></button>
         </div>
       </li> : <li key={brand.id} className="inv-row">
-        <span className="inv-icon"><Sprout size={19} /></span>
+        <span className="inv-icon"><Building2 size={19} /></span>
         <div className="inv-identity"><strong>{brand.name}</strong><span>{(productCounts[brand.id] ?? 0)} product{(productCounts[brand.id] ?? 0) === 1 ? "" : "s"}</span></div>
         <div className="inv-actions">
           <button type="button" className="icon-btn" onClick={() => { setError(""); setEditing({ id: brand.id, name: brand.name }); }} disabled={pending} aria-label={`Edit ${brand.name}`}><Pencil size={15} /></button>
