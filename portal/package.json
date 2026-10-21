@@ -1,0 +1,36 @@
+{
+  "name": "bright-portal",
+  "version": "0.1.0",
+  "private": true,
+  "scripts": {
+    "dev": "next dev --hostname 127.0.0.1",
+    "build": "next build",
+    "start": "next start --hostname 127.0.0.1",
+    "typecheck": "tsc --noEmit",
+    "test:schema": "node --test scripts/test-schema.mjs",
+    "test:access": "node --test scripts/test-access.mjs",
+    "check:supabase": "node --env-file=.env.local scripts/check-supabase.mjs",
+    "test:recovery": "node --test scripts/test-recovery.mjs scripts/test-recovery-link.mjs",
+    "move-data": "node --env-file=.env.migration scripts/move-data.mjs"
+  },
+  "dependencies": {
+    "@supabase/ssr": "^0.12.7",
+    "@supabase/supabase-js": "^2.116.0",
+    "jspdf": "^4.2.1",
+    "jspdf-autotable": "^5.0.8",
+    "lucide-react": "^0.577.0",
+    "next": "16.3.5",
+    "qrcode.react": "^4.2.0",
+    "react": "^19.2.0",
+    "react-dom": "^19.2.0",
+    "server-only": "^0.0.1"
+  },
+  "devDependencies": {
+    "@electric-sql/pglite": "^0.5.8",
+    "@types/node": "^22.0.0",
+    "@types/react": "^19.0.0",
+    "@types/react-dom": "^19.0.0",
+    "pg": "^8.23.1",
+    "typescript": "^5.9.0"
+  }
+}

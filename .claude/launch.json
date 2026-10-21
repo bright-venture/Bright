@@ -4,8 +4,22 @@
     {
       "name": "bright-site",
       "runtimeExecutable": "node",
-      "runtimeArgs": ["scripts/serve.mjs"],
+      "runtimeArgs": [
+        "scripts/serve.mjs"
+      ],
       "port": 4321,
+      "autoPort": true
+    },
+    {
+      "name": "bright-portal",
+      "runtimeExecutable": "npm",
+      "runtimeArgs": [
+        "--prefix",
+        "portal",
+        "run",
+        "dev"
+      ],
+      "port": 3000,
       "autoPort": true
     }
   ]

@@ -2,10 +2,14 @@
 
 Static marketing site for Bright Service Company SARL (facility and support services, est. 2005), live at https://brightlb.com (Netlify; `www` redirects to the apex). Design and copy come from Kimi/ChatGPT exports; this repo prerenders them. Plain HTML/CSS/JS with a Node build step; no framework.
 
+## Employee portal (`portal/`)
+
+`portal/` is a separate Next.js + Supabase app for portal.brightlb.com (a second Netlify site with Base directory `portal`, `portal/netlify.toml`; auth email through Resend SMTP), moved from portal.tomatosky.com with the same architecture. It has its own package.json, CLAUDE.md, README.md and docs/supabase-setup.md; work inside that folder for portal changes. Netlify (the public site) publishes only `site/`, so the portal is never exposed through brightlb.com. Never modify the TomatoSky repo (Desktop/TomatoSky) from here.
+
 ## Workflow
 
 - Edit files in `src/` (and photos/logos/video in `source/`), then `npm run build`. The build writes the whole website into `site/`; commit it. Netlify publishes only `site/` (`netlify.toml`) and does not run a build, so nothing else in the repo is public.
-- `npm run dev` builds, then serves at http://localhost:4321 (or the next free port). `scripts/serve.mjs` serves `site/` only, binds to 127.0.0.1, refuses paths outside it (checked with `path.relative` and `realpath`, never `startsWith`) and hidden files, and sends the same headers as `site/_headers`; keep it that way (Aikido SAST finding, Oct 2026). The preview config is `.claude/launch.json` (`bright-site`; it only serves, so build first).
+- `npm run dev` (`scripts/dev.mjs`) builds, serves the site on 4321 and starts the portal on 3000 with `SITE_DEV_ORIGIN`, so http://127.0.0.1:3000/ is the website and /login the portal (dev-only rewrites in `portal/next.config.ts`; in production brightlb.com and portal.brightlb.com are separate Netlify sites). `npm run dev:site` builds and serves the website alone at http://localhost:4321 (or the next free port). `scripts/serve.mjs` serves `site/` only, binds to 127.0.0.1, refuses paths outside it (checked with `path.relative` and `realpath`, never `startsWith`) and hidden files, and sends the same headers as `site/_headers`; keep it that way (Aikido SAST finding, Oct 2026). The preview config is `.claude/launch.json` (`bright-site`; it only serves, so build first).
 - `npm run audit` runs Lighthouse (mobile + desktop) on every page in `sitemap.xml`; narrow it with language, device or page, e.g. `npm run audit -- ar mobile porter-services`. Target is 100 in every category. On this Windows machine headless Chrome occasionally stalls its compositor for ~1 to 2 s, giving a one-off 99; re-run or confirm on PageSpeed Insights.
 - When a new Kimi export arrives: their `content.js` / `services-content.js` reintroduce wording we corrected. Merge only new or changed strings, keep ours otherwise, and re-check the Conventions below.
 

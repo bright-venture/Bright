@@ -1,0 +1,18 @@
+# Netlify site for portal.brightlb.com, separate from the public site (brightlb.com, which
+# publishes only ../site). Set this site's Base directory to `portal` in the Netlify UI, so this
+# file is used and pushes that change nothing in portal/ skip the build.
+# Netlify's OpenNext adapter (installed automatically) runs the pages, server actions and proxy.ts.
+[build]
+  command = "npm run build"
+  publish = ".next"
+
+[build.environment]
+  NODE_VERSION = "22"
+
+# proxy.ts adds Cache-Control no-store, Referrer-Policy and X-Robots-Tag to every page.
+[[headers]]
+  for = "/*"
+  [headers.values]
+    X-Content-Type-Options = "nosniff"
+    X-Frame-Options = "DENY"
+    Permissions-Policy = "camera=(), microphone=(), geolocation=()"
