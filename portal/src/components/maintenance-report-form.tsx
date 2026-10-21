@@ -108,7 +108,7 @@ export function MaintenanceReportForm({ machine, template, defaultTechnician, in
 
     <section className="mr-block">
       <h3 className="mr-block-title">{t.checklist}</h3>
-      <p className="mr-block-sub">{t.markHint(stateLabels)}{template.columns.includes("ok") ? "" : ` ${t.blankHint}`}</p>
+      <p className="mr-block-sub">{t.markHint(stateLabels)} {t.blankHint}</p>
       <div className="mr-items">
         {template.checklist.map(item => {
           const entry = checklist[item.key] ?? {};

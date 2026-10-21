@@ -38,15 +38,15 @@ export const REPORT_STATUS_LABELS_AR: Record<ReportStatus, string> = {
 };
 
 // A single checklist row. `state` is one of these (or unset) plus an optional note.
-export const CHECK_STATES = ["ok", "repaired", "changed"] as const;
+export const CHECK_STATES = ["repaired", "changed"] as const;
 export type CheckState = (typeof CHECK_STATES)[number];
-export const CHECK_STATE_LABELS: Record<CheckState, string> = { ok: "OK", repaired: "Repaired", changed: "Changed" };
-export const CHECK_STATE_LABELS_AR: Record<CheckState, string> = { ok: "سليم", repaired: "تم الإصلاح", changed: "تم التغيير" };
+export const CHECK_STATE_LABELS: Record<CheckState, string> = { repaired: "Repaired", changed: "Changed" };
+export const CHECK_STATE_LABELS_AR: Record<CheckState, string> = { repaired: "تم الإصلاح", changed: "تم التغيير" };
 
 // `label` is the English wording, `ar` the Arabic wording from the form.
 export type ChecklistItem = { key: string; label: string; ar: string };
 export type FunctionTest = { key: string; label: string; ar: string };
-// `columns` are the mark columns this form uses (B75R has no OK column).
+// `columns` are the mark columns this form uses. There is no OK column: a part left blank is fine.
 export type Template = { model: MachineModel; columns: readonly CheckState[]; checklist: ChecklistItem[]; functionTests: FunctionTest[] };
 
 // Keys are stable position-based ids (c1, f1…). Reports snapshot the model, and the
@@ -99,7 +99,7 @@ export const TEMPLATES: Record<MachineModel, Template> = {
   },
   walk_behind_scrubber: {
     model: "walk_behind_scrubber",
-    columns: ["ok", "repaired", "changed"],
+    columns: ["repaired", "changed"],
     checklist: checklist([
       ["Scrubbing brush / Pad", "فرشاية الغسيل / الباد"],
       ["Pad / Brush holder", "الباد / حاملة الفرشاية"],

@@ -148,7 +148,6 @@
 .mr-label{font-size:14px;color:var(--ink)}
 .mr-states{display:flex;gap:6px;flex-wrap:wrap}
 .mr-state{min-height:34px;padding:6px 12px;border:1px solid var(--line);background:#fff;border-radius:6px;font-size:13px;font-weight:600;color:#8a9096;cursor:pointer}
-.mr-state.on.ok{background:#e8efe0;color:#3d6b45;border-color:#bcd3ae}
 .mr-state.on.repaired{background:#f7efd9;color:#8a6d1f;border-color:#e6d3a3}
 .mr-state.on.changed{background:#e5eef4;color:#2f6088;border-color:#b9d3e6}
 .mr-note{grid-column:1 / -1;width:100%;border:1px solid #dde1e6;border-radius:6px;padding:7px 10px;font:inherit;font-size:13px;color:var(--ink);background:#fafbfc}
@@ -178,7 +177,6 @@
 .v-item-label{flex:1;font-size:14px;color:var(--ink);line-height:1.4}
 .v-item-note{margin-top:4px;padding-left:0;font-size:13px;color:var(--muted);font-style:italic;line-height:1.5}
 .mr-state-tag{flex-shrink:0;font-size:11px;font-weight:600;border-radius:5px;padding:3px 9px;white-space:nowrap}
-.mr-state-tag.ok{background:#e8efe0;color:#3d6b45}
 .mr-state-tag.repaired{background:#f7efd9;color:#8a6d1f}
 .mr-state-tag.changed{background:#e5eef4;color:#2f6088}
 .mr-report-foot{display:flex;flex-wrap:wrap;gap:8px;align-items:center;margin-top:16px;padding-top:14px;border-top:1px solid #eaedf1;font-size:12px;color:#5a616a}
@@ -377,7 +375,6 @@ input[type="date"]::-webkit-calendar-picker-indicator{margin-left:auto}
 .mr-seg-btn:hover:not(:disabled){background:#f4f6f8}
 .mr-seg-btn.on.repaired{background:#f7efd9;color:#8a6d1f}
 .mr-seg-btn.on.changed{background:#e5eef4;color:#2f6088}
-.mr-seg-btn.on.ok{background:#e8efe0;color:#3d6b45}
 .mr-note-btn{width:34px;height:34px;display:grid;place-items:center;border:1px solid var(--line);border-radius:8px;background:#fff;color:#8a9096;cursor:pointer}
 .mr-note-btn.on{color:#3d6b45;background:#eff1f4;cursor:default}
 .mr-item .mr-note{margin-top:8px}
