@@ -94,15 +94,18 @@ export function MaintenanceReportForm({ machine, template, defaultTechnician, in
   return <form className="mr-form" onSubmit={submit}>
     <section className="mr-block">
       <h3 className="mr-block-title">{t.details}</h3>
+      {/* Same order as the paper form: Date and Technician, then Maintenance Type, Operating Hours, Site/Location. */}
       <div className="mr-grid">
-        <label className="mr-field"><span>{t.technician}</span><input dir="auto" value={technician} onChange={e => { touch(); setTechnician(e.target.value); }} maxLength={160} disabled={pending} required /></label>
         <label className="mr-field"><span>{t.date}</span><DateInput value={reportDate} onChange={v => { touch(); setReportDate(v); }} placeholder={t.chooseDate} disabled={pending} required /></label>
-        <label className="mr-field"><span>{t.hours}</span><input dir="auto" value={operatingHours} onChange={e => { touch(); setOperatingHours(e.target.value); }} maxLength={40} inputMode="numeric" placeholder={t.hoursHint} disabled={pending} /></label>
-        <label className="mr-field"><span>{t.site}</span><input dir="auto" value={siteLocation} onChange={e => { touch(); setSiteLocation(e.target.value); }} maxLength={200} disabled={pending} /></label>
+        <label className="mr-field"><span>{t.technician}</span><input dir="auto" value={technician} onChange={e => { touch(); setTechnician(e.target.value); }} maxLength={160} disabled={pending} required /></label>
       </div>
       <div className="mr-sub">{t.type}</div>
       <div className="mr-seg mr-seg-full" role="group" aria-label={t.type}>
         {MAINTENANCE_TYPES.map(m => <button type="button" key={m} className={`mr-seg-btn pick ${maintenanceType === m ? "on" : ""}`} disabled={pending} aria-pressed={maintenanceType === m} onClick={() => { touch(); setMaintenanceType(maintenanceType === m ? "" : m); }}>{t.types[m]}</button>)}
+      </div>
+      <div className="mr-grid mr-grid-after">
+        <label className="mr-field"><span>{t.hours}</span><input dir="auto" value={operatingHours} onChange={e => { touch(); setOperatingHours(e.target.value); }} maxLength={40} inputMode="numeric" placeholder={t.hoursHint} disabled={pending} /></label>
+        <label className="mr-field"><span>{t.site}</span><input dir="auto" value={siteLocation} onChange={e => { touch(); setSiteLocation(e.target.value); }} maxLength={200} disabled={pending} /></label>
       </div>
     </section>
 

@@ -77,7 +77,7 @@ export function MachineState({ machine, report, versions, defaultTechnician, isA
           ? <span className="mr-meta-text"><small>{t.lastEdited}</small><span><bdi dir="ltr">{report.updatedAt.slice(0, 16).replace("T", " ")}</bdi>{report.technicianName ? <> · <bdi>{report.technicianName}</bdi></> : ""}</span></span>
           : <span className="mr-meta-text"><small>{t.newReport}</small><span>{t.notSaved}</span></span>}
       {!startNew && <span className="mr-foot-actions">
-        {template && <button type="button" className="mr-pdf" onClick={() => downloadReportPdf(machine, report)}><FileDown size={13} /> PDF</button>}
+        {template && <button type="button" className="mr-pdf" onClick={() => downloadReportPdf(machine, report, lang)}><FileDown size={13} /> PDF</button>}
         {isAdmin && report && <button type="button" className="icon-btn danger" onClick={removeReport} disabled={pending} aria-label={t.deleteReport}><Trash2 size={15} /></button>}
       </span>}
     </div>

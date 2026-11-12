@@ -53,7 +53,7 @@ export function VersionRow({ version, machine, isAdmin, pending, onDelete, lang 
         {version.siteLocation && <span>{t.vSite}: {version.siteLocation}</span>}
         {version.nextMaintenance && <span>{t.vNext}: {version.nextMaintenance}</span>}
         <span className="mr-foot-actions">
-          <button type="button" className="mr-pdf" onClick={() => downloadReportPdf(machine, version)}><FileDown size={13} /> PDF</button>
+          <button type="button" className="mr-pdf" onClick={() => downloadReportPdf(machine, version, lang)}><FileDown size={13} /> PDF</button>
           {isAdmin && <button type="button" className="icon-btn danger" onClick={onDelete} disabled={pending} aria-label={t.deleteVersion}><Trash2 size={14} /></button>}
         </span>
       </div>

@@ -448,3 +448,5 @@ button.text-link{background:none;border:0;border-bottom:1px solid #9ea8b3;border
 .sidebar .wordmark .wordmark-name{font-size:17px}
 /* Headings in bold Arial like the website; the tight tracking was made for TomatoSky's display font. */
 h1,h2{font-weight:700;letter-spacing:-.025em}
+/* Report details: Operating Hours and Site/Location sit under the maintenance type, as on the paper form. */
+.mr-block .mr-grid-after{margin-top:16px}
